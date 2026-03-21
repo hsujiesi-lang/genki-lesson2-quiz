@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>げんき 第2課 これ/それ/あれ/どれ 練習</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: linear-gradient(135deg, #fdf6ec 0%, #fce4c7 100%);
+    min-height: 100vh;
+    color: #333;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  header {
+    text-align: center;
+    padding: 30px 0 10px;
+  }
+
+  header h1 {
+    font-size: 1.8rem;
+    color: #e67e22;
+    margin-bottom: 4px;
+  }
+
+  header p {
+    color: #888;
+    font-size: 0.95rem;
+  }
+
+  /* Grammar Summary */
+  .grammar-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    display: none;
+  }
+
+  .grammar-box.show { display: block; }
+
+  .grammar-box h3 {
+    color: #e67e22;
+    margin-bottom: 14px;
+    font-size: 1.1rem;
+  }
+
+  .grammar-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.95rem;
+  }
+
+  .grammar-table th {
+    background: #e67e22;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .grammar-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+  }
+
+  .grammar-table tr:nth-child(even) td {
+    background: #fdf6ec;
+  }
+
+  .note {
+    background: #fff8ee;
+    border-left: 4px solid #e67e22;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* Menu */
+  .menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .menu-btn {
+    background: #fff;
+    border: 2px solid #f0d9b5;
+    border-radius: 14px;
+    padding: 18px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .menu-btn:hover {
+    border-color: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230,126,34,0.15);
+  }
+
+  .menu-btn .num {
+    display: inline-block;
+    background: #e67e22;
+    color: #fff;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    line-height: 28px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .menu-btn .title-jp {
+    display: block;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 2px;
+  }
+
+  .menu-btn .title-desc {
+    display: block;
+    font-size: 0.78rem;
+    color: #999;
+  }
+
+  .menu-btn.grammar-toggle {
+    grid-column: 1 / -1;
+    background: #fdf6ec;
+    border-color: #e67e22;
+  }
+
+  /* Quiz Area */
+  .quiz-area {
+    display: none;
+  }
+
+  .quiz-area.active { display: block; }
+
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .quiz-header h2 {
+    font-size: 1.15rem;
+    color: #e67e22;
+  }
+
+  .back-btn {
+    background: none;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #888;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover { border-color: #e67e22; color: #e67e22; }
+
+  .progress-bar {
+    background: #eee;
+    border-radius: 10px;
+    height: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    background: linear-gradient(90deg, #f39c12, #e67e22);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  .question-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .q-number {
+    display: inline-block;
+    background: #e67e22;
+    color: #fff;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .q-scene {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin-bottom: 6px;
+  }
+
+  .q-hint {
+    font-size: 0.85rem;
+    color: #999;
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+
+  .q-sentence {
+    font-size: 1.25rem;
+    background: #fdf6ec;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    line-height: 1.7;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .blank {
+    display: inline-block;
+    border-bottom: 3px solid #e67e22;
+    min-width: 80px;
+    color: #e67e22;
+    font-weight: 700;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .input-row input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+    transition: border 0.2s;
+  }
+
+  .input-row input:focus {
+    border-color: #e67e22;
+  }
+
+  .input-row button {
+    background: #e67e22;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+
+  .input-row button:hover { background: #d35400; }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 14px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    display: none;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .feedback.correct {
+    display: block;
+    background: #e8f8e8;
+    border: 1.5px solid #6fcf6f;
+    color: #2e7d32;
+  }
+
+  .feedback.wrong {
+    display: block;
+    background: #fde8e8;
+    border: 1.5px solid #ef5350;
+    color: #c62828;
+  }
+
+  .feedback .icon { font-size: 1.2rem; margin-right: 6px; }
+
+  .next-btn {
+    display: none;
+    margin-top: 14px;
+    width: 100%;
+    background: #f39c12;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .next-btn:hover { background: #e67e22; }
+
+  /* Score */
+  .score-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    display: none;
+  }
+
+  .score-card.show { display: block; }
+
+  .score-big {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #e67e22;
+    margin: 10px 0;
+  }
+
+  .score-msg {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+
+  .score-bar-bg {
+    background: #eee;
+    border-radius: 10px;
+    height: 14px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s ease;
+  }
+
+  .score-card button {
+    margin-top: 12px;
+    background: #e67e22;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 30px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .score-card button:hover { background: #d35400; }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .menu { grid-template-columns: 1fr; }
+    header h1 { font-size: 1.4rem; }
+    .q-sentence { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>げんき 第2課 練習</h1>
+    <p>これ/それ/あれ/どれ & この/その/あの/どの</p>
+  </header>
+
+  <!-- MENU -->
+  <div id="menuScreen">
+    <div class="menu">
+      <div class="menu-btn" onclick="startQuiz(1)">
+        <span class="num">1</span>
+        <span class="title-jp">これ/それ/あれ</span>
+        <span class="title-desc">Fill in the pronoun</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(2)">
+        <span class="num">2</span>
+        <span class="title-jp">この/その/あの + 名詞</span>
+        <span class="title-desc">Modifier + noun</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(3)">
+        <span class="num">3</span>
+        <span class="title-jp">これ vs この</span>
+        <span class="title-desc">Choose the right form</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(4)">
+        <span class="num">4</span>
+        <span class="title-jp">英語 → 日本語</span>
+        <span class="title-desc">Translate to Japanese</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(5)">
+        <span class="num">5</span>
+        <span class="title-jp">どれ / どの</span>
+        <span class="title-desc">Question words</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(6)">
+        <span class="num">6</span>
+        <span class="title-jp">情境題</span>
+        <span class="title-desc">Scene-based sentences</span>
+      </div>
+      <div class="menu-btn grammar-toggle" onclick="toggleGrammar()">
+        <span class="title-jp">文法のまとめ (Grammar Summary)</span>
+      </div>
+    </div>
+
+    <!-- Grammar Summary -->
+    <div class="grammar-box" id="grammarBox">
+      <h3>こ・そ・あ・ど 系統</h3>
+      <table class="grammar-table">
+        <tr><th></th><th>単独 (standalone)</th><th>+ 名詞 (+ noun)</th><th>意味</th></tr>
+        <tr><td style="font-weight:700;color:#e67e22">こ</td><td>これ</td><td>この + 名詞</td><td>close to speaker</td></tr>
+        <tr><td style="font-weight:700;color:#e67e22">そ</td><td>それ</td><td>その + 名詞</td><td>close to listener</td></tr>
+        <tr><td style="font-weight:700;color:#e67e22">あ</td><td>あれ</td><td>あの + 名詞</td><td>far from both</td></tr>
+        <tr><td style="font-weight:700;color:#e67e22">ど</td><td>どれ</td><td>どの + 名詞</td><td>which (unknown)</td></tr>
+      </table>
+      <div class="note">
+        <b>重點：</b><br>
+        ・<b>これ/それ/あれ</b> 單獨使用，後接 <b>は</b>：これ<b>は</b>いくらですか。<br>
+        ・<b>この/その/あの</b> 後面一定要接名詞：この<b>とけい</b>はいくらですか。<br>
+        ・<b>どれ/どの</b> 使用助詞 <b>が</b>（不用は）：どれ<b>が</b>あなたのですか。<br>
+        ・<b>これ/それ/あれ</b> 不可用來指人（不禮貌）。
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ AREA -->
+  <div class="quiz-area" id="quizArea">
+    <div class="quiz-header">
+      <h2 id="quizTitle"></h2>
+      <button class="back-btn" onclick="backToMenu()">メニューへ</button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div id="questionContainer"></div>
+    <div class="score-card" id="scoreCard">
+      <p style="font-size:0.9rem;color:#999;">結果</p>
+      <div class="score-big" id="scoreBig"></div>
+      <div class="score-bar-bg"><div class="score-bar-fill" id="scoreBarFill"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <button onclick="backToMenu()">メニューに戻る</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const ITEMS = {
+  "とけい": "watch/clock", "かさ": "umbrella", "かばん": "bag", "くつ": "shoes",
+  "さいふ": "wallet", "ペン": "pen", "ぼうし": "hat/cap", "ほん": "book",
+  "ノート": "notebook", "スマホ": "smartphone", "しんぶん": "newspaper",
+  "じてんしゃ": "bicycle", "Tシャツ": "T-shirt", "ジーンズ": "jeans", "メニュー": "menu"
+};
+const itemKeys = Object.keys(ITEMS);
+
+const DISTANCES = [
+  { key: "speaker", re: "これ", no: "この", labelJP: "你身邊 / near you", labelEN: "close to the speaker" },
+  { key: "listener", re: "それ", no: "その", labelJP: "對方身邊 / near listener", labelEN: "close to the listener" },
+  { key: "far", re: "あれ", no: "あの", labelJP: "遠處 / far away", labelEN: "far from both people" },
+];
+
+let currentQuiz = [];
+let currentIndex = 0;
+let score = 0;
+
+// ===== HELPERS =====
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+function clean(s) { return s.replace(/[\s\u3000]/g, ""); }
+
+// ===== QUESTION GENERATORS =====
+function genType1() {
+  const questions = [];
+  for (let i = 0; i < 6; i++) {
+    const item = pick(itemKeys);
+    const dist = pick(DISTANCES);
+    const hintMap = {
+      "speaker": `The ${ITEMS[item]} is in YOUR hand.`,
+      "listener": `The ${ITEMS[item]} is in the LISTENER's hand.`,
+      "far": `The ${ITEMS[item]} is far from both of you.`
+    };
+    const sceneMap = {
+      "speaker": `（你手上拿著${item}）`,
+      "listener": `（對方手上拿著${item}）`,
+      "far": `（${item}在遠處）`
+    };
+    questions.push({
+      scene: sceneMap[dist.key],
+      sentence: `＿＿＿は ${item} です。`,
+      hint: hintMap[dist.key],
+      answers: [dist.re],
+      explain: `${dist.labelEN} → ${dist.re}`
+    });
+  }
+  return questions;
+}
+
+function genType2() {
+  const questions = [];
+  for (let i = 0; i < 6; i++) {
+    const item = pick(itemKeys);
+    const dist = pick(DISTANCES);
+    const sceneMap = {
+      "speaker": `（你身邊的${item}）`,
+      "listener": `（對方身邊的${item}）`,
+      "far": `（遠處的${item}）`
+    };
+    const correct = dist.no + item;
+    questions.push({
+      scene: sceneMap[dist.key],
+      sentence: `＿＿＿＿＿は いくらですか。`,
+      hint: `How much is ... ${ITEMS[item]}? (${dist.labelEN})`,
+      answers: [correct],
+      explain: `${dist.labelEN} + noun → ${correct}`
+    });
+  }
+  return questions;
+}
+
+function genType3() {
+  const questions = [];
+  for (let i = 0; i < 6; i++) {
+    const item = pick(itemKeys);
+    const dist = pick(DISTANCES);
+    const useRe = Math.random() > 0.5;
+    if (useRe) {
+      questions.push({
+        scene: `（${dist.labelJP}）`,
+        sentence: `＿＿＿は ${item} です。`,
+        hint: `${dist.labelEN} — standalone (no noun after blank)`,
+        answers: [dist.re],
+        explain: `＿は の形 → ${dist.re}（れ系列は単独で使う）`
+      });
+    } else {
+      questions.push({
+        scene: `（${dist.labelJP}）`,
+        sentence: `＿＿＿${item}は いくらですか。`,
+        hint: `${dist.labelEN} — modifier (noun after blank)`,
+        answers: [dist.no],
+        explain: `＿＋名詞 の形 → ${dist.no}（の系列は名詞の前に置く）`
+      });
+    }
+  }
+  return questions;
+}
+
+function genType4() {
+  const templates = [
+    { en: "How much is this? (near you)", ja: "これは いくらですか。" },
+    { en: (item) => `That is ${ITEMS[item]}. (near listener)`, ja: (item) => `それは ${item} です。` },
+    { en: (item) => `How much is that ${ITEMS[item]} over there?`, ja: (item) => `あの${item}は いくらですか。` },
+    { en: (item) => `This ${ITEMS[item]} is expensive.`, ja: (item) => `この${item}は たかいです。` },
+    { en: (item) => `That is not ${ITEMS[item]}. (near listener)`, ja: (item) => `それは ${item} じゃないです。` },
+    { en: (item) => `Whose ${ITEMS[item]} is this?`, ja: (item) => `これは だれの${item}ですか。` },
+    { en: (item) => `Please give me that ${ITEMS[item]}. (near listener)`, ja: (item) => `その${item}を ください。` },
+    { en: (item) => `That ${ITEMS[item]} over there is also expensive.`, ja: (item) => `あの${item}も たかいです。` },
+  ];
+  const selected = shuffle([...templates]).slice(0, 6);
+  return selected.map(t => {
+    const item = pick(itemKeys);
+    const en = typeof t.en === 'function' ? t.en(item) : t.en;
+    const ja = typeof t.ja === 'function' ? t.ja(item) : t.ja;
+    return {
+      scene: "",
+      sentence: "",
+      hint: en,
+      answers: [ja],
+      explain: ja,
+      isTranslation: true
+    };
+  });
+}
+
+function genType5() {
+  const questions = [];
+  for (let i = 0; i < 5; i++) {
+    const item = pick(itemKeys);
+    const useDore = Math.random() > 0.5;
+    if (useDore) {
+      questions.push({
+        scene: "",
+        sentence: `あなたの ${item} は ＿＿＿ですか。`,
+        hint: `Which one is your ${ITEMS[item]}?`,
+        answers: ["どれ"],
+        explain: `名詞なし → どれ`
+      });
+    } else {
+      questions.push({
+        scene: "",
+        sentence: `＿＿＿${item}が あなたのですか。`,
+        hint: `Which ${ITEMS[item]} is yours?`,
+        answers: ["どの"],
+        explain: `＿＋名詞 → どの`
+      });
+    }
+  }
+  // add a note question
+  questions.push({
+    scene: "",
+    sentence: `＿＿＿が あなたの${pick(itemKeys)}ですか。`,
+    hint: `Which one is your ...? (standalone)`,
+    answers: ["どれ"],
+    explain: `単独 → どれ（注意：助詞用が）`
+  });
+  return questions;
+}
+
+function genType6() {
+  const scenes = shuffle([
+    {
+      scene: "你在跳蚤市場，想問你手邊的時鐘多少錢。",
+      hint: "You want to ask the price of a clock near you.",
+      answers: ["これはいくらですか。", "このとけいはいくらですか。"],
+      explain: "これは いくらですか。/ このとけいは いくらですか。"
+    },
+    {
+      scene: "店員手上拿著一個包包，你想問多少錢。",
+      hint: "Shopkeeper is holding a bag. Ask the price.",
+      answers: ["それはいくらですか。", "そのかばんはいくらですか。"],
+      explain: "それは いくらですか。/ そのかばんは いくらですか。"
+    },
+    {
+      scene: "遠處有一把傘，你想說「那把傘好貴」。",
+      hint: "An umbrella far away — say it's expensive.",
+      answers: ["あのかさはたかいです。", "あれはたかいです。"],
+      explain: "あのかさは たかいです。/ あれは たかいです。"
+    },
+    {
+      scene: "你撿到一個錢包，想問「這是誰的錢包？」",
+      hint: "You found a wallet — ask whose it is.",
+      answers: ["これはだれのさいふですか。"],
+      explain: "これは だれの さいふですか。"
+    },
+    {
+      scene: "在餐廳，你指著菜單上的東西問「這是什麼？」",
+      hint: "At a restaurant — ask what this is.",
+      answers: ["これはなんですか。"],
+      explain: "これは なんですか。"
+    },
+    {
+      scene: "你想請店員把他旁邊的那支筆給你。",
+      hint: "Ask the clerk for the pen near them.",
+      answers: ["そのペンをください。"],
+      explain: "そのペンを ください。"
+    },
+    {
+      scene: "你想說「那邊那頂帽子也很貴」。",
+      hint: "That hat over there is also expensive.",
+      answers: ["あのぼうしもたかいです。", "あれもたかいです。"],
+      explain: "あのぼうしも たかいです。"
+    },
+    {
+      scene: "朋友問你幾個東西裡哪個是你的，你問「哪一個？」",
+      hint: "Among several items — ask 'Which one?'",
+      answers: ["どれですか。"],
+      explain: "どれですか。"
+    },
+  ]).slice(0, 6);
+
+  return scenes.map(s => ({
+    scene: s.scene,
+    sentence: "",
+    hint: s.hint,
+    answers: s.answers,
+    explain: s.explain,
+    isFullSentence: true
+  }));
+}
+
+// ===== QUIZ ENGINE =====
+const quizTitles = {
+  1: "これ/それ/あれ 填空",
+  2: "この/その/あの + 名詞",
+  3: "これ vs この 判斷",
+  4: "英語 → 日本語 翻訳",
+  5: "どれ / どの 練習",
+  6: "情境題"
+};
+
+const generators = { 1: genType1, 2: genType2, 3: genType3, 4: genType4, 5: genType5, 6: genType6 };
+
+function startQuiz(type) {
+  currentQuiz = generators[type]();
+  currentIndex = 0;
+  score = 0;
+  document.getElementById("menuScreen").style.display = "none";
+  document.getElementById("quizArea").classList.add("active");
+  document.getElementById("quizTitle").textContent = quizTitles[type];
+  document.getElementById("scoreCard").classList.remove("show");
+  showQuestion();
+}
+
+function showQuestion() {
+  const container = document.getElementById("questionContainer");
+  const q = currentQuiz[currentIndex];
+  const total = currentQuiz.length;
+  document.getElementById("progressFill").style.width = ((currentIndex) / total * 100) + "%";
+
+  let html = `<div class="question-card">`;
+  html += `<span class="q-number">Q${currentIndex + 1} / ${total}</span>`;
+
+  if (q.scene) {
+    html += `<div class="q-scene">${q.scene}</div>`;
+  }
+
+  if (q.isTranslation || q.isFullSentence) {
+    html += `<div class="q-hint">${q.hint}</div>`;
+    if (q.isTranslation) {
+      html += `<div style="margin-bottom:4px;font-size:0.85rem;color:#aaa;">日本語で書いてください：</div>`;
+    }
+    if (q.isFullSentence) {
+      html += `<div style="margin-bottom:4px;font-size:0.85rem;color:#aaa;">日本語の文を書いてください：</div>`;
+    }
+  } else {
+    if (q.sentence) {
+      html += `<div class="q-sentence">${q.sentence.replace(/＿+/g, '<span class="blank">?</span>')}</div>`;
+    }
+    html += `<div class="q-hint">${q.hint}</div>`;
+  }
+
+  html += `<div class="input-row">
+    <input type="text" id="answerInput" placeholder="ここに入力..." autofocus>
+    <button onclick="submitAnswer()">確認</button>
+  </div>`;
+  html += `<div class="feedback" id="feedback"></div>`;
+  html += `<button class="next-btn" id="nextBtn" onclick="nextQuestion()">次の問題へ →</button>`;
+  html += `</div>`;
+
+  container.innerHTML = html;
+
+  const input = document.getElementById("answerInput");
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const fb = document.getElementById("feedback");
+      if (fb.style.display === "none" || !fb.classList.contains("correct") && !fb.classList.contains("wrong")) {
+        submitAnswer();
+      } else {
+        nextQuestion();
+      }
+    }
+  });
+
+  setTimeout(() => input.focus(), 100);
+}
+
+function submitAnswer() {
+  const input = document.getElementById("answerInput");
+  const fb = document.getElementById("feedback");
+  const nextBtn = document.getElementById("nextBtn");
+  const q = currentQuiz[currentIndex];
+  const userAns = clean(input.value);
+
+  if (!userAns) return;
+
+  input.disabled = true;
+  const isCorrect = q.answers.some(a => userAns === clean(a));
+
+  if (isCorrect) {
+    score++;
+    fb.className = "feedback correct";
+    fb.innerHTML = `<span class="icon">&#10004;</span> <b>正解！</b> → ${q.explain}`;
+  } else {
+    fb.className = "feedback wrong";
+    fb.innerHTML = `<span class="icon">&#10008;</span> <b>不正解</b><br>正しい答え: <b>${q.answers[0]}</b><br>${q.explain}`;
+  }
+
+  nextBtn.style.display = "block";
+  if (currentIndex === currentQuiz.length - 1) {
+    nextBtn.textContent = "結果を見る";
+  }
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= currentQuiz.length) {
+    showScore();
+  } else {
+    showQuestion();
+  }
+}
+
+function showScore() {
+  document.getElementById("questionContainer").innerHTML = "";
+  document.getElementById("progressFill").style.width = "100%";
+  const total = currentQuiz.length;
+  const pct = Math.round(score / total * 100);
+
+  let msg, barColor;
+  if (pct === 100) { msg = "完璧！ Perfect!"; barColor = "#27ae60"; }
+  else if (pct >= 80) { msg = "すごい！ Great!"; barColor = "#27ae60"; }
+  else if (pct >= 60) { msg = "いいですね！ Good!"; barColor = "#f39c12"; }
+  else { msg = "もう一度がんばりましょう！"; barColor = "#e74c3c"; }
+
+  document.getElementById("scoreBig").textContent = `${score} / ${total}`;
+  document.getElementById("scoreMsg").textContent = msg;
+  const bar = document.getElementById("scoreBarFill");
+  bar.style.background = barColor;
+  setTimeout(() => bar.style.width = pct + "%", 100);
+
+  document.getElementById("scoreCard").classList.add("show");
+}
+
+function backToMenu() {
+  document.getElementById("quizArea").classList.remove("active");
+  document.getElementById("menuScreen").style.display = "block";
+  document.getElementById("questionContainer").innerHTML = "";
+  document.getElementById("scoreCard").classList.remove("show");
+}
+
+function toggleGrammar() {
+  const box = document.getElementById("grammarBox");
+  box.classList.toggle("show");
+}
+</script>
+
+</body>
+</html>
