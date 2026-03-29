@@ -178,7 +178,8 @@
       <div class="big" id="sBig"></div>
       <div class="scbar"><div class="scfill" id="sFill"></div></div>
       <div class="msg" id="sMsg"></div>
-      <button onclick="backToMenu()">メニューに戻る</button>
+      <div id="wrongList"></div>
+      <button onclick="backToMenu()" style="margin-top:14px">メニューに戻る</button>
     </div>
   </div>
 </div>
@@ -232,7 +233,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function clean(s){return s.replace(/[\s\u3000]/g,"").toLowerCase()}
 function matchAny(input,answers){const c=clean(input);return answers.some(a=>c===clean(a))}
 
-let quiz=[],qi=0,score=0;
+let quiz=[],qi=0,score=0,wrongs=[],enterReady=false;
 
 // ========== GENERATORS ==========
 
@@ -493,7 +494,7 @@ const GENERATORS={
 // ========== ENGINE ==========
 function startQuiz(type){
   const g=GENERATORS[type];
-  quiz=g.gen();qi=0;score=0;
+  quiz=g.gen();qi=0;score=0;wrongs=[];enterReady=false;
   document.getElementById("menuScreen").style.display="none";
   document.getElementById("quizArea").classList.add("active");
   document.getElementById("quizTitle").textContent=g.title;
@@ -509,22 +510,59 @@ function showQ(){
   if(q.sentence)h+=`<div class="qsentence">${q.sentence}</div>`;
   if(q.hint)h+=`<div class="qhint">${q.hint}</div>`;
   if(q.isTranslation)h+=`<div style="font-size:.82rem;color:#bbb;margin-bottom:6px">日本語で書いてください：</div>`;
-  h+=`<div class="irow"><input type="text" id="ai" placeholder="ここに入力..." autocomplete="off" autocapitalize="off" spellcheck="false"><button onclick="submit()">確認</button></div>`;
+  h+=`<div class="irow"><input type="text" id="ai" placeholder="ここに入力..." autocomplete="off" autocapitalize="off" spellcheck="false"><button onclick="handleBtn()">確認</button></div>`;
+  h+=`<div class="confirm-hint" id="ch" style="display:none;margin-top:6px;padding:6px 12px;background:#fff8ee;border:1.5px dashed #f39c12;border-radius:8px;font-size:.88rem;color:#e67e22;text-align:center">Enter をもう一度押して送出 (Press Enter again to submit)</div>`;
   h+=`<div class="fb" id="fb"></div><button class="nxt" id="nb" onclick="next()">${qi===t-1?"結果を見る":"次へ →"}</button></div>`;
   c.innerHTML=h;
+  enterReady=false;
   const inp=document.getElementById("ai");
-  inp.addEventListener("keydown",e=>{if(e.key==="Enter"){const fb=document.getElementById("fb");fb.classList.contains("ok")||fb.classList.contains("ng")?next():submit()}});
+  inp.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      const fb=document.getElementById("fb");
+      if(fb.classList.contains("ok")||fb.classList.contains("ng")){next();return}
+      if(!inp.value.trim())return;
+      if(!enterReady){
+        enterReady=true;
+        document.getElementById("ch").style.display="block";
+        inp.style.borderColor="#f39c12";
+      } else {
+        submit();
+      }
+    } else {
+      // typing new content resets the confirm state
+      enterReady=false;
+      const ch=document.getElementById("ch");
+      if(ch)ch.style.display="none";
+      inp.style.borderColor="#eee";
+    }
+  });
+  inp.addEventListener("input",()=>{enterReady=false;const ch=document.getElementById("ch");if(ch)ch.style.display="none";inp.style.borderColor="#eee"});
   setTimeout(()=>inp.focus(),80);
+}
+
+function handleBtn(){
+  const inp=document.getElementById("ai");
+  if(!inp.value.trim())return;
+  if(!enterReady){
+    enterReady=true;
+    document.getElementById("ch").style.display="block";
+    inp.style.borderColor="#f39c12";
+  } else {
+    submit();
+  }
 }
 
 function submit(){
   const inp=document.getElementById("ai"),fb=document.getElementById("fb"),nb=document.getElementById("nb"),q=quiz[qi];
   if(!inp.value.trim())return;
   inp.disabled=true;
+  document.getElementById("ch").style.display="none";
   if(matchAny(inp.value,q.answers)){
     score++;fb.className="fb ok";fb.innerHTML=`&#10004; <b>正解！</b> → ${q.explain}`;
   } else {
     fb.className="fb ng";fb.innerHTML=`&#10008; <b>不正解</b><br>正しい答え: <b>${q.explain}</b>`;
+    wrongs.push({num:qi+1,qtext:q.qtext||"",hint:q.hint||"",yourAns:inp.value.trim(),correct:q.explain});
   }
   nb.style.display="block";
 }
@@ -547,7 +585,37 @@ function showScore(){
   document.getElementById("sMsg").textContent=msg;
   const bar=document.getElementById("sFill");bar.style.background=col;
   setTimeout(()=>bar.style.width=pct+"%",100);
+
+  // Show wrong answers
+  const wr=document.getElementById("wrongList");
+  if(wrongs.length>0){
+    let h=`<div style="text-align:left;margin-top:18px"><h3 style="color:#e74c3c;font-size:.95rem;margin-bottom:10px">間違えた問題 (${wrongs.length})</h3>`;
+    wrongs.forEach((w,i)=>{
+      h+=`<div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:10px;padding:12px;margin-bottom:8px">`;
+      h+=`<div style="font-size:.82rem;color:#999;margin-bottom:4px">Q${w.num}</div>`;
+      if(w.qtext)h+=`<div style="font-size:.9rem;margin-bottom:4px">${w.qtext}</div>`;
+      if(w.hint)h+=`<div style="font-size:.82rem;color:#888;margin-bottom:6px;font-style:italic">${w.hint}</div>`;
+      h+=`<div style="font-size:.88rem"><span style="color:#e74c3c">你的答案:</span> ${w.yourAns}</div>`;
+      h+=`<div style="font-size:.88rem"><span style="color:#27ae60">正解:</span> <b>${w.correct}</b></div>`;
+      h+=`</div>`;
+    });
+    h+=`<button onclick="retryWrongs()" style="margin-top:8px;width:100%;background:#e74c3c;color:#fff;border:none;border-radius:10px;padding:10px;font-size:.9rem;font-weight:700;cursor:pointer">間違えた問題をもう一度 (Retry wrong ones)</button>`;
+    h+=`</div>`;
+    wr.innerHTML=h;
+  } else {
+    wr.innerHTML="";
+  }
+
   document.getElementById("scoreCard").classList.add("show");
+}
+
+function retryWrongs(){
+  // rebuild quiz from wrong questions
+  const oldWrongs=wrongs.map(w=>quiz[w.num-1]);
+  quiz=shuffle(oldWrongs);qi=0;score=0;wrongs=[];enterReady=false;
+  document.getElementById("scoreCard").classList.remove("show");
+  document.getElementById("wrongList").innerHTML="";
+  showQ();
 }
 
 function backToMenu(){
@@ -555,6 +623,7 @@ function backToMenu(){
   document.getElementById("menuScreen").style.display="block";
   document.getElementById("qc").innerHTML="";
   document.getElementById("scoreCard").classList.remove("show");
+  document.getElementById("wrongList").innerHTML="";
 }
 
 function toggleGrammar(){document.getElementById("grammarBox").classList.toggle("show")}
