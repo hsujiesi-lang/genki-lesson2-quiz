@@ -312,7 +312,7 @@ function genPlace(n=6){
     } else {
       // どこ question
       qs.push({
-        qtext:`${place}はどこにあるか聞きたい。`,
+        qtext:`Ask where the ${PLACES[place]} is.`,
         sentence:`${place}は <span class="blank">?</span>ですか。`,
         hint:`Ask where the ${PLACES[place]} is.`,
         answers:["どこ"],explain:"asking where → どこ"
