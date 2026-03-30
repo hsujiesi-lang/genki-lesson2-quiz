@@ -141,8 +141,17 @@
         <span class="t2">30 questions — all vocab & grammar mixed!</span>
       </div>
 
+      <div class="menu-btn full" onclick="startWrongBank()" style="background:#fff0f0;border-color:#e74c3c">
+        <div class="icon">🔁</div>
+        <span class="t1">常錯題庫 (Weak Point Review)</span>
+        <span class="t2" id="wrongBadge" style="color:#e74c3c">(0題)</span>
+      </div>
+
       <div class="menu-btn full" onclick="toggleGrammar()" style="background:#fdf6ec;border-color:#e67e22">
         <span class="t1">📖 文法のまとめ (Grammar Reference)</span>
+      </div>
+      <div style="grid-column:1/-1;text-align:right;margin-top:-4px">
+        <button onclick="if(confirm('確定要清除所有常錯題記錄嗎？'))wbClearAll()" style="background:none;border:none;font-size:.75rem;color:#ccc;cursor:pointer;text-decoration:underline">清除常錯題記錄</button>
       </div>
     </div>
 
@@ -234,6 +243,33 @@ function clean(s){return s.replace(/[\s\u3000]/g,"").toLowerCase()}
 function matchAny(input,answers){const c=clean(input);return answers.some(a=>c===clean(a))}
 
 let quiz=[],qi=0,score=0,wrongs=[],enterReady=false,answeredAt=0;
+
+// ===== WRONG BANK (localStorage) =====
+const WB_KEY="genki2_wrong_bank";
+function wbLoad(){try{return JSON.parse(localStorage.getItem(WB_KEY))||{}}catch(e){return{}}}
+function wbSave(bank){localStorage.setItem(WB_KEY,JSON.stringify(bank))}
+function wbRecord(q,userAns){
+  const bank=wbLoad();
+  // use explain as unique key for the question
+  const key=q.explain||q.answers[0];
+  if(!bank[key]){
+    bank[key]={count:0,q:{qtext:q.qtext||"",hint:q.hint||"",sentence:q.sentence||"",answers:q.answers,explain:q.explain,isTranslation:q.isTranslation||false},history:[]};
+  }
+  bank[key].count++;
+  bank[key].lastWrong=Date.now();
+  bank[key].history.push({date:new Date().toLocaleDateString(),yourAns:userAns});
+  if(bank[key].history.length>5)bank[key].history=bank[key].history.slice(-5);
+  wbSave(bank);
+  updateWrongBadge();
+}
+function wbClearOne(key){const bank=wbLoad();delete bank[key];wbSave(bank);updateWrongBadge();}
+function wbClearAll(){localStorage.removeItem(WB_KEY);updateWrongBadge();}
+function updateWrongBadge(){
+  const bank=wbLoad();
+  const count=Object.keys(bank).length;
+  const badge=document.getElementById("wrongBadge");
+  if(badge){badge.textContent=count>0?`(${count}題)`:"(0題)";badge.style.color=count>0?"#e74c3c":"#999";}
+}
 
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&answeredAt>0&&(Date.now()-answeredAt>200)){
@@ -499,6 +535,38 @@ const GENERATORS={
   exam:{title:"模擬考試",gen:genExam},
 };
 
+// ========== WRONG BANK QUIZ ==========
+function startWrongBank(){
+  const bank=wbLoad();
+  const keys=Object.keys(bank);
+  if(keys.length===0){
+    alert("常錯題庫裡還沒有題目！\n先去做其他練習，答錯的題目會自動記錄到這裡。");
+    return;
+  }
+  // sort by count descending, then by most recent
+  keys.sort((a,b)=>{
+    if(bank[b].count!==bank[a].count)return bank[b].count-bank[a].count;
+    return (bank[b].lastWrong||0)-(bank[a].lastWrong||0);
+  });
+  // take up to 20 questions
+  const selected=keys.slice(0,20);
+  quiz=shuffle(selected.map(key=>{
+    const entry=bank[key];
+    const q={...entry.q};
+    // add wrong count info to hint
+    q._wbKey=key;
+    q._wrongCount=entry.count;
+    q._history=entry.history||[];
+    return q;
+  }));
+  qi=0;score=0;wrongs=[];enterReady=false;answeredAt=0;
+  document.getElementById("menuScreen").style.display="none";
+  document.getElementById("quizArea").classList.add("active");
+  document.getElementById("quizTitle").textContent="常錯題庫";
+  document.getElementById("scoreCard").classList.remove("show");
+  showQ();
+}
+
 // ========== ENGINE ==========
 function startQuiz(type){
   const g=GENERATORS[type];
@@ -514,6 +582,7 @@ function showQ(){
   const c=document.getElementById("qc"),q=quiz[qi],t=quiz.length;
   document.getElementById("pf").style.width=(qi/t*100)+"%";
   let h=`<div class="card"><span class="qnum">Q${qi+1} / ${t}</span>`;
+  if(q._wrongCount)h+=`<span style="float:right;background:#fde8e8;color:#e74c3c;font-size:.75rem;padding:2px 8px;border-radius:10px;font-weight:700">錯${q._wrongCount}回</span>`;
   if(q.qtext)h+=`<div class="qtext">${q.qtext}</div>`;
   if(q.sentence)h+=`<div class="qsentence">${q.sentence}</div>`;
   if(q.hint)h+=`<div class="qhint">${q.hint}</div>`;
@@ -567,9 +636,19 @@ function submit(){
   document.getElementById("ch").style.display="none";
   if(matchAny(inp.value,q.answers)){
     score++;fb.className="fb ok";fb.innerHTML=`&#10004; <b>正解！</b> → ${q.explain}`;
+    // If from wrong bank and answered correctly, reduce count
+    if(q._wbKey){
+      const bank=wbLoad();
+      if(bank[q._wbKey]){
+        bank[q._wbKey].count--;
+        if(bank[q._wbKey].count<=0)delete bank[q._wbKey];
+        wbSave(bank);
+      }
+    }
   } else {
     fb.className="fb ng";fb.innerHTML=`&#10008; <b>不正解</b><br>正しい答え: <b>${q.explain}</b>`;
     wrongs.push({num:qi+1,qtext:q.qtext||"",hint:q.hint||"",yourAns:inp.value.trim(),correct:q.explain});
+    wbRecord(q,inp.value.trim());
   }
   nb.style.display="block";
   answeredAt=Date.now();
@@ -632,9 +711,13 @@ function backToMenu(){
   document.getElementById("qc").innerHTML="";
   document.getElementById("scoreCard").classList.remove("show");
   document.getElementById("wrongList").innerHTML="";
+  updateWrongBadge();
 }
 
 function toggleGrammar(){document.getElementById("grammarBox").classList.toggle("show")}
+
+// Init badge on load
+updateWrongBadge();
 </script>
 </body>
 </html>
