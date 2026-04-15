@@ -608,6 +608,142 @@ function genL3Frequency(n=6){
   return shuffle(qs);
 }
 
+// Frequency + verb+object full-sentence composition
+const L3_FREQ_VERBS=[
+  {obj:"コーヒー",part:"を",verb:"のみます",verbNeg:"のみません",enObj:"coffee",enVerb:"drink",enVerb3:"drinks"},
+  {obj:"おちゃ",part:"を",verb:"のみます",verbNeg:"のみません",enObj:"tea",enVerb:"drink",enVerb3:"drinks"},
+  {obj:"みず",part:"を",verb:"のみます",verbNeg:"のみません",enObj:"water",enVerb:"drink",enVerb3:"drinks"},
+  {obj:"あさごはん",part:"を",verb:"たべます",verbNeg:"たべません",enObj:"breakfast",enVerb:"eat",enVerb3:"eats"},
+  {obj:"ひるごはん",part:"を",verb:"たべます",verbNeg:"たべません",enObj:"lunch",enVerb:"eat",enVerb3:"eats"},
+  {obj:"ばんごはん",part:"を",verb:"たべます",verbNeg:"たべません",enObj:"dinner",enVerb:"eat",enVerb3:"eats"},
+  {obj:"にく",part:"を",verb:"たべます",verbNeg:"たべません",enObj:"meat",enVerb:"eat",enVerb3:"eats"},
+  {obj:"やさい",part:"を",verb:"たべます",verbNeg:"たべません",enObj:"vegetables",enVerb:"eat",enVerb3:"eats"},
+  {obj:"さかな",part:"を",verb:"たべます",verbNeg:"たべません",enObj:"fish",enVerb:"eat",enVerb3:"eats"},
+  {obj:"テレビ",part:"を",verb:"みます",verbNeg:"みません",enObj:"TV",enVerb:"watch",enVerb3:"watches"},
+  {obj:"えいが",part:"を",verb:"みます",verbNeg:"みません",enObj:"movies",enVerb:"watch",enVerb3:"watches"},
+  {obj:"ざっし",part:"を",verb:"よみます",verbNeg:"よみません",enObj:"magazines",enVerb:"read",enVerb3:"reads"},
+  {obj:"ほん",part:"を",verb:"よみます",verbNeg:"よみません",enObj:"books",enVerb:"read",enVerb3:"reads"},
+  {obj:"しんぶん",part:"を",verb:"よみます",verbNeg:"よみません",enObj:"the newspaper",enVerb:"read",enVerb3:"reads"},
+  {obj:"おんがく",part:"を",verb:"ききます",verbNeg:"ききません",enObj:"music",enVerb:"listen to",enVerb3:"listens to"},
+  {obj:"にほんご",part:"を",verb:"はなします",verbNeg:"はなしません",enObj:"Japanese",enVerb:"speak",enVerb3:"speaks"},
+  {obj:"えいご",part:"を",verb:"はなします",verbNeg:"はなしません",enObj:"English",enVerb:"speak",enVerb3:"speaks"},
+  // Movement / intransitive
+  {obj:"がっこう",part:"に",verb:"いきます",verbNeg:"いきません",enObj:"school",enVerb:"go to",enVerb3:"goes to",isMove:true},
+  {obj:"カフェ",part:"に",verb:"いきます",verbNeg:"いきません",enObj:"a cafe",enVerb:"go to",enVerb3:"goes to",isMove:true},
+  {obj:"としょかん",part:"に",verb:"いきます",verbNeg:"いきません",enObj:"the library",enVerb:"go to",enVerb3:"goes to",isMove:true},
+  {obj:"うち",part:"に",verb:"かえります",verbNeg:"かえりません",enObj:"home",enVerb:"return",enVerb3:"returns",isMove:true,homeVerb:true},
+  // する (study - no object)
+  {obj:null,part:null,verb:"べんきょうします",verbNeg:"べんきょうしません",enObj:null,enVerb:"study",enVerb3:"studies",isStudy:true},
+];
+
+const L3_FREQ_ADVERBS=[
+  {jp:"まいにち",en:"every day",neg:false,position:"tail"},
+  {jp:"まいばん",en:"every night",neg:false,position:"tail"},
+  {jp:"よく",en:"often",neg:false,position:"pre"},
+  {jp:"ときどき",en:"sometimes",neg:false,position:"pre"},
+  {jp:"たいてい",en:"usually",neg:false,position:"pre"},
+  {jp:"あまり",en:"much",neg:true,position:"negtail"},
+  {jp:"ぜんぜん",en:"at all",neg:true,position:"negtail"},
+];
+
+const L3_FREQ_SUBJECTS=[
+  {jp:"わたしは",en:"I",third:false,dropOk:true},
+  {jp:"わたしは",en:"I",third:false,dropOk:true},
+  {jp:"わたしは",en:"I",third:false,dropOk:true},
+  {jp:"メアリーさんは",en:"Mary",third:true,dropOk:false},
+  {jp:"たけしさんは",en:"Takeshi",third:true,dropOk:false},
+  {jp:"ソラさんは",en:"Sora",third:true,dropOk:false},
+];
+
+function genL3FreqSentences(n=12){
+  const qs=[];
+  const usedKeys=new Set();
+  let tries=0;
+  while(qs.length<n&&tries<n*6){
+    tries++;
+    const v=pick(L3_FREQ_VERBS), adv=pick(L3_FREQ_ADVERBS), sub=pick(L3_FREQ_SUBJECTS);
+    // Avoid awkward combos: まいにち/まいばん + 帰る with dinner etc is OK. Skip if duplicate
+    const key=`${sub.en}|${adv.jp}|${v.obj||"study"}|${v.verb}`;
+    if(usedKeys.has(key))continue;
+    usedKeys.add(key);
+
+    // Build English
+    let en="";
+    const enVerb=sub.third?v.enVerb3:v.enVerb;
+    const enDoes=sub.third?"doesn't":"don't";
+
+    if(adv.neg){
+      // negative sentence
+      if(v.isStudy){
+        en=`${sub.en} ${enDoes} ${v.enVerb} ${adv.en==="much"?"much":"at all"}.`;
+      }else if(v.homeVerb){
+        en=`${sub.en} ${enDoes} ${v.enVerb} home ${adv.en==="much"?"much":"at all"}.`;
+      }else if(v.isMove){
+        en=`${sub.en} ${enDoes} ${v.enVerb} ${v.enObj} ${adv.en==="much"?"much":"at all"}.`;
+      }else{
+        en=`${sub.en} ${enDoes} ${v.enVerb} ${v.enObj} ${adv.en==="much"?"much":"at all"}.`;
+      }
+    }else{
+      // positive
+      if(adv.position==="tail"){
+        // "every day" / "every night" — at tail
+        if(v.isStudy){
+          en=`${sub.en} ${enVerb} ${adv.en}.`;
+        }else if(v.homeVerb){
+          en=`${sub.en} ${enVerb} home ${adv.en}.`;
+        }else if(v.isMove){
+          en=`${sub.en} ${enVerb} ${v.enObj} ${adv.en}.`;
+        }else{
+          en=`${sub.en} ${enVerb} ${v.enObj} ${adv.en}.`;
+        }
+      }else{
+        // "often / sometimes / usually" — before verb
+        if(v.isStudy){
+          en=`${sub.en} ${adv.en} ${enVerb}.`;
+        }else if(v.homeVerb){
+          en=`${sub.en} ${adv.en} ${enVerb} home.`;
+        }else if(v.isMove){
+          en=`${sub.en} ${adv.en} ${enVerb} ${v.enObj}.`;
+        }else{
+          en=`${sub.en} ${adv.en} ${enVerb} ${v.enObj}.`;
+        }
+      }
+    }
+
+    // Build Japanese (with subject)
+    const verbForm=adv.neg?v.verbNeg:v.verb;
+    let jaWithSub, jaNoSub;
+    if(v.isStudy){
+      jaWithSub=`${sub.jp}${adv.jp}${verbForm}。`;
+      jaNoSub=`${adv.jp}${verbForm}。`;
+    }else{
+      jaWithSub=`${sub.jp}${adv.jp}${v.obj}${v.part}${verbForm}。`;
+      jaNoSub=`${adv.jp}${v.obj}${v.part}${verbForm}。`;
+    }
+
+    const answers=[jaWithSub];
+    // Accept dropped-subject version only if subject is "I"
+    if(sub.dropOk)answers.push(jaNoSub);
+
+    // Display version (with spaces) for the explanation
+    let jaDisplay;
+    if(v.isStudy){
+      jaDisplay=`${sub.jp} ${adv.jp} ${verbForm}。`;
+    }else{
+      jaDisplay=`${sub.jp} ${adv.jp} ${v.obj}${v.part} ${verbForm}。`;
+    }
+
+    qs.push({
+      qtext:en,
+      hint:sub.dropOk?"日本語で完整な文を書いてください（「わたしは」は省略可）":"日本語で完整な文を書いてください",
+      answers:answers,
+      explain:jaDisplay,
+      isTranslation:true
+    });
+  }
+  return qs;
+}
+
 function genL3Translate(n=8){
   return shuffle([
     {en:"I eat breakfast every day.",ja:"まいにち あさごはんを たべます。"},
@@ -633,7 +769,7 @@ function genL3Exam(){
     ...genL3VocabEn2Jp(6),...genL3VocabJp2En(4),
     ...genL3VerbConj(6),...genL3Particles(4),
     ...genL3Time(3),...genL3Masenka(2),
-    ...genL3Frequency(2),...genL3Translate(3),
+    ...genL3Frequency(2),...genL3FreqSentences(3),...genL3Translate(3),
   ]).slice(0,30);
 }
 
@@ -645,6 +781,7 @@ const L3_GENERATORS={
   g_time:{title:"時間 + に",gen:()=>genL3Time(10)},
   g_masenka:{title:"～ませんか",gen:()=>genL3Masenka(8)},
   g_freq:{title:"頻度の副詞",gen:()=>genL3Frequency(8)},
+  g_freqsent:{title:"頻度の副詞 — 完整句",gen:()=>genL3FreqSentences(12)},
   translate:{title:"翻訳チャレンジ",gen:()=>genL3Translate(10)},
   exam:{title:"模擬考試",gen:genL3Exam},
 };
@@ -709,6 +846,7 @@ function buildL3Menu(){
       <div class="menu-btn" onclick="startQuiz(3,'g_time')"><div class="icon">🕐</div><span class="t1">時間 + に</span><span class="t2">Time expressions</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'g_masenka')"><div class="icon">🤝</div><span class="t1">～ませんか</span><span class="t2">Invitations</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'g_freq')"><div class="icon">📊</div><span class="t1">頻度の副詞</span><span class="t2">よく / ときどき / たいてい / ぜんぜん</span></div>
+      <div class="menu-btn full" onclick="startQuiz(3,'g_freqsent')" style="border-color:#9b59b6;background:#faf5ff"><div class="icon">✍️</div><span class="t1">頻度の副詞 — 完整句練習</span><span class="t2">英→日：頻度副詞 × 動詞 × 名詞 (combine & type!)</span></div>
 
       <div class="section-label">総合 COMPREHENSIVE</div>
       <div class="menu-btn" onclick="startQuiz(3,'translate')"><div class="icon">📝</div><span class="t1">翻訳チャレンジ</span><span class="t2">Translate full sentences</span></div>
