@@ -608,6 +608,127 @@ function genL3Frequency(n=6){
   return shuffle(qs);
 }
 
+// ===== Inviting / Date planning (～ませんか + time + いっしょに + responses) =====
+const L3_INVITE_TIMES=[
+  {jp:"あした",     en:"tomorrow",    prep:""},
+  {jp:"こんばん",   en:"tonight",     prep:""},
+  {jp:"しゅうまつに",en:"weekend",    prep:"this "},
+  {jp:"げつようびに",en:"Monday",     prep:"on "},
+  {jp:"かようびに", en:"Tuesday",     prep:"on "},
+  {jp:"すいようびに",en:"Wednesday",  prep:"on "},
+  {jp:"もくようびに",en:"Thursday",   prep:"on "},
+  {jp:"きんようびに",en:"Friday",     prep:"on "},
+  {jp:"どようびに", en:"Saturday",    prep:"on "},
+  {jp:"にちようびに",en:"Sunday",     prep:"on "},
+];
+
+const L3_INVITE_ACTIVITIES=[
+  // ~を pattern
+  {obj:"コーヒー",  part:"を",masenka:"のみませんか",   en:"drink coffee",       type:"wo"},
+  {obj:"おちゃ",    part:"を",masenka:"のみませんか",   en:"drink tea",          type:"wo"},
+  {obj:"ひるごはん",part:"を",masenka:"たべませんか",   en:"eat lunch",          type:"wo"},
+  {obj:"ばんごはん",part:"を",masenka:"たべませんか",   en:"eat dinner",         type:"wo"},
+  {obj:"あさごはん",part:"を",masenka:"たべませんか",   en:"eat breakfast",      type:"wo"},
+  {obj:"えいが",    part:"を",masenka:"みませんか",     en:"watch a movie",      type:"wo"},
+  {obj:"テレビ",    part:"を",masenka:"みませんか",     en:"watch TV",           type:"wo"},
+  {obj:"おんがく",  part:"を",masenka:"ききませんか",   en:"listen to music",    type:"wo"},
+  {obj:"ざっし",    part:"を",masenka:"よみませんか",   en:"read a magazine",    type:"wo"},
+  // ~に (destination)
+  {obj:"カフェ",    part:"に",masenka:"いきませんか",   en:"go to a cafe",       type:"ni"},
+  {obj:"がっこう",  part:"に",masenka:"いきませんか",   en:"go to school",       type:"ni"},
+  {obj:"としょかん",part:"に",masenka:"いきませんか",   en:"go to the library",  type:"ni"},
+  // no object
+  {obj:null,        part:null,masenka:"べんきょうしませんか",en:"study",         type:"study"},
+];
+
+function genL3Invite(n=12){
+  const qs=[];
+  const usedKeys=new Set();
+  let tries=0;
+  // Type 1: invitation with time + activity (aim for 8)
+  while(qs.length<8 && tries<60){
+    tries++;
+    const t=pick(L3_INVITE_TIMES), a=pick(L3_INVITE_ACTIVITIES);
+    const useIssho=Math.random()<.5;
+    const key=`${t.jp}|${a.masenka}|${useIssho}`;
+    if(usedKeys.has(key))continue;
+    usedKeys.add(key);
+
+    // English
+    const timeEn=t.prep+t.en;
+    let enParts=["Shall we",a.en];
+    if(useIssho)enParts.push("together");
+    enParts.push(timeEn+"?");
+    const en=enParts.join(" ");
+
+    // Japanese
+    const ishoJp=useIssho?"いっしょに ":"";
+    let ja;
+    if(a.type==="study"){
+      ja=`${t.jp} ${ishoJp}${a.masenka}。`;
+    }else{
+      ja=`${t.jp} ${ishoJp}${a.obj}${a.part} ${a.masenka}。`;
+    }
+
+    // Structure hint
+    let structure;
+    const isshoSlot=`<b>[いっしょに]</b>`;
+    if(a.type==="study"){
+      structure=`<b>[時間]</b> + ${isshoSlot} + <b>べんきょうしませんか</b>。`;
+    }else if(a.type==="ni"){
+      structure=`<b>[時間]</b> + ${isshoSlot} + <b>[場所]に</b> + <b>[動詞ませんか]</b>。`;
+    }else{
+      structure=`<b>[時間]</b> + ${isshoSlot} + <b>[名詞]を</b> + <b>[動詞ませんか]</b>。`;
+    }
+
+    qs.push({
+      qtext:en,
+      hint:"～ませんか を使って誘いの文を書いてください",
+      answers:[ja.replace(/\s+/g,"")],
+      explain:ja,
+      structure:structure,
+      isTranslation:true
+    });
+  }
+
+  // Type 2: Responses & plan-asking
+  const extras=[
+    {en:"Respond: 'That sounds good!' (accepting an invitation)",
+     hint:"自然な短い返事",
+     ans:["いいですね。","いいですねえ。"],
+     explain:"いいですね。",
+     structure:`<b>いいですね。</b>（Sounds good — accepting）`},
+    {en:"Politely decline an invitation (Japanese-style, trail off).",
+     hint:"すみません、...",
+     ans:["すみません、ちょっと。","すみませんちょっと。","すみません、ちょっと・・・","すみません、ちょっと..."],
+     explain:"すみません、ちょっと・・・",
+     structure:`<b>すみません、ちょっと…</b>（Polite decline — don't finish the sentence）`},
+    {en:"Ask Mary: What will you do this weekend?",
+     hint:"しゅうまつ + 何 + を + します + か",
+     ans:["しゅうまつになにをしますか。","しゅうまつになんをしますか。"],
+     explain:"しゅうまつに なにを しますか。",
+     structure:`<b>[時間]に</b> + <b>なにを</b> + <b>しますか</b>。`},
+    {en:"Ask: What will you do tomorrow?",
+     hint:"あした + 何 + を + します + か",
+     ans:["あしたなにをしますか。"],
+     explain:"あした なにを しますか。",
+     structure:`<b>[時間]</b> + <b>なにを</b> + <b>しますか</b>。`},
+    {en:"Ask Takeshi: 'What time shall we meet tomorrow?' (use いきます, literally: at what time tomorrow shall we go?)",
+     hint:"あした + なんじに + いきませんか",
+     ans:["あしたなんじにいきませんか。"],
+     explain:"あした なんじに いきませんか。",
+     structure:`<b>[時間]</b> + <b>なんじに</b> + <b>いきませんか</b>。`},
+    {en:"Invite: 'Shall we go see a movie together on Saturday?'",
+     hint:"どようび + に + いっしょに + えいが + を + みませんか",
+     ans:["どようびにいっしょにえいがをみませんか。"],
+     explain:"どようびに いっしょに えいがを みませんか。",
+     structure:`<b>[曜日]に</b> + <b>いっしょに</b> + <b>[名詞]を</b> + <b>[動詞ませんか]</b>。`},
+  ];
+  extras.forEach(e=>qs.push({qtext:e.en,hint:e.hint,answers:e.ans,explain:e.explain,structure:e.structure,isTranslation:true}));
+
+  return shuffle(qs).slice(0,n);
+}
+
 // Frequency + verb+object full-sentence composition
 const L3_FREQ_VERBS=[
   {obj:"コーヒー",part:"を",verb:"のみます",verbNeg:"のみません",enObj:"coffee",enVerb:"drink",enVerb3:"drinks"},
@@ -780,7 +901,7 @@ function genL3Exam(){
   return shuffle([
     ...genL3VocabEn2Jp(6),...genL3VocabJp2En(4),
     ...genL3VerbConj(6),...genL3Particles(4),
-    ...genL3Time(3),...genL3Masenka(2),
+    ...genL3Time(3),...genL3Masenka(2),...genL3Invite(2),
     ...genL3Frequency(2),...genL3FreqSentences(3),...genL3Translate(3),
   ]).slice(0,30);
 }
@@ -792,6 +913,7 @@ const L3_GENERATORS={
   g_particle:{title:"助詞 を/に/で/へ",gen:()=>genL3Particles(12)},
   g_time:{title:"時間 + に",gen:()=>genL3Time(10)},
   g_masenka:{title:"～ませんか",gen:()=>genL3Masenka(8)},
+  g_invite:{title:"デートに 誘う (Inviting)",gen:()=>genL3Invite(12)},
   g_freq:{title:"頻度の副詞",gen:()=>genL3Frequency(8)},
   g_freqsent:{title:"頻度の副詞 — 完整句",gen:()=>genL3FreqSentences(12)},
   translate:{title:"翻訳チャレンジ",gen:()=>genL3Translate(10)},
@@ -857,6 +979,7 @@ function buildL3Menu(){
       <div class="menu-btn" onclick="startQuiz(3,'g_particle')"><div class="icon">🔤</div><span class="t1">助詞 を/に/で/へ</span><span class="t2">Particle fill-in</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'g_time')"><div class="icon">🕐</div><span class="t1">時間 + に</span><span class="t2">Time expressions</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'g_masenka')"><div class="icon">🤝</div><span class="t1">～ませんか</span><span class="t2">Invitations</span></div>
+      <div class="menu-btn full" onclick="startQuiz(3,'g_invite')" style="border-color:#e91e63;background:#fff5f8"><div class="icon">💌</div><span class="t1">デートに 誘う (Inviting)</span><span class="t2">Time + いっしょに + activity + responses (accept/decline/plan)</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'g_freq')"><div class="icon">📊</div><span class="t1">頻度の副詞</span><span class="t2">よく / ときどき / たいてい / ぜんぜん</span></div>
       <div class="menu-btn full" onclick="startQuiz(3,'g_freqsent')" style="border-color:#9b59b6;background:#faf5ff"><div class="icon">✍️</div><span class="t1">頻度の副詞 — 完整句練習</span><span class="t2">英→日：頻度副詞 × 動詞 × 名詞 (combine & type!)</span></div>
 
