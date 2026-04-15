@@ -733,11 +733,23 @@ function genL3FreqSentences(n=12){
       jaDisplay=`${sub.jp} ${adv.jp} ${v.obj}${v.part} ${verbForm}。`;
     }
 
+    // Build sentence structure hint (shown for first 3 questions)
+    const masuTag=adv.neg?"ません形":"ます形";
+    let structure;
+    if(v.isStudy){
+      structure=`<b>[主語]は</b> + <b>[頻度副詞]</b> + <b>べんきょう${adv.neg?"しません":"します"}</b>。`;
+    }else if(v.isMove){
+      structure=`<b>[主語]は</b> + <b>[頻度副詞]</b> + <b>[場所]に</b> + <b>[動詞 ${masuTag}]</b>。`;
+    }else{
+      structure=`<b>[主語]は</b> + <b>[頻度副詞]</b> + <b>[名詞]を</b> + <b>[動詞 ${masuTag}]</b>。`;
+    }
+
     qs.push({
       qtext:en,
       hint:sub.dropOk?"日本語で完整な文を書いてください（「わたしは」は省略可）":"日本語で完整な文を書いてください",
       answers:answers,
       explain:jaDisplay,
+      structure:structure,
       isTranslation:true
     });
   }
@@ -1003,6 +1015,7 @@ function showQ(){
   if(q.sentence)h+=`<div class="qsentence">${q.sentence}</div>`;
   if(q.hint)h+=`<div class="qhint">${q.hint}</div>`;
   if(q.isTranslation)h+=`<div style="font-size:.82rem;color:#bbb;margin-bottom:6px">日本語で書いてください：</div>`;
+  if(q.structure&&qi<3)h+=`<div style="margin-bottom:12px;padding:10px 14px;background:#f3eefc;border-left:3px solid #9b59b6;border-radius:0 8px 8px 0;font-size:.88rem;color:#6c3483;line-height:1.7"><span style="display:inline-block;background:#9b59b6;color:#fff;font-size:.7rem;padding:1px 7px;border-radius:8px;margin-right:6px;vertical-align:middle">句子結構</span>${q.structure}</div>`;
   h+=`<div class="irow"><input type="text" id="ai" placeholder="ここに入力..." autocomplete="off" autocapitalize="off" spellcheck="false"><button onclick="handleBtn()">確認</button></div>`;
   h+=`<div class="confirm-hint" id="ch" style="display:none;margin-top:6px;padding:6px 12px;background:#fff8ee;border:1.5px dashed #f39c12;border-radius:8px;font-size:.88rem;color:#e67e22;text-align:center">Enter をもう一度押して送出 (Press Enter again to submit)</div>`;
   h+=`<div class="fb" id="fb"></div><button class="nxt" id="nb" onclick="next()">${qi===t-1?"結果を見る":"次へ →"}</button></div>`;
