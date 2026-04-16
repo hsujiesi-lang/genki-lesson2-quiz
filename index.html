@@ -608,6 +608,194 @@ function genL3Frequency(n=6){
   return shuffle(qs);
 }
 
+// ===== Sentence Structure Drill (W6 pptx: 3 patterns) =====
+const L3_SS_TIMES_NI=[
+  {jp:"ろくじに",en:"at 6:00"},{jp:"しちじに",en:"at 7:00"},{jp:"はちじに",en:"at 8:00"},
+  {jp:"くじに",en:"at 9:00"},{jp:"じゅうじに",en:"at 10:00"},{jp:"じゅういちじに",en:"at 11:00"},
+  {jp:"じゅうにじに",en:"at 12:00"},{jp:"ごじに",en:"at 5:00"},
+  {jp:"げつようびに",en:"on Monday"},{jp:"かようびに",en:"on Tuesday"},{jp:"すいようびに",en:"on Wednesday"},
+  {jp:"もくようびに",en:"on Thursday"},{jp:"きんようびに",en:"on Friday"},{jp:"どようびに",en:"on Saturday"},
+  {jp:"にちようびに",en:"on Sunday"},
+  {jp:"しゅうまつに",en:"this weekend"},
+];
+const L3_SS_TIMES_NOPART=[
+  {jp:"あした",en:"tomorrow"},{jp:"きょう",en:"today"},{jp:"きのう",en:"yesterday"},
+  {jp:"まいにち",en:"every day"},{jp:"まいばん",en:"every night"},{jp:"こんばん",en:"tonight"},
+];
+function pickL3Time(){return pick([...L3_SS_TIMES_NI,...L3_SS_TIMES_NOPART])}
+
+const L3_SS_SUBJECTS=[
+  {jp:"わたしは ",en:"I",third:false,drop:true},
+  {jp:"わたしは ",en:"I",third:false,drop:true},
+  {jp:"わたしは ",en:"I",third:false,drop:true},
+  {jp:"メアリーさんは ",en:"Mary",third:true,drop:false},
+  {jp:"たけしさんは ",en:"Takeshi",third:true,drop:false},
+  {jp:"ソラさんは ",en:"Sora",third:true,drop:false},
+];
+
+// Structure 1 data
+const L3_SS1_VERBS=[
+  {jp:"たべます",neg:"たべません",en:"eat",en3:"eats"},
+  {jp:"のみます",neg:"のみません",en:"drink",en3:"drinks"},
+  {jp:"みます",neg:"みません",en:"watch",en3:"watches"},
+  {jp:"ききます",neg:"ききません",en:"listen to",en3:"listens to"},
+  {jp:"よみます",neg:"よみません",en:"read",en3:"reads"},
+  {jp:"はなします",neg:"はなしません",en:"speak",en3:"speaks"},
+];
+const L3_SS1_PLACES=[
+  {jp:"カフェで",en:"at a cafe"},
+  {jp:"うちで",en:"at home"},
+  {jp:"がっこうで",en:"at school"},
+  {jp:"としょかんで",en:"at the library"},
+];
+const L3_SS1_OBJ={
+  "たべます":[{jp:"あさごはん",en:"breakfast"},{jp:"ひるごはん",en:"lunch"},{jp:"ばんごはん",en:"dinner"},{jp:"さかな",en:"fish"},{jp:"にく",en:"meat"},{jp:"やさい",en:"vegetables"}],
+  "のみます":[{jp:"コーヒー",en:"coffee"},{jp:"おちゃ",en:"tea"},{jp:"みず",en:"water"}],
+  "みます":[{jp:"テレビ",en:"TV"},{jp:"えいが",en:"a movie"}],
+  "ききます":[{jp:"おんがく",en:"music"}],
+  "よみます":[{jp:"ほん",en:"a book"},{jp:"ざっし",en:"a magazine"},{jp:"しんぶん",en:"the newspaper"}],
+  "はなします":[{jp:"にほんご",en:"Japanese"},{jp:"えいご",en:"English"}],
+};
+
+// Structure 2 data
+const L3_SS2_VERBS=[
+  {jp:"いきます",neg:"いきません",en:"go",en3:"goes",prep:"to"},
+  {jp:"きます",neg:"きません",en:"come",en3:"comes",prep:"to"},
+  {jp:"かえります",neg:"かえりません",en:"return",en3:"returns",prep:"to"},
+];
+const L3_SS2_DEST_ANY=[
+  {jp:"がっこうに",en:"school"},
+  {jp:"カフェに",en:"a cafe"},
+  {jp:"としょかんに",en:"the library"},
+  {jp:"だいがくに",en:"the university"},
+];
+const L3_SS2_DEST_HOME=[{jp:"うちに",en:"home",isHome:true}];
+
+// Structure 3 data
+const L3_SS3_VERBS=[
+  {jp:"ねます",neg:"ねません",en:"go to sleep",en3:"goes to sleep"},
+  {jp:"おきます",neg:"おきません",en:"get up",en3:"gets up"},
+];
+
+function _enVerbForm(v,sub,useNeg){
+  if(sub.third)return useNeg?`doesn't ${v.en}`:v.en3;
+  return useNeg?`don't ${v.en}`:v.en;
+}
+function _cleanJa(s){return s.replace(/\s+/g,"")}
+
+function _structTag(num,color,template){
+  return `<div style="margin:2px 0;line-height:1.6"><span style="background:${color};color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-right:6px;font-weight:700">Structure ${num}</span>${template}</div>`;
+}
+
+function makeSS1Q(){
+  const sub=pick(L3_SS_SUBJECTS);
+  const v=pick(L3_SS1_VERBS);
+  const obj=pick(L3_SS1_OBJ[v.jp]);
+  const useTime=Math.random()<.85;
+  const usePlace=Math.random()<.6;
+  const useNeg=Math.random()<.2;
+  const time=useTime?pickL3Time():null;
+  const place=usePlace?pick(L3_SS1_PLACES):null;
+  const verbForm=useNeg?v.neg:v.jp;
+  const verbEn=_enVerbForm(v,sub,useNeg);
+
+  // English
+  let enParts=[sub.en,verbEn,obj.en];
+  if(place)enParts.push(place.en);
+  if(time)enParts.push(time.en);
+  const en=enParts.join(" ")+".";
+
+  // Japanese
+  let ja="";
+  if(time)ja+=time.jp+" ";
+  if(place)ja+=place.jp+" ";
+  ja+=obj.jp+"を "+verbForm+"。";
+  const jaSub=sub.jp+ja;
+  const answers=[_cleanJa(jaSub)];
+  if(sub.drop)answers.push(_cleanJa(ja));
+
+  const form=useNeg?"ません":"ます";
+  const structure=_structTag(1,"#3498db",`<b>[時間]</b> + <b>[場所]で</b> + <b>[名詞]を</b> + <b>[動詞 ${form}]</b>`);
+
+  return {qtext:en,hint:sub.drop?"日本語で完整な文を書いてください（「わたしは」は省略可）":"日本語で完整な文を書いてください",
+          answers,explain:jaSub,structure,alwaysShowStructure:true,isTranslation:true};
+}
+
+function makeSS2Q(){
+  const sub=pick(L3_SS_SUBJECTS);
+  const v=pick(L3_SS2_VERBS);
+  // かえります→home; いきます/きます→any non-home destination
+  const dest=(v.jp==="かえります")?pick(L3_SS2_DEST_HOME):pick(L3_SS2_DEST_ANY);
+  const useTime=Math.random()<.85;
+  const useNeg=Math.random()<.15;
+  const time=useTime?pickL3Time():null;
+  const verbForm=useNeg?v.neg:v.jp;
+  const verbEn=_enVerbForm(v,sub,useNeg);
+
+  // English: "I go to school" / "I return home" (no "to" with "home")
+  let enParts=[sub.en,verbEn];
+  if(dest.isHome)enParts.push("home");
+  else enParts.push(v.prep+" "+dest.en);
+  if(time)enParts.push(time.en);
+  const en=enParts.join(" ")+".";
+
+  // Japanese
+  let ja="";
+  if(time)ja+=time.jp+" ";
+  ja+=dest.jp+" "+verbForm+"。";
+  const jaSub=sub.jp+ja;
+  const answers=[_cleanJa(jaSub)];
+  if(sub.drop)answers.push(_cleanJa(ja));
+  // Accept へ version too
+  const jaHe=jaSub.replace(dest.jp, dest.jp.replace(/に$/,"へ"));
+  answers.push(_cleanJa(jaHe));
+  if(sub.drop)answers.push(_cleanJa(ja.replace(dest.jp, dest.jp.replace(/に$/,"へ"))));
+
+  const form=useNeg?"ません":"ます";
+  const structure=_structTag(2,"#27ae60",`<b>[時間]</b> + <b>[目的地]に / へ</b> + <b>[動詞 ${form}]</b>`);
+
+  return {qtext:en,hint:sub.drop?"日本語で完整な文を書いてください（「わたしは」は省略可・に/へ どちらもOK）":"日本語で完整な文を書いてください（に/へ どちらもOK）",
+          answers,explain:jaSub,structure,alwaysShowStructure:true,isTranslation:true};
+}
+
+function makeSS3Q(){
+  const sub=pick(L3_SS_SUBJECTS);
+  const v=pick(L3_SS3_VERBS);
+  const useTime=Math.random()<.95;
+  const useNeg=Math.random()<.1;
+  const time=useTime?pickL3Time():null;
+  const verbForm=useNeg?v.neg:v.jp;
+  const verbEn=_enVerbForm(v,sub,useNeg);
+
+  let enParts=[sub.en,verbEn];
+  if(time)enParts.push(time.en);
+  const en=enParts.join(" ")+".";
+
+  let ja="";
+  if(time)ja+=time.jp+" ";
+  ja+=verbForm+"。";
+  const jaSub=sub.jp+ja;
+  const answers=[_cleanJa(jaSub)];
+  if(sub.drop)answers.push(_cleanJa(ja));
+
+  const form=useNeg?"ません":"ます";
+  const structure=_structTag(3,"#e67e22",`<b>[時間]</b> + <b>[動詞 ${form}]</b>`);
+
+  return {qtext:en,hint:sub.drop?"日本語で完整な文を書いてください（「わたしは」は省略可）":"日本語で完整な文を書いてください",
+          answers,explain:jaSub,structure,alwaysShowStructure:true,isTranslation:true};
+}
+
+function genL3SS(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.5)qs.push(makeSS1Q());
+    else if(r<.8)qs.push(makeSS2Q());
+    else qs.push(makeSS3Q());
+  }
+  return qs;
+}
+
 // ===== Inviting / Date planning (～ませんか + time + いっしょに + responses) =====
 const L3_INVITE_TIMES=[
   {jp:"あした",     en:"tomorrow",    prep:""},
@@ -914,6 +1102,7 @@ const L3_GENERATORS={
   g_time:{title:"時間 + に",gen:()=>genL3Time(10)},
   g_masenka:{title:"～ませんか",gen:()=>genL3Masenka(8)},
   g_invite:{title:"デートに 誘う (Inviting)",gen:()=>genL3Invite(12)},
+  g_ss:{title:"文の構造 (Sentence Structure Drill)",gen:()=>genL3SS(15)},
   g_freq:{title:"頻度の副詞",gen:()=>genL3Frequency(8)},
   g_freqsent:{title:"頻度の副詞 — 完整句",gen:()=>genL3FreqSentences(12)},
   translate:{title:"翻訳チャレンジ",gen:()=>genL3Translate(10)},
@@ -980,6 +1169,7 @@ function buildL3Menu(){
       <div class="menu-btn" onclick="startQuiz(3,'g_time')"><div class="icon">🕐</div><span class="t1">時間 + に</span><span class="t2">Time expressions</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'g_masenka')"><div class="icon">🤝</div><span class="t1">～ませんか</span><span class="t2">Invitations</span></div>
       <div class="menu-btn full" onclick="startQuiz(3,'g_invite')" style="border-color:#e91e63;background:#fff5f8"><div class="icon">💌</div><span class="t1">デートに 誘う (Inviting)</span><span class="t2">Time + いっしょに + activity + responses (accept/decline/plan)</span></div>
+      <div class="menu-btn full" onclick="startQuiz(3,'g_ss')" style="border-color:#3498db;background:#f0f8ff"><div class="icon">🧩</div><span class="t1">文の構造 (Sentence Structure Drill)</span><span class="t2">Pattern 1: 時間 + 場所で + 名詞を + 動詞 / Pattern 2: 時間 + 目的地に + 動詞 / Pattern 3: 時間 + 動詞</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'g_freq')"><div class="icon">📊</div><span class="t1">頻度の副詞</span><span class="t2">よく / ときどき / たいてい / ぜんぜん</span></div>
       <div class="menu-btn full" onclick="startQuiz(3,'g_freqsent')" style="border-color:#9b59b6;background:#faf5ff"><div class="icon">✍️</div><span class="t1">頻度の副詞 — 完整句練習</span><span class="t2">英→日：頻度副詞 × 動詞 × 名詞 (combine & type!)</span></div>
 
@@ -1138,7 +1328,7 @@ function showQ(){
   if(q.sentence)h+=`<div class="qsentence">${q.sentence}</div>`;
   if(q.hint)h+=`<div class="qhint">${q.hint}</div>`;
   if(q.isTranslation)h+=`<div style="font-size:.82rem;color:#bbb;margin-bottom:6px">日本語で書いてください：</div>`;
-  if(q.structure&&qi<3)h+=`<div style="margin-bottom:12px;padding:10px 14px;background:#f3eefc;border-left:3px solid #9b59b6;border-radius:0 8px 8px 0;font-size:.88rem;color:#6c3483;line-height:1.7"><span style="display:inline-block;background:#9b59b6;color:#fff;font-size:.7rem;padding:1px 7px;border-radius:8px;margin-right:6px;vertical-align:middle">句子結構</span>${q.structure}</div>`;
+  if(q.structure&&(qi<3||q.alwaysShowStructure))h+=`<div style="margin-bottom:12px;padding:10px 14px;background:#f3eefc;border-left:3px solid #9b59b6;border-radius:0 8px 8px 0;font-size:.88rem;color:#6c3483;line-height:1.7">${q.alwaysShowStructure?"":'<span style="display:inline-block;background:#9b59b6;color:#fff;font-size:.7rem;padding:1px 7px;border-radius:8px;margin-right:6px;vertical-align:middle">句子結構</span>'}${q.structure}</div>`;
   h+=`<div class="irow"><input type="text" id="ai" placeholder="ここに入力..." autocomplete="off" autocapitalize="off" spellcheck="false"><button onclick="handleBtn()">確認</button></div>`;
   h+=`<div class="confirm-hint" id="ch" style="display:none;margin-top:6px;padding:6px 12px;background:#fff8ee;border:1.5px dashed #f39c12;border-radius:8px;font-size:.88rem;color:#e67e22;text-align:center">Enter をもう一度押して送出 (Press Enter again to submit)</div>`;
   h+=`<div class="fb" id="fb"></div><button class="nxt" id="nb" onclick="next()">${qi===t-1?"結果を見る":"次へ →"}</button></div>`;
