@@ -1311,24 +1311,69 @@ function buildL3Menu(){
     </div>`;
 }
 
+// L4 navigation state: 'main' | 'vocab' | {type:'format',cat:'places'}
+let l4State={view:"main",cat:null};
+
 function buildL4Menu(){
-  let h=`<div class="menu-grid">`;
-  h+=`<div style="grid-column:1/-1;padding:8px 12px;background:#fffbe6;border:1px dashed #f39c12;border-radius:8px;font-size:.82rem;color:#a0662a;margin-bottom:4px">📌 単語複習のみ — 各カテゴリーに単語を追加してから使ってください (Vocabulary review only — add words to each category first).</div>`;
+  l4State={view:"main",cat:null};
+  return `
+    <div style="padding:10px 12px;background:#fffbe6;border:1px dashed #f39c12;border-radius:8px;font-size:.82rem;color:#a0662a;margin-bottom:10px">📌 Lesson 4 — 単語複習のみ (Vocabulary review only)</div>
+    <div class="menu-grid">
+      <div class="menu-btn full" onclick="showL4Vocab()" style="padding:24px 16px;border-color:#e67e22;background:#fff8ee">
+        <div class="icon" style="font-size:2rem">📚</div>
+        <span class="t1" style="font-size:1.1rem">単語復習 (Vocabulary Review)</span>
+        <span class="t2">Browse vocabulary by topic</span>
+      </div>
+    </div>`;
+}
+
+function showL4Vocab(){
+  l4State={view:"vocab",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL4Main()">← L4 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 10px;font-size:1.05rem">📚 単語復習 — 主題を選んでください</h3>`;
+  h+=`<div class="menu-grid">`;
   L4_CATEGORIES.forEach(c=>{
-    h+=`<div class="section-label">${c.icon} ${c.jp} (${c.en})</div>`;
-    h+=`<div class="menu-btn" onclick="startQuiz(4,'v_${c.key}_en2jp')">
-          <div class="icon">🇬🇧→🇯🇵</div>
-          <span class="t1">English → 日本語</span>
-          <span class="t2">See English, type Japanese</span>
-        </div>`;
-    h+=`<div class="menu-btn" onclick="startQuiz(4,'v_${c.key}_jp2en')">
-          <div class="icon">🇯🇵→🇬🇧</div>
-          <span class="t1">日本語 → English</span>
-          <span class="t2">See Japanese, type English</span>
+    h+=`<div class="menu-btn" onclick="showL4Format('${c.key}')">
+          <div class="icon" style="font-size:1.6rem">${c.icon}</div>
+          <span class="t1">${c.jp}</span>
+          <span class="t2">${c.en}</span>
         </div>`;
   });
   h+=`</div>`;
-  return h;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4Format(catKey){
+  const cat=L4_CATEGORIES.find(c=>c.key===catKey);
+  if(!cat)return;
+  l4State={view:"format",cat:catKey};
+  let h=`<button class="back-lessons" onclick="showL4Vocab()">← 主題選択</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp}</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">${cat.en} — テスト形式を選んでください</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_en2jp')">
+          <div class="icon">🇬🇧→🇯🇵</div>
+          <span class="t1">English → 日本語</span>
+          <span class="t2">See English, type Japanese</span>
+        </div>
+        <div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_jp2en')">
+          <div class="icon">🇯🇵→🇬🇧</div>
+          <span class="t1">日本語 → English</span>
+          <span class="t2">See Japanese, type English</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function renderL4Main(){
+  document.getElementById("menuContent").innerHTML=buildL4Menu();
+}
+
+function restoreL4View(){
+  if(!l4State)return;
+  if(l4State.view==="format"&&l4State.cat)showL4Format(l4State.cat);
+  else if(l4State.view==="vocab")showL4Vocab();
+  else renderL4Main();
 }
 
 // ============================================================
@@ -1355,6 +1400,7 @@ function backToMenu(){
   document.getElementById("quizArea").classList.remove("active");
   if(currentLesson){
     document.getElementById("menuScreen").style.display="block";
+    if(currentLesson===4)restoreL4View();
   }else{
     document.getElementById("lessonPicker").style.display="block";
   }
