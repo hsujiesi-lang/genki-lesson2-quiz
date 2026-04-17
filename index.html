@@ -84,6 +84,24 @@
   .gtable tr:nth-child(even) td{background:#fdf6ec}
   .note{background:#fff8ee;border-left:3px solid #e67e22;padding:10px 14px;margin:10px 0;border-radius:0 8px 8px 0;font-size:.85rem;line-height:1.6}
 
+  /* Verb audio list */
+  .verb-row{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #f0d9b5;border-radius:12px;padding:12px 14px;margin-bottom:8px;transition:all .2s;flex-wrap:wrap}
+  .verb-row:hover{border-color:#e67e22;box-shadow:0 3px 10px rgba(230,126,34,.12)}
+  .verb-row.playing{border-color:#27ae60;background:#f0fff4}
+  .verb-row .vplay{background:#e67e22;color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:1rem;cursor:pointer;flex:0 0 36px;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+  .verb-row .vplay:hover{background:#d35400;transform:scale(1.08)}
+  .verb-row .vplay:active{transform:scale(.95)}
+  .verb-row .vdict{font-weight:700;font-size:1.15rem;flex:0 0 auto}
+  .verb-row .vforms{color:#666;font-size:.92rem;flex:1 1 auto}
+  .verb-row .vforms .arr{color:#bbb;margin:0 4px}
+  .verb-row .ven{color:#888;font-size:.82rem;font-style:italic;flex:0 0 100%;margin-top:2px}
+  .verb-row .vtype{font-size:.68rem;color:#fff;padding:2px 7px;border-radius:8px;font-weight:700}
+  .verb-row .vtype.u{background:#2980b9}
+  .verb-row .vtype.ru{background:#27ae60}
+  .verb-row .vtype.irr{background:#e74c3c}
+  .verb-now{display:none;margin-top:6px;padding:4px 8px;background:#fff8ee;border-radius:6px;font-size:.78rem;color:#e67e22}
+  .verb-now.show{display:inline-block}
+
   @media(max-width:500px){.menu-grid{grid-template-columns:1fr}header h1{font-size:1.3rem}.qsentence{font-size:1.05rem}.lesson-picker{flex-direction:column;align-items:center}.lesson-card{max-width:100%}}
 </style>
 </head>
@@ -1271,6 +1289,111 @@ function genL4Duration(n=12){
 
 L4_GENERATORS["g_duration"]={title:"時間の長さ (Duration of Time)",gen:()=>genL4Duration(15)};
 
+// ===== L4 Verb audio list (dict / ました / ませんでした) =====
+const L4_VERB_LIST=[
+  // New L4 verbs (typical Genki L4)
+  {dict:"あう",masu:"あいます",mashita:"あいました",masenDeshita:"あいませんでした",en:"to meet",type:"u",isL4:true},
+  {dict:"ある",masu:"あります",mashita:"ありました",masenDeshita:"ありませんでした",en:"to exist (things)",type:"u",isL4:true},
+  {dict:"いる",masu:"います",mashita:"いました",masenDeshita:"いませんでした",en:"to exist (people / animals)",type:"ru",isL4:true},
+  {dict:"かう",masu:"かいます",mashita:"かいました",masenDeshita:"かいませんでした",en:"to buy",type:"u",isL4:true},
+  {dict:"かく",masu:"かきます",mashita:"かきました",masenDeshita:"かきませんでした",en:"to write",type:"u",isL4:true},
+  {dict:"とる",masu:"とります",mashita:"とりました",masenDeshita:"とりませんでした",en:"to take (a photo)",type:"u",isL4:true},
+  {dict:"まつ",masu:"まちます",mashita:"まちました",masenDeshita:"まちませんでした",en:"to wait",type:"u",isL4:true},
+  {dict:"わかる",masu:"わかります",mashita:"わかりました",masenDeshita:"わかりませんでした",en:"to understand",type:"u",isL4:true},
+  // Review: L3 verbs
+  {dict:"いく",masu:"いきます",mashita:"いきました",masenDeshita:"いきませんでした",en:"to go",type:"u",isL4:false},
+  {dict:"かえる",masu:"かえります",mashita:"かえりました",masenDeshita:"かえりませんでした",en:"to return; to go back",type:"u",isL4:false},
+  {dict:"きく",masu:"ききます",mashita:"ききました",masenDeshita:"ききませんでした",en:"to listen; to hear",type:"u",isL4:false},
+  {dict:"のむ",masu:"のみます",mashita:"のみました",masenDeshita:"のみませんでした",en:"to drink",type:"u",isL4:false},
+  {dict:"はなす",masu:"はなします",mashita:"はなしました",masenDeshita:"はなしませんでした",en:"to speak; to talk",type:"u",isL4:false},
+  {dict:"よむ",masu:"よみます",mashita:"よみました",masenDeshita:"よみませんでした",en:"to read",type:"u",isL4:false},
+  {dict:"たべる",masu:"たべます",mashita:"たべました",masenDeshita:"たべませんでした",en:"to eat",type:"ru",isL4:false},
+  {dict:"ねる",masu:"ねます",mashita:"ねました",masenDeshita:"ねませんでした",en:"to sleep",type:"ru",isL4:false},
+  {dict:"みる",masu:"みます",mashita:"みました",masenDeshita:"みませんでした",en:"to see; to watch",type:"ru",isL4:false},
+  {dict:"おきる",masu:"おきます",mashita:"おきました",masenDeshita:"おきませんでした",en:"to get up",type:"ru",isL4:false},
+  {dict:"くる",masu:"きます",mashita:"きました",masenDeshita:"きませんでした",en:"to come",type:"irr",isL4:false},
+  {dict:"する",masu:"します",mashita:"しました",masenDeshita:"しませんでした",en:"to do",type:"irr",isL4:false},
+  {dict:"べんきょうする",masu:"べんきょうします",mashita:"べんきょうしました",masenDeshita:"べんきょうしませんでした",en:"to study",type:"irr",isL4:false},
+];
+
+let _verbSpeaking=false;
+
+function playVerb(idx){
+  if(_verbSpeaking){window.speechSynthesis.cancel();_verbSpeaking=false;document.querySelectorAll(".verb-row").forEach(r=>r.classList.remove("playing"));document.querySelectorAll(".verb-now").forEach(n=>n.classList.remove("show"));return;}
+  const v=L4_VERB_LIST[idx];
+  if(!v||!window.speechSynthesis){alert("お使いのブラウザは音声合成に対応していません (Speech synthesis not supported)");return;}
+  const row=document.querySelector(`.verb-row[data-idx="${idx}"]`);
+  const nowEl=row?row.querySelector(".verb-now"):null;
+  row&&row.classList.add("playing");
+  const labels=["辞書形","ました (past affirmative)","ませんでした (past negative)"];
+  const forms=[v.dict,v.mashita,v.masenDeshita];
+  let i=0;
+  _verbSpeaking=true;
+  function speakNext(){
+    if(i>=forms.length){
+      _verbSpeaking=false;
+      row&&row.classList.remove("playing");
+      nowEl&&nowEl.classList.remove("show");
+      return;
+    }
+    if(nowEl){nowEl.textContent="▶ "+labels[i]+": "+forms[i];nowEl.classList.add("show");}
+    const u=new SpeechSynthesisUtterance(forms[i]);
+    u.lang="ja-JP";u.rate=.85;u.pitch=1;
+    u.onend=()=>{i++;setTimeout(speakNext,450);};
+    u.onerror=()=>{i++;setTimeout(speakNext,100);};
+    window.speechSynthesis.speak(u);
+  }
+  speakNext();
+}
+
+function playVerbFormOnly(idx,formKey){
+  // Play a single form without the 3-step sequence
+  if(_verbSpeaking){window.speechSynthesis.cancel();_verbSpeaking=false;}
+  const v=L4_VERB_LIST[idx];
+  if(!v||!window.speechSynthesis)return;
+  const u=new SpeechSynthesisUtterance(v[formKey]);
+  u.lang="ja-JP";u.rate=.85;
+  window.speechSynthesis.speak(u);
+}
+
+function showL4VerbAudio(){
+  l4State={view:"verbAudio",cat:"verbs"};
+  let h=`<button class="back-lessons" onclick="showL4Format('verbs')">← テスト形式</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">🔊 動詞リスト — 発音を聞く</h3>`;
+  h+=`<p style="color:#999;font-size:.82rem;margin-bottom:6px;padding-left:4px">🔊 をタップ: <b>辞書形 → ました → ませんでした</b> の順に再生されます</p>`;
+  h+=`<p style="color:#aaa;font-size:.75rem;margin-bottom:10px;padding-left:4px">各フォームを個別に聞きたい場合は、そのフォームをタップしてください</p>`;
+  const l4verbs=L4_VERB_LIST.filter(v=>v.isL4);
+  const l3verbs=L4_VERB_LIST.filter(v=>!v.isL4);
+  h+=`<div class="section-label" style="margin-bottom:6px">📘 L4 新出動詞 (New in Lesson 4)</div>`;
+  l4verbs.forEach(v=>{
+    const idx=L4_VERB_LIST.indexOf(v);
+    h+=_verbRowHTML(v,idx);
+  });
+  h+=`<div class="section-label" style="margin:14px 0 6px">🔁 復習：L3 動詞 (Review)</div>`;
+  l3verbs.forEach(v=>{
+    const idx=L4_VERB_LIST.indexOf(v);
+    h+=_verbRowHTML(v,idx);
+  });
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function _verbRowHTML(v,idx){
+  const typeLabel={u:"u",ru:"ru",irr:"irr"}[v.type];
+  return `<div class="verb-row" data-idx="${idx}">
+    <button class="vplay" onclick="event.stopPropagation();playVerb(${idx})" title="3形を順番に再生">🔊</button>
+    <span class="vdict" onclick="playVerbFormOnly(${idx},'dict')" title="辞書形">${v.dict}</span>
+    <span class="vforms">
+      <span class="arr">→</span>
+      <span onclick="playVerbFormOnly(${idx},'mashita')" style="cursor:pointer" title="ました">${v.mashita}</span>
+      <span class="arr">→</span>
+      <span onclick="playVerbFormOnly(${idx},'masenDeshita')" style="cursor:pointer" title="ませんでした">${v.masenDeshita}</span>
+    </span>
+    <span class="vtype ${v.type}">${typeLabel}</span>
+    <span class="ven">${v.en}</span>
+    <span class="verb-now"></span>
+  </div>`;
+}
+
 // ============================================================
 //  MENU BUILDERS
 // ============================================================
@@ -1491,18 +1614,26 @@ function showL4Format(catKey){
   let h=`<button class="back-lessons" onclick="showL4Vocab()">← 主題選択</button>`;
   h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp}</h3>`;
   h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">${cat.en} — テスト形式を選んでください</p>`;
-  h+=`<div class="menu-grid">
-        <div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_en2jp')">
-          <div class="icon">🇬🇧→🇯🇵</div>
-          <span class="t1">English → 日本語</span>
-          <span class="t2">See English, type Japanese</span>
-        </div>
-        <div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_jp2en')">
-          <div class="icon">🇯🇵→🇬🇧</div>
-          <span class="t1">日本語 → English</span>
-          <span class="t2">See Japanese, type English</span>
-        </div>
+  h+=`<div class="menu-grid">`;
+  // Special: verbs category gets an audio list option
+  if(catKey==="verbs"){
+    h+=`<div class="menu-btn full" onclick="showL4VerbAudio()" style="border-color:#9b59b6;background:#faf5ff">
+          <div class="icon">🔊</div>
+          <span class="t1">動詞リスト (発音を聞く)</span>
+          <span class="t2">辞書形 → ました → ませんでした を音声で練習</span>
+        </div>`;
+  }
+  h+=`<div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_en2jp')">
+        <div class="icon">🇬🇧→🇯🇵</div>
+        <span class="t1">English → 日本語</span>
+        <span class="t2">See English, type Japanese</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_jp2en')">
+        <div class="icon">🇯🇵→🇬🇧</div>
+        <span class="t1">日本語 → English</span>
+        <span class="t2">See Japanese, type English</span>
       </div>`;
+  h+=`</div>`;
   document.getElementById("menuContent").innerHTML=h;
 }
 
@@ -1512,7 +1643,8 @@ function renderL4Main(){
 
 function restoreL4View(){
   if(!l4State)return;
-  if(l4State.view==="format"&&l4State.cat)showL4Format(l4State.cat);
+  if(l4State.view==="verbAudio")showL4VerbAudio();
+  else if(l4State.view==="format"&&l4State.cat)showL4Format(l4State.cat);
   else if(l4State.view==="vocab")showL4Vocab();
   else renderL4Main();
 }
