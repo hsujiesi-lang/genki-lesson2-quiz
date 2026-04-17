@@ -107,6 +107,11 @@
         <span class="ltitle">デートの やくそく</span>
         <span class="lsub">Making a Date</span>
       </div>
+      <div class="lesson-card" onclick="selectLesson(4)">
+        <div class="lnum">L4</div>
+        <span class="ltitle">第4課</span>
+        <span class="lsub">Lesson 4 — 単語のみ</span>
+      </div>
     </div>
     <!-- Global wrong bank -->
     <div style="text-align:center;margin-top:8px">
@@ -1110,6 +1115,69 @@ const L3_GENERATORS={
 };
 
 // ============================================================
+//  LESSON 4 DATA & GENERATORS  (vocabulary review only — content TBD)
+// ============================================================
+const L4_CATEGORIES=[
+  {key:"places",  jp:"名詞 — 場所",      en:"Places / Locations",  icon:"📍"},
+  {key:"things",  jp:"名詞 — 物",        en:"Things / Objects",    icon:"📦"},
+  {key:"people",  jp:"名詞 — 人・家族",  en:"People / Family",     icon:"👥"},
+  {key:"time",    jp:"名詞 — 時間・日付",en:"Time / Date",         icon:"🕐"},
+  {key:"verbs",   jp:"動詞",             en:"Verbs",               icon:"🏃"},
+  {key:"adj",     jp:"形容詞",           en:"Adjectives",          icon:"🎨"},
+  {key:"adv",     jp:"副詞・その他",     en:"Adverbs / Others",    icon:"💫"},
+  {key:"expr",    jp:"表現",             en:"Expressions",         icon:"💬"},
+];
+
+// Empty dictionaries — fill in each category later
+const L4_VOCAB={
+  places:{},
+  things:{},
+  people:{},
+  time:{},
+  verbs:{},
+  adj:{},
+  adv:{},
+  expr:{},
+};
+
+function genL4VocabEn2Jp(cat,n=15){
+  const dict=L4_VOCAB[cat]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return null;
+  }
+  return shuffle([...keys]).slice(0,n).map(k=>({
+    qtext:`<span style="font-size:1.3rem;font-weight:700">${dict[k]}</span>`,
+    hint:"日本語で入力してください",answers:[k],explain:k
+  }));
+}
+
+function genL4VocabJp2En(cat,n=15){
+  const dict=L4_VOCAB[cat]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return null;
+  }
+  return shuffle([...keys]).slice(0,n).map(k=>{
+    const alts=dict[k].split(";").map(s=>s.trim());
+    alts.push(...dict[k].split("/").map(s=>s.trim()));
+    const base=dict[k].replace(/\s*\(.*?\)\s*/g,"").trim();
+    if(base)alts.push(base);
+    return {qtext:`<span style="font-size:1.6rem;font-weight:700">${k}</span>`,
+            hint:"Type the English meaning",
+            answers:[...new Set(alts)],explain:dict[k]};
+  });
+}
+
+const L4_GENERATORS={};
+L4_CATEGORIES.forEach(c=>{
+  L4_GENERATORS[`v_${c.key}_en2jp`]={title:`${c.jp}：English → 日本語`,gen:()=>genL4VocabEn2Jp(c.key,15)};
+  L4_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL4VocabJp2En(c.key,15)};
+});
+
+// ============================================================
 //  MENU BUILDERS
 // ============================================================
 function buildL2Menu(){
@@ -1243,6 +1311,26 @@ function buildL3Menu(){
     </div>`;
 }
 
+function buildL4Menu(){
+  let h=`<div class="menu-grid">`;
+  h+=`<div style="grid-column:1/-1;padding:8px 12px;background:#fffbe6;border:1px dashed #f39c12;border-radius:8px;font-size:.82rem;color:#a0662a;margin-bottom:4px">📌 単語複習のみ — 各カテゴリーに単語を追加してから使ってください (Vocabulary review only — add words to each category first).</div>`;
+  L4_CATEGORIES.forEach(c=>{
+    h+=`<div class="section-label">${c.icon} ${c.jp} (${c.en})</div>`;
+    h+=`<div class="menu-btn" onclick="startQuiz(4,'v_${c.key}_en2jp')">
+          <div class="icon">🇬🇧→🇯🇵</div>
+          <span class="t1">English → 日本語</span>
+          <span class="t2">See English, type Japanese</span>
+        </div>`;
+    h+=`<div class="menu-btn" onclick="startQuiz(4,'v_${c.key}_jp2en')">
+          <div class="icon">🇯🇵→🇬🇧</div>
+          <span class="t1">日本語 → English</span>
+          <span class="t2">See Japanese, type English</span>
+        </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
 // ============================================================
 //  NAVIGATION
 // ============================================================
@@ -1250,7 +1338,9 @@ function selectLesson(num){
   currentLesson=num;
   document.getElementById("lessonPicker").style.display="none";
   const mc=document.getElementById("menuContent");
-  mc.innerHTML=num===2?buildL2Menu():buildL3Menu();
+  if(num===4)mc.innerHTML=buildL4Menu();
+  else if(num===3)mc.innerHTML=buildL3Menu();
+  else mc.innerHTML=buildL2Menu();
   document.getElementById("menuScreen").style.display="block";
 }
 
@@ -1309,9 +1399,14 @@ function startWrongBank(){
 
 // ========== ENGINE ==========
 function startQuiz(lesson,type){
-  const gens=lesson===2?L2_GENERATORS:L3_GENERATORS;
+  let gens;
+  if(lesson===4)gens=L4_GENERATORS;
+  else if(lesson===3)gens=L3_GENERATORS;
+  else gens=L2_GENERATORS;
   const g=gens[type];
-  quiz=g.gen();qi=0;score=0;wrongs=[];enterReady=false;answeredAt=0;
+  const qs=g.gen();
+  if(!qs)return; // generator aborted (e.g. empty L4 category)
+  quiz=qs;qi=0;score=0;wrongs=[];enterReady=false;answeredAt=0;
   document.getElementById("menuScreen").style.display="none";
   document.getElementById("quizArea").classList.add("active");
   document.getElementById("quizTitle").textContent=g.title;
