@@ -1177,6 +1177,100 @@ L4_CATEGORIES.forEach(c=>{
   L4_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL4VocabJp2En(c.key,15)};
 });
 
+// ===== L4 Grammar: Duration of Time (じかん) =====
+const L4_DUR_NUMS=[
+  {dur:"いちじかん",en:"1 hour",half:"いちじかんはん",halfEn:"1 and a half hours"},
+  {dur:"にじかん",en:"2 hours",half:"にじかんはん",halfEn:"2 and a half hours"},
+  {dur:"さんじかん",en:"3 hours",half:"さんじかんはん",halfEn:"3 and a half hours"},
+  {dur:"よじかん",en:"4 hours",half:"よじかんはん",halfEn:"4 and a half hours"},
+  {dur:"ごじかん",en:"5 hours",half:"ごじかんはん",halfEn:"5 and a half hours"},
+  {dur:"ろくじかん",en:"6 hours",half:"ろくじかんはん",halfEn:"6 and a half hours"},
+  {dur:"しちじかん",en:"7 hours",half:"しちじかんはん",halfEn:"7 and a half hours"},
+  {dur:"はちじかん",en:"8 hours",half:"はちじかんはん",halfEn:"8 and a half hours"},
+  {dur:"くじかん",en:"9 hours",half:"くじかんはん",halfEn:"9 and a half hours"},
+  {dur:"じゅうじかん",en:"10 hours",half:"じゅうじかんはん",halfEn:"10 and a half hours"},
+];
+const L4_DUR_VERBS=[
+  {jp:"べんきょうしました",en:"studied"},
+  {jp:"ねました",en:"slept"},
+  {jp:"はなしました",en:"talked"},
+  {jp:"テレビをみました",en:"watched TV"},
+  {jp:"ほんをよみました",en:"read a book"},
+  {jp:"ざっしをよみました",en:"read a magazine"},
+  {jp:"おんがくをききました",en:"listened to music"},
+  {jp:"えいがをみました",en:"watched a movie"},
+];
+const L4_DUR_TIMEREFS=[
+  {jp:"きのう",en:" yesterday"},
+  {jp:"きょう",en:" today"},
+  {jp:"",en:""},
+  {jp:"",en:""},
+];
+
+function makeL4DurBasic(){
+  const t=pick(L4_DUR_TIMEREFS), n=pick(L4_DUR_NUMS), v=pick(L4_DUR_VERBS);
+  const en=`I ${v.en} for ${n.en}${t.en}.`;
+  const ja=(t.jp?t.jp+" ":"")+n.dur+" "+v.jp+"。";
+  const structure=`<b>${t.jp?"[時間] + ":""}[Xじかん]</b> + <b>[動詞 ました]</b>　<span style="color:#c0392b">※ 助詞なし (no particle)</span>`;
+  return {qtext:en,hint:"日本語で書いてください（助詞は不要 — no particle before verb）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true};
+}
+
+function makeL4DurHalf(){
+  const t=pick(L4_DUR_TIMEREFS), n=pick(L4_DUR_NUMS), v=pick(L4_DUR_VERBS);
+  const en=`I ${v.en} for ${n.halfEn}${t.en}.`;
+  const ja=(t.jp?t.jp+" ":"")+n.half+" "+v.jp+"。";
+  const structure=`<b>${t.jp?"[時間] + ":""}[X じかんはん]</b> + <b>[動詞 ました]</b>　<span style="color:#c0392b">※ はん = and a half</span>`;
+  return {qtext:en,hint:"「はん」を忘れずに（for X and a half hours）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true};
+}
+
+function makeL4DurAbout(){
+  const t=pick(L4_DUR_TIMEREFS), n=pick(L4_DUR_NUMS), v=pick(L4_DUR_VERBS);
+  const en=`I ${v.en} for about ${n.en}${t.en}.`;
+  const ja=(t.jp?t.jp+" ":"")+n.dur+"ぐらい "+v.jp+"。";
+  const structure=`<b>${t.jp?"[時間] + ":""}[Xじかん]ぐらい</b> + <b>[動詞 ました]</b>　<span style="color:#c0392b">※ ぐらい = about</span>`;
+  return {qtext:en,hint:"「ぐらい」を使ってください（about）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true};
+}
+
+function makeL4DurQuestion(){
+  const t=pick([{jp:"きのう",en:"yesterday"},{jp:"きょう",en:"today"}]);
+  const v=pick(L4_DUR_VERBS);
+  const en=`How many hours did you ${v.en} ${t.en}?`;
+  const ja=t.jp+" なんじかん "+v.jp.replace("ました","ましたか。");
+  const structure=`<b>[時間] + なんじかん</b> + <b>[動詞 ましたか]</b>　<span style="color:#c0392b">※ なんじかん = how many hours</span>`;
+  return {qtext:en,hint:"なんじかん を使ってください (how many hours)",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true};
+}
+
+function makeL4DurWait(){
+  // Special pattern with waiting for someone
+  const n=pick(L4_DUR_NUMS);
+  const useAbout=Math.random()<.5;
+  const useHalf=!useAbout&&Math.random()<.5;
+  const who=pick([{jp:"たけしさん",en:"Takeshi"},{jp:"メアリーさん",en:"Mary"},{jp:"ともだち",en:"my friend"}]);
+  let durJp,durEn;
+  if(useAbout){durJp=n.dur+"ぐらい";durEn="for about "+n.en;}
+  else if(useHalf){durJp=n.half;durEn="for "+n.halfEn;}
+  else{durJp=n.dur;durEn="for "+n.en;}
+  const en=`I waited for ${who.en} ${durEn}.`;
+  const ja=who.jp+"を "+durJp+" まちました。";
+  const structure=`<b>[人]を + [Xじかん${useAbout?"ぐらい":useHalf?"はん":""}]</b> + <b>まちました</b>　<span style="color:#c0392b">※ まつ takes を (object particle)</span>`;
+  return {qtext:en,hint:"「を」は「誰を待つか」に使います",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true};
+}
+
+function genL4Duration(n=12){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.30)qs.push(makeL4DurBasic());
+    else if(r<.50)qs.push(makeL4DurHalf());
+    else if(r<.70)qs.push(makeL4DurAbout());
+    else if(r<.85)qs.push(makeL4DurQuestion());
+    else qs.push(makeL4DurWait());
+  }
+  return qs;
+}
+
+L4_GENERATORS["g_duration"]={title:"時間の長さ (Duration of Time)",gen:()=>genL4Duration(15)};
+
 // ============================================================
 //  MENU BUILDERS
 // ============================================================
@@ -1317,12 +1411,59 @@ let l4State={view:"main",cat:null};
 function buildL4Menu(){
   l4State={view:"main",cat:null};
   return `
-    <div style="padding:10px 12px;background:#fffbe6;border:1px dashed #f39c12;border-radius:8px;font-size:.82rem;color:#a0662a;margin-bottom:10px">📌 Lesson 4 — 単語複習のみ (Vocabulary review only)</div>
     <div class="menu-grid">
-      <div class="menu-btn full" onclick="showL4Vocab()" style="padding:24px 16px;border-color:#e67e22;background:#fff8ee">
-        <div class="icon" style="font-size:2rem">📚</div>
-        <span class="t1" style="font-size:1.1rem">単語復習 (Vocabulary Review)</span>
+      <div class="menu-btn full" onclick="showL4Vocab()" style="padding:22px 16px;border-color:#e67e22;background:#fff8ee">
+        <div class="icon" style="font-size:1.8rem">📚</div>
+        <span class="t1" style="font-size:1.05rem">単語復習 (Vocabulary Review)</span>
         <span class="t2">Browse vocabulary by topic</span>
+      </div>
+
+      <div class="section-label">文法 GRAMMAR</div>
+      <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#3498db;background:#f0f8ff">
+        <div class="icon">🕐</div>
+        <span class="t1">時間の長さ (Duration of Time)</span>
+        <span class="t2">～じかん / ～じかんはん / ～じかんぐらい / なんじかん</span>
+      </div>
+
+      <div class="menu-btn full" onclick="toggleGrammar(4)" style="background:#fdf6ec;border-color:#e67e22">
+        <span class="t1">📖 規則表 (Rules Reference)</span>
+      </div>
+    </div>
+
+    <div class="gbox" id="grammarBox4">
+      <h3>🕐 時間の長さ (Duration of Time) — じかん</h3>
+      <table class="gtable">
+        <tr><th>表現</th><th>意味</th><th>例</th></tr>
+        <tr><td><b>～じ</b></td><td>o'clock (time POINT)</td><td>いち<b>じ</b> = 1 o'clock</td></tr>
+        <tr><td><b>～じかん</b></td><td>hour(s) (DURATION)</td><td>いち<b>じかん</b> = 1 hour</td></tr>
+        <tr><td><b>～じはん</b></td><td>half past ~ (time POINT)</td><td>いち<b>じはん</b> = 1:30</td></tr>
+        <tr><td><b>～じかんはん</b></td><td>~ and a half hours (DURATION)</td><td>いち<b>じかんはん</b> = 1.5 hours</td></tr>
+        <tr><td><b>～じかんぐらい</b></td><td>about ~ hours</td><td>いち<b>じかんぐらい</b> = about 1 hour</td></tr>
+        <tr><td><b>なんじかん</b></td><td>how many hours</td><td><b>なんじかん</b> ねましたか</td></tr>
+      </table>
+      <div class="note">
+        📌 <b>重要ルール (Important rules):</b><br>
+        1. Put a number before <b>～じかん</b> to express duration.<br>
+        2. Put the duration phrase <b>BEFORE the verb</b>.<br>
+        3. <b>No particle is needed</b> before the verb!<br>
+      </div>
+      <h3 style="margin-top:16px">例文 (Examples)</h3>
+      <div class="note">
+        きのう <b>いちじかん</b> べんきょうしました。<br>
+        — I studied for 1 hour yesterday.<br><br>
+        きのう <b>しちじかんはん</b> ねました。<br>
+        — I slept for 7 and a half hours yesterday.<br><br>
+        メアリーさんは そこで たけしさんを <b>さんじかんぐらい</b> まちました。<br>
+        — Mary waited for Takeshi there for about 3 hours.<br><br>
+        きのう <b>なんじかん</b> べんきょうしましたか。<br>
+        — How many hours did you study yesterday?
+      </div>
+      <h3 style="margin-top:16px">⚠️ 注意 (Caution)</h3>
+      <div class="note">
+        <b>～じ</b> (o'clock) と <b>～じかん</b> (duration) を混同しないように！<br>
+        <br>
+        ✔ いちじ<b>に</b> おきます。 — I get up <b>at</b> 1 o'clock. (time point → <b>に</b>)<br>
+        ✔ いちじかん ねました。 — I slept <b>for</b> 1 hour. (duration → <b>no particle</b>)
       </div>
     </div>`;
 }
