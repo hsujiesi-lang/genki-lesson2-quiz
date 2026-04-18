@@ -1458,6 +1458,52 @@ function showL4VerbAudio(){
   document.getElementById("menuContent").innerHTML=h;
 }
 
+// ===== Generic vocabulary audio list (for non-verb categories) =====
+let _currentVocabList=[];
+
+function playWord(word){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  // Strip placeholder "～" characters; not meant to be read aloud
+  const clean=String(word).replace(/[～~]/g,"").trim();
+  if(!clean)return;
+  const u=new SpeechSynthesisUtterance(clean);
+  u.lang="ja-JP";u.rate=.85;
+  window.speechSynthesis.speak(u);
+}
+function playWordByIdx(idx){
+  const w=_currentVocabList[idx];
+  if(w)playWord(w);
+}
+
+function showL4VocabAudio(catKey){
+  const cat=L4_CATEGORIES.find(c=>c.key===catKey);
+  if(!cat)return;
+  const dict=L4_VOCAB[catKey]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return;
+  }
+  _currentVocabList=keys;
+  l4State={view:"vocabAudio",cat:catKey};
+  let h=`<button class="back-lessons" onclick="showL4Format('${catKey}')">← テスト形式</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp} — 単語リスト</h3>`;
+  h+=`<p style="color:#999;font-size:.82rem;margin-bottom:10px;padding-left:4px">🔊 をタップして発音を聞く (tap to hear pronunciation)</p>`;
+  keys.forEach((k,idx)=>{
+    h+=_wordRowHTML(k,dict[k],idx);
+  });
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function _wordRowHTML(word,en,idx){
+  return `<div class="verb-row">
+    <button class="vplay" onclick="playWordByIdx(${idx})" title="発音を聞く">🔊</button>
+    <span class="vdict" onclick="playWordByIdx(${idx})" style="cursor:pointer">${word}</span>
+    <span class="ven">${en}</span>
+  </div>`;
+}
+
 function _verbRowHTML(v,idx){
   const typeLabel={u:"u",ru:"ru",irr:"irr"}[v.type];
   return `<div class="verb-row" data-idx="${idx}">
@@ -1696,12 +1742,18 @@ function showL4Format(catKey){
   h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp}</h3>`;
   h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">${cat.en} — テスト形式を選んでください</p>`;
   h+=`<div class="menu-grid">`;
-  // Special: verbs category gets an audio list option
+  // Audio list — verbs get the richer 3-form list; others get a simple single-form list
   if(catKey==="verbs"){
     h+=`<div class="menu-btn full" onclick="showL4VerbAudio()" style="border-color:#9b59b6;background:#faf5ff">
           <div class="icon">🔊</div>
           <span class="t1">動詞リスト (発音を聞く)</span>
           <span class="t2">辞書形 → ました → ませんでした を音声で練習</span>
+        </div>`;
+  }else if(Object.keys(L4_VOCAB[catKey]||{}).length>0){
+    h+=`<div class="menu-btn full" onclick="showL4VocabAudio('${catKey}')" style="border-color:#9b59b6;background:#faf5ff">
+          <div class="icon">📖</div>
+          <span class="t1">単語リスト (発音を聞く)</span>
+          <span class="t2">Review vocabulary with pronunciation before testing</span>
         </div>`;
   }
   h+=`<div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_en2jp')">
@@ -1725,6 +1777,7 @@ function renderL4Main(){
 function restoreL4View(){
   if(!l4State)return;
   if(l4State.view==="verbAudio")showL4VerbAudio();
+  else if(l4State.view==="vocabAudio"&&l4State.cat)showL4VocabAudio(l4State.cat);
   else if(l4State.view==="format"&&l4State.cat)showL4Format(l4State.cat);
   else if(l4State.view==="vocab")showL4Vocab();
   else renderL4Main();
