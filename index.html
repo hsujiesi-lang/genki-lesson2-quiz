@@ -127,8 +127,8 @@
       </div>
       <div class="lesson-card" onclick="selectLesson(4)">
         <div class="lnum">L4</div>
-        <span class="ltitle">第4課</span>
-        <span class="lsub">Lesson 4 — 単語のみ</span>
+        <span class="ltitle">メアリーさんの 週末</span>
+        <span class="lsub">Mary's Weekend</span>
       </div>
     </div>
     <!-- Global wrong bank -->
@@ -1399,12 +1399,12 @@ L4_GENERATORS["g_duration"]={title:"時間の長さ (Duration of Time)",gen:()=>
 //  L4 Grammar: Describe where things are (もののある場所)
 // ============================================================
 const L4_LOC_POSITIONS=[
-  {jp:"うえ",en:"on; on top of",kanji:"上"},
-  {jp:"した",en:"under; below",kanji:"下"},
+  {jp:"うえ",en:"on",kanji:"上"},
+  {jp:"した",en:"under",kanji:"下"},
   {jp:"まえ",en:"in front of",kanji:"前"},
   {jp:"うしろ",en:"behind",kanji:"後ろ"},
   {jp:"なか",en:"inside",kanji:"中"},
-  {jp:"ちかく",en:"near; close to",kanji:"近く"},
+  {jp:"ちかく",en:"near",kanji:"近く"},
   {jp:"となり",en:"next to",kanji:"隣"},
 ];
 
@@ -1418,9 +1418,12 @@ const L4_LOC_THINGS_SUBJ=[
   {jp:"スマホ",en:"the smartphone"},
   {jp:"しゃしん",en:"the photograph"},
   {jp:"とけい",en:"the clock"},
-  {jp:"レポート",en:"the paper (report)"},
+  {jp:"レポート",en:"the paper"},
   {jp:"パン",en:"the bread"},
-  {jp:"おかね",en:"the money"},
+  {jp:"かさ",en:"the umbrella"},
+  {jp:"ぼうし",en:"the hat"},
+  {jp:"ジーンズ",en:"the jeans"},
+  {jp:"くつ",en:"the shoes"},
 ];
 
 const L4_LOC_THINGS_REF=[
@@ -1430,6 +1433,7 @@ const L4_LOC_THINGS_REF=[
   {jp:"ほん",en:"the book"},
   {jp:"テレビ",en:"the TV"},
   {jp:"ノート",en:"the notebook"},
+  {jp:"テーブル",en:"the table"},
 ];
 
 const L4_LOC_PEOPLE=[
@@ -1455,7 +1459,13 @@ const L4_LOC_PLACES=[
   {jp:"ほんや",en:"the bookstore"},
   {jp:"レストラン",en:"the restaurant"},
   {jp:"バスてい",en:"the bus stop"},
-  {jp:"こうえん",en:"the park"},
+  // Places from textbook map exercises (also L2 vocab)
+  {jp:"としょかん",en:"the library"},
+  {jp:"ぎんこう",en:"the bank"},
+  {jp:"ゆうびんきょく",en:"the post office"},
+  {jp:"コンビニ",en:"the convenience store"},
+  {jp:"だいがく",en:"the university"},
+  {jp:"カフェ",en:"the cafe"},
 ];
 
 const L4_LOC_CITIES=[
@@ -1472,7 +1482,7 @@ function _pickDifferent(arr,exclude){
   return p;
 }
 
-// Type A: Object on/under/in/near/next-to another thing (あります)
+// Type A: Thing in relation to another thing — 「X は Y の [位置] です」
 function makeLocThing(){
   const pos=pick(L4_LOC_POSITIONS);
   let subj,ref;
@@ -1484,7 +1494,8 @@ function makeLocThing(){
       {jp:"スマホ",en:"the smartphone"},
       {jp:"ノート",en:"the notebook"},
       {jp:"しゃしん",en:"the photograph"},
-      {jp:"おかね",en:"the money"},
+      {jp:"かさ",en:"the umbrella"},
+      {jp:"くつ",en:"the shoes"},
     ]);
     ref=pick([
       {jp:"かばん",en:"the bag"},
@@ -1495,12 +1506,12 @@ function makeLocThing(){
     ref=_pickDifferent(L4_LOC_THINGS_REF,subj.jp);
   }
   const en=`${subj.en} is ${pos.en} ${ref.en}.`;
-  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に あります。`;
-  const structure=`<b>[物₁]は + [物₂]の [位置] に</b> + <b>あります</b>　<span style="color:#c0392b">※ 物 → あります</span>`;
-  return {qtext:en,hint:"物の位置：N1 は N2 の [位置] に あります",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}です。`;
+  const structure=`<b>[X]は + [Y]の [位置] + です</b>　<span style="color:#c0392b">※ 「です」で位置を表す</span>`;
+  return {qtext:en,hint:"[X] は [Y] の [位置] です",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
 }
 
-// Type B: Person next to / in front of / behind another person (います)
+// Type B: Person next to another person — 「X は Y の [位置] です」
 function makeLocPerson(){
   const pos=pick([
     {jp:"となり",en:"next to"},
@@ -1511,64 +1522,136 @@ function makeLocPerson(){
   const subj=pick(L4_LOC_PEOPLE);
   const ref=_pickDifferent(L4_LOC_PEOPLE,subj.jp);
   const en=`${subj.en} is ${pos.en} ${ref.en}.`;
-  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に います。`;
-  const structure=`<b>[人₁]は + [人₂]の [位置] に</b> + <b>います</b>　<span style="color:#c0392b">※ 人・動物 → います</span>`;
-  return {qtext:en,hint:"人の位置：N1 は N2 の [位置] に います",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}です。`;
+  const structure=`<b>[人₁]は + [人₂]の [位置] + です</b>　<span style="color:#c0392b">※ 人の位置も「です」</span>`;
+  return {qtext:en,hint:"[人₁] は [人₂] の [位置] です",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
 }
 
-// Type B2: Animal position (いる)
+// Type B2: Animal position
 function makeLocAnimal(){
   const pos=pick(L4_LOC_POSITIONS);
   const subj=pick(L4_LOC_ANIMALS);
-  const ref=pick([{jp:"つくえ",en:"the desk"},{jp:"いす",en:"the chair"},{jp:"かばん",en:"the bag"}]);
+  const ref=pick([{jp:"つくえ",en:"the desk"},{jp:"いす",en:"the chair"},{jp:"かばん",en:"the bag"},{jp:"テーブル",en:"the table"}]);
   const en=`${subj.en} is ${pos.en} ${ref.en}.`;
-  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に います。`;
-  const structure=`<b>[動物]は + [物]の [位置] に</b> + <b>います</b>　<span style="color:#c0392b">※ 動物 → います</span>`;
-  return {qtext:en,hint:"動物の位置：[動物] は [場所] に います",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}です。`;
+  const structure=`<b>[動物]は + [物]の [位置] + です</b>`;
+  return {qtext:en,hint:"[動物] は [場所] の [位置] です",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
 }
 
-// Type C: Between A and B (あいだ)
+// Type C: Between A and B — 「X は Y と Z の あいだです」
 function makeLocBetween(){
-  const useAnimate=Math.random()<.55;
-  let subj,r1,r2,copula,hint;
+  const useAnimate=Math.random()<.45;
+  let subj,r1,r2,hint;
   if(useAnimate){
     subj=pick(L4_LOC_PEOPLE);
     r1=_pickDifferent(L4_LOC_PEOPLE,subj.jp);
     r2=pick(L4_LOC_PEOPLE.filter(p=>p.jp!==subj.jp&&p.jp!==r1.jp));
-    copula="います";hint="人は [A]と [B]の あいだに います";
+    hint="[人] は [A] と [B] の あいだです";
   }else{
-    subj=pick(L4_LOC_THINGS_SUBJ);
-    r1=_pickDifferent(L4_LOC_THINGS_REF,subj.jp);
-    r2=pick(L4_LOC_THINGS_REF.filter(p=>p.jp!==subj.jp&&p.jp!==r1.jp));
-    copula="あります";hint="物は [A]と [B]の あいだに あります";
+    // Places (like textbook example レストランはスーパーと病院のあいだです)
+    subj=pick(L4_LOC_PLACES);
+    r1=_pickDifferent(L4_LOC_PLACES,subj.jp);
+    r2=pick(L4_LOC_PLACES.filter(p=>p.jp!==subj.jp&&p.jp!==r1.jp));
+    hint="[場所] は [A] と [B] の あいだです";
   }
   const en=`${subj.en} is between ${r1.en} and ${r2.en}.`;
-  const ja=`${subj.jp}は ${r1.jp}と ${r2.jp}の あいだに ${copula}。`;
-  const structure=`<b>[X]は + [A]と [B]の あいだに</b> + <b>${copula}</b>　<span style="color:#c0392b">※ 「あいだ」は「A<u>と</u>B<u>の</u>あいだ」</span>`;
+  const ja=`${subj.jp}は ${r1.jp}と ${r2.jp}の あいだです。`;
+  const structure=`<b>[X]は + [A]と [B]の あいだ + です</b>　<span style="color:#c0392b">※ 「あいだ」は「A<u>と</u>B<u>の</u>あいだ」</span>`;
   return {qtext:en,hint,answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
 }
 
-// Type D: City/place to the right/left (as in Tokyo / Yokohama example)
-function makeLocDirection(){
-  const pos=pick([{jp:"みぎ",en:"to the right of"},{jp:"ひだり",en:"to the left of"}]);
-  const pool=Math.random()<.6?L4_LOC_CITIES:L4_LOC_PLACES;
+// Type D: Place/building to the right/left of another (like textbook map)
+function makeLocPlaceDirection(){
+  const pos=pick([
+    {jp:"みぎ",en:"to the right of"},
+    {jp:"ひだり",en:"to the left of"},
+    {jp:"となり",en:"next to"},
+    {jp:"まえ",en:"in front of"},
+    {jp:"うしろ",en:"behind"},
+  ]);
+  // Prefer places/buildings (textbook exercise style)
+  const pool=Math.random()<.3?L4_LOC_CITIES:L4_LOC_PLACES;
   const subj=pick(pool);
   const ref=_pickDifferent(pool,subj.jp);
   const en=`${subj.en} is ${pos.en} ${ref.en}.`;
-  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に あります。`;
-  const structure=`<b>[場所₁]は + [場所₂]の みぎ/ひだり に</b> + <b>あります</b>`;
-  return {qtext:en,hint:"方向：N1 は N2 の [みぎ/ひだり] に あります",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}です。`;
+  const structure=`<b>[場所₁]は + [場所₂]の [位置] + です</b>`;
+  return {qtext:en,hint:"[場所] は [場所] の [位置] です",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type E: Dialog — Answer "where is X?" question (Exercise II B / Pair Work C style)
+function makeLocDialog(){
+  // Mix of things-in-room and places-on-map
+  const useThings=Math.random()<.5;
+  let subj,ref,pos;
+  if(useThings){
+    const thingSubjs=[
+      {jp:"ほん",en:"the book"},
+      {jp:"かさ",en:"the umbrella"},
+      {jp:"ねこ",en:"the cat"},
+      {jp:"いぬ",en:"the dog"},
+      {jp:"ぼうし",en:"the hat"},
+      {jp:"とけい",en:"the clock"},
+      {jp:"くつ",en:"the shoes"},
+      {jp:"はな",en:"the flower"},
+      {jp:"ジーンズ",en:"the jeans"},
+    ];
+    subj=pick(thingSubjs);
+    ref=pick([{jp:"つくえ",en:"the desk"},{jp:"いす",en:"the chair"},{jp:"かばん",en:"the bag"},{jp:"テーブル",en:"the table"}]);
+    pos=pick(L4_LOC_POSITIONS);
+  }else{
+    subj=pick(L4_LOC_PLACES);
+    ref=_pickDifferent(L4_LOC_PLACES,subj.jp);
+    pos=pick([
+      {jp:"となり",en:"next to"},
+      {jp:"まえ",en:"in front of"},
+      {jp:"うしろ",en:"behind"},
+      {jp:"ちかく",en:"near"},
+      {jp:"みぎ",en:"to the right of"},
+      {jp:"ひだり",en:"to the left of"},
+    ]);
+  }
+  // Format: "Answer the question 'Where is X?' — X is [location] Y."
+  const en=`(Q: Where is ${subj.en}?)   → ${subj.en} is ${pos.en} ${ref.en}.`;
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}です。`;
+  const structure=`<b>Q:</b> ${subj.jp}は どこですか。<br><b>A:</b> <b>[X]は [Y]の [位置] です</b>`;
+  return {qtext:en,hint:"質問に答えてください",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type F: Location + で + Verb (extended pattern, secondary in L4)
+function makeLocWithVerb(){
+  const pos=pick([
+    {jp:"まえ",en:"in front of"},
+    {jp:"うしろ",en:"behind"},
+    {jp:"ちかく",en:"near"},
+    {jp:"なか",en:"inside"},
+  ]);
+  const place=pick(L4_LOC_PLACES);
+  const action=pick([
+    {jp:"メアリーさんを まちました",en:"waited for Mary",obj:"Mary"},
+    {jp:"たけしさんを まちました",en:"waited for Takeshi",obj:"Takeshi"},
+    {jp:"ともだちを まちました",en:"waited for my friend",obj:"my friend"},
+    {jp:"ごはんを たべました",en:"ate a meal",obj:null},
+    {jp:"コーヒーを のみました",en:"drank coffee",obj:null},
+  ]);
+  const en=`I ${action.en} ${pos.en} ${place.en}.`;
+  const ja=`わたしは ${place.jp}の ${pos.jp}で ${action.jp}。`;
+  const jaDrop=`${place.jp}の ${pos.jp}で ${action.jp}。`;
+  const structure=`<b>[主語]は + [場所]の [位置] で + [動作]</b>　<span style="color:#c0392b">※ 位置 + で + 動詞（動作場所）</span>`;
+  return {qtext:en,hint:"[場所]の[位置]<u>で</u> + 動詞　（動作が行われる場所 → で）",answers:[_cleanJa(ja),_cleanJa(jaDrop)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
 }
 
 function genL4Location(n=15){
   const qs=[];
   for(let i=0;i<n;i++){
     const r=Math.random();
-    if(r<.30)qs.push(makeLocThing());
-    else if(r<.55)qs.push(makeLocPerson());
-    else if(r<.70)qs.push(makeLocAnimal());
-    else if(r<.90)qs.push(makeLocBetween());
-    else qs.push(makeLocDirection());
+    if(r<.22)qs.push(makeLocThing());       // XはYの位置です（物）
+    else if(r<.40)qs.push(makeLocPerson()); // 人の位置（textbook exercise)
+    else if(r<.52)qs.push(makeLocAnimal()); // 動物
+    else if(r<.65)qs.push(makeLocBetween()); // あいだ
+    else if(r<.82)qs.push(makeLocPlaceDirection()); // 場所 (textbook Exercise II A)
+    else if(r<.95)qs.push(makeLocDialog()); // Q&A format (textbook II B / Pair Work C)
+    else qs.push(makeLocWithVerb());         // 位置 + で + 動詞 (extended)
   }
   return qs;
 }
@@ -2008,75 +2091,82 @@ function showL4LocRules(){
   l4State={view:"locRules",cat:null};
   let h=`<button class="back-lessons" onclick="showL4LocMenu()">← もののある場所</button>`;
   h+=`<div class="gbox show" style="display:block;margin-top:14px">
-    <h3>📍 もののある場所 — Describe where things are</h3>
+    <h3>📍 Describing Where Things Are</h3>
     <div class="note">
-      <b>基本パターン (Basic Pattern):</b><br>
-      [N1] は [N2] の [位置語] に <b>あります</b> / <b>います</b>。<br>
-      <span style="color:#888">→ "N1 is [location] N2."</span>
+      <b>基本パターン (Main Pattern — Lesson 4):</b><br>
+      <b>X は Y の [位置語] です。</b><br>
+      <span style="color:#888">→ "X is [location] Y."</span>
+    </div>
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：L4 は「です」を使う！</b><br>
+      <span style="color:#555">位置の <b>description</b> は <b>です</b> を使います。<br>
+      <b>あります / います</b> は「存在」(existence) を表すときに使います。</span>
     </div>
 
-    <h3 style="margin-top:14px">1. あります vs います</h3>
-    <div class="note">
-      <b>あります</b> = 物 (inanimate things): はな・ほん・つくえ・建物 etc.<br>
-      <b>います</b> = 人・動物 (animate): やまださん・ねこ・いぬ
-    </div>
-
-    <h3 style="margin-top:14px">2. 位置語 (Location Words)</h3>
+    <h3 style="margin-top:14px">1. 位置語 (Location Words)</h3>
     <table class="gtable">
       <tr><th>ひらがな</th><th>漢字</th><th>English</th></tr>
-      <tr><td>うえ</td><td>上</td><td>on; above</td></tr>
-      <tr><td>した</td><td>下</td><td>under; below</td></tr>
+      <tr><td>みぎ</td><td>右</td><td>to the right of</td></tr>
+      <tr><td>ひだり</td><td>左</td><td>to the left of</td></tr>
       <tr><td>まえ</td><td>前</td><td>in front of</td></tr>
       <tr><td>うしろ</td><td>後ろ</td><td>behind</td></tr>
       <tr><td>なか</td><td>中</td><td>inside</td></tr>
-      <tr><td>ちかく</td><td>近く</td><td>near; close to</td></tr>
+      <tr><td>うえ</td><td>上</td><td>on / above</td></tr>
+      <tr><td>した</td><td>下</td><td>under / beneath</td></tr>
+      <tr><td>ちかく</td><td>近く</td><td>near</td></tr>
       <tr><td>となり</td><td>隣</td><td>next to</td></tr>
-      <tr><td>みぎ</td><td>右</td><td>to the right of</td></tr>
-      <tr><td>ひだり</td><td>左</td><td>to the left of</td></tr>
-      <tr><td><b>あいだ</b></td><td>間</td><td>between (A<u>と</u>B<u>の</u>あいだ)</td></tr>
+      <tr><td><b>あいだ</b></td><td>間</td><td>between (X は Y <u>と</u> Z <u>の</u> あいだです)</td></tr>
     </table>
 
-    <h3 style="margin-top:14px">3. 例文 (Examples)</h3>
+    <h3 style="margin-top:14px">2. 例文 (Examples — directly from textbook)</h3>
     <div class="note">
-      <b>はな</b>は <b>つくえ</b>の <b>うえ</b>に <b>あります</b>。<br>
-      <span style="color:#888">The flower is on the desk.</span>
-    </div>
-    <div class="note">
-      <b>かばん</b>は <b>つくえ</b>の <b>した</b>に <b>あります</b>。<br>
-      <span style="color:#888">The bag is under the desk.</span>
+      マクドナルドは あのホテルの <b>まえ</b>です。<br>
+      <span style="color:#888">It's in front of that hotel.</span>
     </div>
     <div class="note">
-      <b>ほん</b>は <b>かばん</b>の <b>なか</b>に <b>あります</b>。<br>
-      <span style="color:#888">The book is inside the bag.</span>
+      ぎんこうは としょかんの <b>となり</b>です。<br>
+      <span style="color:#888">The bank is next to the library.</span>
     </div>
     <div class="note">
-      <b>いす</b>は <b>つくえ</b>の <b>ちかく</b>に <b>あります</b>。<br>
-      <span style="color:#888">The chair is near the desk.</span>
-    </div>
-    <div class="note" style="border-left-color:#2980b9">
-      <b>やまださん</b>は <b>さとうさん</b>の <b>となり</b>に <b>います</b>。<br>
-      <span style="color:#888">Yamada is next to Sato.</span>
-    </div>
-    <div class="note" style="border-left-color:#2980b9">
-      <b>やまださん</b>は <b>さとうさん</b>の <b>うしろ</b>に <b>います</b>。<br>
-      <span style="color:#888">Yamada is behind Sato.</span>
-    </div>
-    <div class="note" style="border-left-color:#2980b9">
-      <b>やまださん</b>は <b>さとうさん</b>の <b>まえ</b>に <b>います</b>。<br>
-      <span style="color:#888">Yamada is in front of Sato.</span>
+      かさは テーブルの <b>した</b>です。<br>
+      <span style="color:#888">The umbrella is under the table.</span>
     </div>
     <div class="note" style="border-left-color:#27ae60">
-      <b>やまださん</b>は <b>さとうさん</b>と <b>すずきさん</b>の <b>あいだ</b>に <b>います</b>。<br>
-      <span style="color:#888">Yamada is between Sato and Suzuki.<br>
-      <b>※ と / の</b> の位置に注意！</span>
+      レストランは スーパーと びょういんの <b>あいだ</b>です。<br>
+      <span style="color:#888">The restaurant is between the supermarket and the hospital.</span>
     </div>
-    <div class="note" style="border-left-color:#f39c12">
-      <b>とうきょう</b>は <b>よこはま</b>の <b>みぎ</b>に <b>あります</b>。<br>
-      <span style="color:#888">Tokyo is to the right of Yokohama.</span>
+
+    <h3 style="margin-top:14px">3. 拡張：位置 + で + 動詞 (with a verb)</h3>
+    <div class="note">
+      To describe an event happening at a location, use <b>で</b> (not です):<br>
+      <b>わたしは モスバーガーの まえで メアリーさんを まちました。</b><br>
+      <span style="color:#888">I waited for Mary in front of the Mos Burger.</span>
     </div>
-    <div class="note" style="border-left-color:#f39c12">
-      <b>よこはま</b>は <b>とうきょう</b>の <b>ひだり</b>に <b>あります</b>。<br>
-      <span style="color:#888">Yokohama is to the left of Tokyo.</span>
+
+    <h3 style="margin-top:14px">4. 会話のパターン (Dialog)</h3>
+    <div class="note">
+      <b>A:</b> すみません。こうえんは どこですか。<br>
+      <b>B:</b> こうえんは ホテルの となりです。<br>
+      <b>A:</b> ありがとうございます。<br>
+      <b>B:</b> いいえ。
+    </div>
+
+    <h3 style="margin-top:14px">5. Notes from the textbook</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      <b>📎 そば</b> is another word for "near"<br>
+      <b>📎 となり</b> = two side-by-side buildings/people (same kind)<br>
+      <b>📎 よこ</b> = wider "by" (different kinds)<br>
+      〇 かばんは つくえの <b>よこ</b>です。 (The bag is by the desk.)<br>
+      × かばんは つくえの <b>となり</b>です。(odd — bag ≠ desk kind)
+    </div>
+
+    <h3 style="margin-top:14px">6. です vs あります/います</h3>
+    <div class="note" style="background:#f0f8ff;border-left-color:#2980b9">
+      <b>です</b> — 既知の物の位置を <u>説明</u> する (description)<br>
+      　ex: マクドナルドは ホテルの まえです。<br>
+      <b>あります / います</b> — <u>存在</u> を introduce する (existence)<br>
+      　ex: あそこに 留学生が <b>います</b>。(There is a student over there.)<br>
+      　ex: つくえの うえに ほんが <b>あります</b>。(There is a book on the desk.)
     </div>
   </div>`;
   document.getElementById("menuContent").innerHTML=h;
