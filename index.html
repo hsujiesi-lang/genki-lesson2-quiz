@@ -1395,6 +1395,186 @@ function genL4Duration(n=12){
 
 L4_GENERATORS["g_duration"]={title:"時間の長さ (Duration of Time)",gen:()=>genL4Duration(15)};
 
+// ============================================================
+//  L4 Grammar: Describe where things are (もののある場所)
+// ============================================================
+const L4_LOC_POSITIONS=[
+  {jp:"うえ",en:"on; on top of",kanji:"上"},
+  {jp:"した",en:"under; below",kanji:"下"},
+  {jp:"まえ",en:"in front of",kanji:"前"},
+  {jp:"うしろ",en:"behind",kanji:"後ろ"},
+  {jp:"なか",en:"inside",kanji:"中"},
+  {jp:"ちかく",en:"near; close to",kanji:"近く"},
+  {jp:"となり",en:"next to",kanji:"隣"},
+];
+
+const L4_LOC_THINGS_SUBJ=[
+  {jp:"はな",en:"the flower"},
+  {jp:"ほん",en:"the book"},
+  {jp:"かばん",en:"the bag"},
+  {jp:"ざっし",en:"the magazine"},
+  {jp:"ノート",en:"the notebook"},
+  {jp:"ペン",en:"the pen"},
+  {jp:"スマホ",en:"the smartphone"},
+  {jp:"しゃしん",en:"the photograph"},
+  {jp:"とけい",en:"the clock"},
+  {jp:"レポート",en:"the paper (report)"},
+  {jp:"パン",en:"the bread"},
+  {jp:"おかね",en:"the money"},
+];
+
+const L4_LOC_THINGS_REF=[
+  {jp:"つくえ",en:"the desk"},
+  {jp:"いす",en:"the chair"},
+  {jp:"かばん",en:"the bag"},
+  {jp:"ほん",en:"the book"},
+  {jp:"テレビ",en:"the TV"},
+  {jp:"ノート",en:"the notebook"},
+];
+
+const L4_LOC_PEOPLE=[
+  {jp:"やまださん",en:"Yamada"},
+  {jp:"さとうさん",en:"Sato"},
+  {jp:"すずきさん",en:"Suzuki"},
+  {jp:"たなかさん",en:"Tanaka"},
+  {jp:"メアリーさん",en:"Mary"},
+  {jp:"たけしさん",en:"Takeshi"},
+];
+
+const L4_LOC_ANIMALS=[
+  {jp:"ねこ",en:"the cat"},
+  {jp:"いぬ",en:"the dog"},
+];
+
+const L4_LOC_PLACES=[
+  {jp:"おてら",en:"the temple"},
+  {jp:"こうえん",en:"the park"},
+  {jp:"スーパー",en:"the supermarket"},
+  {jp:"びょういん",en:"the hospital"},
+  {jp:"ホテル",en:"the hotel"},
+  {jp:"ほんや",en:"the bookstore"},
+  {jp:"レストラン",en:"the restaurant"},
+  {jp:"バスてい",en:"the bus stop"},
+  {jp:"こうえん",en:"the park"},
+];
+
+const L4_LOC_CITIES=[
+  {jp:"とうきょう",en:"Tokyo"},
+  {jp:"よこはま",en:"Yokohama"},
+  {jp:"おおさか",en:"Osaka"},
+  {jp:"きょうと",en:"Kyoto"},
+  {jp:"なごや",en:"Nagoya"},
+];
+
+function _pickDifferent(arr,exclude){
+  let p=pick(arr),tries=0;
+  while(p.jp===exclude&&tries<10){p=pick(arr);tries++}
+  return p;
+}
+
+// Type A: Object on/under/in/near/next-to another thing (あります)
+function makeLocThing(){
+  const pos=pick(L4_LOC_POSITIONS);
+  let subj,ref;
+  if(pos.jp==="なか"){
+    // 中 — subject is small item, reference has interior
+    subj=pick([
+      {jp:"ほん",en:"the book"},
+      {jp:"ペン",en:"the pen"},
+      {jp:"スマホ",en:"the smartphone"},
+      {jp:"ノート",en:"the notebook"},
+      {jp:"しゃしん",en:"the photograph"},
+      {jp:"おかね",en:"the money"},
+    ]);
+    ref=pick([
+      {jp:"かばん",en:"the bag"},
+      {jp:"つくえ",en:"the desk"},
+    ]);
+  }else{
+    subj=pick(L4_LOC_THINGS_SUBJ);
+    ref=_pickDifferent(L4_LOC_THINGS_REF,subj.jp);
+  }
+  const en=`${subj.en} is ${pos.en} ${ref.en}.`;
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に あります。`;
+  const structure=`<b>[物₁]は + [物₂]の [位置] に</b> + <b>あります</b>　<span style="color:#c0392b">※ 物 → あります</span>`;
+  return {qtext:en,hint:"物の位置：N1 は N2 の [位置] に あります",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: Person next to / in front of / behind another person (います)
+function makeLocPerson(){
+  const pos=pick([
+    {jp:"となり",en:"next to"},
+    {jp:"まえ",en:"in front of"},
+    {jp:"うしろ",en:"behind"},
+    {jp:"ちかく",en:"near"},
+  ]);
+  const subj=pick(L4_LOC_PEOPLE);
+  const ref=_pickDifferent(L4_LOC_PEOPLE,subj.jp);
+  const en=`${subj.en} is ${pos.en} ${ref.en}.`;
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に います。`;
+  const structure=`<b>[人₁]は + [人₂]の [位置] に</b> + <b>います</b>　<span style="color:#c0392b">※ 人・動物 → います</span>`;
+  return {qtext:en,hint:"人の位置：N1 は N2 の [位置] に います",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B2: Animal position (いる)
+function makeLocAnimal(){
+  const pos=pick(L4_LOC_POSITIONS);
+  const subj=pick(L4_LOC_ANIMALS);
+  const ref=pick([{jp:"つくえ",en:"the desk"},{jp:"いす",en:"the chair"},{jp:"かばん",en:"the bag"}]);
+  const en=`${subj.en} is ${pos.en} ${ref.en}.`;
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に います。`;
+  const structure=`<b>[動物]は + [物]の [位置] に</b> + <b>います</b>　<span style="color:#c0392b">※ 動物 → います</span>`;
+  return {qtext:en,hint:"動物の位置：[動物] は [場所] に います",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: Between A and B (あいだ)
+function makeLocBetween(){
+  const useAnimate=Math.random()<.55;
+  let subj,r1,r2,copula,hint;
+  if(useAnimate){
+    subj=pick(L4_LOC_PEOPLE);
+    r1=_pickDifferent(L4_LOC_PEOPLE,subj.jp);
+    r2=pick(L4_LOC_PEOPLE.filter(p=>p.jp!==subj.jp&&p.jp!==r1.jp));
+    copula="います";hint="人は [A]と [B]の あいだに います";
+  }else{
+    subj=pick(L4_LOC_THINGS_SUBJ);
+    r1=_pickDifferent(L4_LOC_THINGS_REF,subj.jp);
+    r2=pick(L4_LOC_THINGS_REF.filter(p=>p.jp!==subj.jp&&p.jp!==r1.jp));
+    copula="あります";hint="物は [A]と [B]の あいだに あります";
+  }
+  const en=`${subj.en} is between ${r1.en} and ${r2.en}.`;
+  const ja=`${subj.jp}は ${r1.jp}と ${r2.jp}の あいだに ${copula}。`;
+  const structure=`<b>[X]は + [A]と [B]の あいだに</b> + <b>${copula}</b>　<span style="color:#c0392b">※ 「あいだ」は「A<u>と</u>B<u>の</u>あいだ」</span>`;
+  return {qtext:en,hint,answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type D: City/place to the right/left (as in Tokyo / Yokohama example)
+function makeLocDirection(){
+  const pos=pick([{jp:"みぎ",en:"to the right of"},{jp:"ひだり",en:"to the left of"}]);
+  const pool=Math.random()<.6?L4_LOC_CITIES:L4_LOC_PLACES;
+  const subj=pick(pool);
+  const ref=_pickDifferent(pool,subj.jp);
+  const en=`${subj.en} is ${pos.en} ${ref.en}.`;
+  const ja=`${subj.jp}は ${ref.jp}の ${pos.jp}に あります。`;
+  const structure=`<b>[場所₁]は + [場所₂]の みぎ/ひだり に</b> + <b>あります</b>`;
+  return {qtext:en,hint:"方向：N1 は N2 の [みぎ/ひだり] に あります",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL4Location(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.30)qs.push(makeLocThing());
+    else if(r<.55)qs.push(makeLocPerson());
+    else if(r<.70)qs.push(makeLocAnimal());
+    else if(r<.90)qs.push(makeLocBetween());
+    else qs.push(makeLocDirection());
+  }
+  return qs;
+}
+
+L4_GENERATORS["g_loc"]={title:"もののある場所 (Describe Where Things Are)",gen:()=>genL4Location(15)};
+
 // ===== L4 Verb audio list (dict / ました / ませんでした) =====
 const L4_VERB_LIST=[
   // New L4 verbs (typical Genki L4)
@@ -1694,7 +1874,12 @@ function buildL4Menu(){
       </div>
 
       <div class="section-label">文法 GRAMMAR</div>
-      <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#3498db;background:#f0f8ff">
+      <div class="menu-btn full" onclick="showL4LocMenu()" style="border-color:#2980b9;background:#f0f8ff">
+        <div class="icon">📍</div>
+        <span class="t1">もののある場所 (Where things are)</span>
+        <span class="t2">～の うえ/した/まえ/うしろ/なか/ちかく/となり/あいだ/みぎ/ひだり に</span>
+      </div>
+      <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">🕐</div>
         <span class="t1">時間の長さ (Duration of Time)</span>
         <span class="t2">～じかん / ～じかんはん / ～じかんぐらい / なんじかん</span>
@@ -1799,12 +1984,112 @@ function renderL4Main(){
   document.getElementById("menuContent").innerHTML=buildL4Menu();
 }
 
+function showL4LocMenu(){
+  l4State={view:"locMenu",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL4Main()">← L4 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">📍 もののある場所</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Describe where things are</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL4LocRules()" style="border-color:#2980b9;background:#f0f8ff">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">文法パターンと例文を確認する</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(4,'g_loc')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：位置表現の完整文を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4LocRules(){
+  l4State={view:"locRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL4LocMenu()">← もののある場所</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>📍 もののある場所 — Describe where things are</h3>
+    <div class="note">
+      <b>基本パターン (Basic Pattern):</b><br>
+      [N1] は [N2] の [位置語] に <b>あります</b> / <b>います</b>。<br>
+      <span style="color:#888">→ "N1 is [location] N2."</span>
+    </div>
+
+    <h3 style="margin-top:14px">1. あります vs います</h3>
+    <div class="note">
+      <b>あります</b> = 物 (inanimate things): はな・ほん・つくえ・建物 etc.<br>
+      <b>います</b> = 人・動物 (animate): やまださん・ねこ・いぬ
+    </div>
+
+    <h3 style="margin-top:14px">2. 位置語 (Location Words)</h3>
+    <table class="gtable">
+      <tr><th>ひらがな</th><th>漢字</th><th>English</th></tr>
+      <tr><td>うえ</td><td>上</td><td>on; above</td></tr>
+      <tr><td>した</td><td>下</td><td>under; below</td></tr>
+      <tr><td>まえ</td><td>前</td><td>in front of</td></tr>
+      <tr><td>うしろ</td><td>後ろ</td><td>behind</td></tr>
+      <tr><td>なか</td><td>中</td><td>inside</td></tr>
+      <tr><td>ちかく</td><td>近く</td><td>near; close to</td></tr>
+      <tr><td>となり</td><td>隣</td><td>next to</td></tr>
+      <tr><td>みぎ</td><td>右</td><td>to the right of</td></tr>
+      <tr><td>ひだり</td><td>左</td><td>to the left of</td></tr>
+      <tr><td><b>あいだ</b></td><td>間</td><td>between (A<u>と</u>B<u>の</u>あいだ)</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">3. 例文 (Examples)</h3>
+    <div class="note">
+      <b>はな</b>は <b>つくえ</b>の <b>うえ</b>に <b>あります</b>。<br>
+      <span style="color:#888">The flower is on the desk.</span>
+    </div>
+    <div class="note">
+      <b>かばん</b>は <b>つくえ</b>の <b>した</b>に <b>あります</b>。<br>
+      <span style="color:#888">The bag is under the desk.</span>
+    </div>
+    <div class="note">
+      <b>ほん</b>は <b>かばん</b>の <b>なか</b>に <b>あります</b>。<br>
+      <span style="color:#888">The book is inside the bag.</span>
+    </div>
+    <div class="note">
+      <b>いす</b>は <b>つくえ</b>の <b>ちかく</b>に <b>あります</b>。<br>
+      <span style="color:#888">The chair is near the desk.</span>
+    </div>
+    <div class="note" style="border-left-color:#2980b9">
+      <b>やまださん</b>は <b>さとうさん</b>の <b>となり</b>に <b>います</b>。<br>
+      <span style="color:#888">Yamada is next to Sato.</span>
+    </div>
+    <div class="note" style="border-left-color:#2980b9">
+      <b>やまださん</b>は <b>さとうさん</b>の <b>うしろ</b>に <b>います</b>。<br>
+      <span style="color:#888">Yamada is behind Sato.</span>
+    </div>
+    <div class="note" style="border-left-color:#2980b9">
+      <b>やまださん</b>は <b>さとうさん</b>の <b>まえ</b>に <b>います</b>。<br>
+      <span style="color:#888">Yamada is in front of Sato.</span>
+    </div>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>やまださん</b>は <b>さとうさん</b>と <b>すずきさん</b>の <b>あいだ</b>に <b>います</b>。<br>
+      <span style="color:#888">Yamada is between Sato and Suzuki.<br>
+      <b>※ と / の</b> の位置に注意！</span>
+    </div>
+    <div class="note" style="border-left-color:#f39c12">
+      <b>とうきょう</b>は <b>よこはま</b>の <b>みぎ</b>に <b>あります</b>。<br>
+      <span style="color:#888">Tokyo is to the right of Yokohama.</span>
+    </div>
+    <div class="note" style="border-left-color:#f39c12">
+      <b>よこはま</b>は <b>とうきょう</b>の <b>ひだり</b>に <b>あります</b>。<br>
+      <span style="color:#888">Yokohama is to the left of Tokyo.</span>
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
 function restoreL4View(){
   if(!l4State)return;
   if(l4State.view==="verbAudio")showL4VerbAudio();
   else if(l4State.view==="vocabAudio"&&l4State.cat)showL4VocabAudio(l4State.cat);
   else if(l4State.view==="format"&&l4State.cat)showL4Format(l4State.cat);
   else if(l4State.view==="vocab")showL4Vocab();
+  else if(l4State.view==="locMenu")showL4LocMenu();
+  else if(l4State.view==="locRules")showL4LocRules();
   else renderL4Main();
 }
 
