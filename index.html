@@ -1340,19 +1340,44 @@ function makeL4DurQuestion(){
 }
 
 function makeL4DurWait(){
-  // Special pattern with waiting for someone
+  // Special pattern with waiting for someone — accepts both word orders
   const n=pick(L4_DUR_NUMS);
   const useAbout=Math.random()<.5;
   const useHalf=!useAbout&&Math.random()<.5;
   const who=pick([{jp:"たけしさん",en:"Takeshi"},{jp:"メアリーさん",en:"Mary"},{jp:"ともだち",en:"my friend"}]);
+  const useSubject=Math.random()<.5;
+  const subj=useSubject?pick([{jp:"わたし",en:"I"},{jp:"メアリーさん",en:"Mary"},{jp:"たけしさん",en:"Takeshi"}]):null;
+  // Avoid same person as subject and object
+  let actualWho=who;
+  if(subj&&subj.jp===who.jp){actualWho=pick([{jp:"たけしさん",en:"Takeshi"},{jp:"ともだち",en:"my friend"}].filter(x=>x.jp!==subj.jp));}
+
   let durJp,durEn;
   if(useAbout){durJp=n.dur+"ぐらい";durEn="for about "+n.en;}
   else if(useHalf){durJp=n.half;durEn="for "+n.halfEn;}
   else{durJp=n.dur;durEn="for "+n.en;}
-  const en=`I waited for ${who.en} ${durEn}.`;
-  const ja=who.jp+"を "+durJp+" まちました。";
-  const structure=`<b>[人]を + [Xじかん${useAbout?"ぐらい":useHalf?"はん":""}]</b> + <b>まちました</b>　<span style="color:#c0392b">※ まつ takes を (object particle)</span>`;
-  return {qtext:en,hint:"「を」は「誰を待つか」に使います",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true};
+
+  const enSubj=subj?subj.en:"I";
+  const waitVerb=enSubj==="I"?"waited":(enSubj+" waited").match(/^(?:Mary|Takeshi) waited/)?"waited":"waited";
+  const en=`${enSubj} waited for ${actualWho.en} ${durEn}.`;
+
+  // Two valid orders, both natural Japanese
+  const subjJp=subj?subj.jp+"は ":"";
+  const jaOrderA=subjJp+actualWho.jp+"を "+durJp+" まちました。";  // Object before Duration (textbook order)
+  const jaOrderB=subjJp+durJp+" "+actualWho.jp+"を まちました。";  // Duration before Object (also natural)
+  // Explanation shows the textbook order
+  const explain=jaOrderA;
+  const answers=[_cleanJa(jaOrderA),_cleanJa(jaOrderB)];
+  // Also accept dropped-subject if subject was "わたし"
+  if(subj&&subj.jp==="わたし"){
+    answers.push(_cleanJa(actualWho.jp+"を "+durJp+" まちました。"));
+    answers.push(_cleanJa(durJp+" "+actualWho.jp+"を まちました。"));
+  }
+
+  const durLabel=useAbout?"Xじかんぐらい":useHalf?"Xじかんはん":"Xじかん";
+  const structure=`<b>[主語]は + [人]を + [${durLabel}]</b> + <b>まちました</b><br><span style="color:#888;font-size:.88em">または：[主語]は + [${durLabel}] + [人]を + まちました　（どちらもOK！）</span><br><span style="color:#c0392b;font-size:.88em">※ まつ takes を （waiting for someone = 誰を待つ）</span>`;
+
+  const hint=subj&&subj.jp==="わたし"?"「わたしは」は省略可。語順は自由 (Object↔Duration)":"語順は自由です — [人]を [時間] も [時間] [人]を もOK";
+  return {qtext:en,hint,answers,explain,structure,isTranslation:true};
 }
 
 function genL4Duration(n=12){
