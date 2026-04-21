@@ -130,6 +130,11 @@
         <span class="ltitle">メアリーさんの 週末</span>
         <span class="lsub">Mary's Weekend</span>
       </div>
+      <div class="lesson-card" onclick="showNumbersMenu()" style="border-color:#2ecc71">
+        <div class="lnum" style="color:#2ecc71">123</div>
+        <span class="ltitle">数字 (Numbers)</span>
+        <span class="lsub">百・千・万 & 助数詞</span>
+      </div>
     </div>
     <!-- Global wrong bank -->
     <div style="text-align:center;margin-top:8px">
@@ -1810,6 +1815,164 @@ function _verbRowHTML(v,idx){
 }
 
 // ============================================================
+//  NUMBERS — Pronunciation & Quiz
+// ============================================================
+const N_1_10=[
+  {d:"1",jp:"いち"},{d:"2",jp:"に"},{d:"3",jp:"さん"},
+  {d:"4",jp:"よん",alt:"し"},{d:"5",jp:"ご"},{d:"6",jp:"ろく"},
+  {d:"7",jp:"なな",alt:"しち"},{d:"8",jp:"はち"},
+  {d:"9",jp:"きゅう",alt:"く"},{d:"10",jp:"じゅう"},
+];
+const N_10S=[
+  {d:"10",jp:"じゅう"},{d:"20",jp:"にじゅう"},{d:"30",jp:"さんじゅう"},
+  {d:"40",jp:"よんじゅう"},{d:"50",jp:"ごじゅう"},{d:"60",jp:"ろくじゅう"},
+  {d:"70",jp:"ななじゅう"},{d:"80",jp:"はちじゅう"},{d:"90",jp:"きゅうじゅう"},
+];
+const N_100S=[
+  {d:"100",jp:"ひゃく"},{d:"200",jp:"にひゃく"},
+  {d:"300",jp:"さんびゃく",warn:"び"},{d:"400",jp:"よんひゃく"},
+  {d:"500",jp:"ごひゃく"},{d:"600",jp:"ろっぴゃく",warn:"ろっ + ぴ"},
+  {d:"700",jp:"ななひゃく"},{d:"800",jp:"はっぴゃく",warn:"はっ + ぴ"},
+  {d:"900",jp:"きゅうひゃく"},
+];
+const N_1000S=[
+  {d:"1,000",jp:"せん"},{d:"2,000",jp:"にせん"},
+  {d:"3,000",jp:"さんぜん",warn:"ぜ"},{d:"4,000",jp:"よんせん"},
+  {d:"5,000",jp:"ごせん"},{d:"6,000",jp:"ろくせん"},
+  {d:"7,000",jp:"ななせん"},{d:"8,000",jp:"はっせん",warn:"はっ"},
+  {d:"9,000",jp:"きゅうせん"},
+];
+const N_10000S=[
+  {d:"10,000",jp:"いちまん"},{d:"20,000",jp:"にまん"},
+  {d:"30,000",jp:"さんまん"},{d:"50,000",jp:"ごまん"},
+  {d:"100,000",jp:"じゅうまん"},{d:"500,000",jp:"ごじゅうまん"},
+  {d:"1,000,000",jp:"ひゃくまん"},{d:"10,000,000",jp:"せんまん"},
+  {d:"100,000,000",jp:"いちおく"},
+];
+const N_COUNTERS=[
+  // Yen (money)
+  {d:"10円",jp:"じゅうえん"},
+  {d:"100円",jp:"ひゃくえん"},
+  {d:"500円",jp:"ごひゃくえん"},
+  {d:"1,000円",jp:"せんえん"},
+  {d:"3,000円",jp:"さんぜんえん"},
+  {d:"8,000円",jp:"はっせんえん"},
+  {d:"10,000円",jp:"いちまんえん"},
+  // Time o'clock (〜じ)
+  {d:"1時",jp:"いちじ"},{d:"4時",jp:"よじ",warn:"よ"},
+  {d:"7時",jp:"しちじ",warn:"しち"},{d:"9時",jp:"くじ",warn:"く"},
+  // Duration (〜じかん)
+  {d:"1時間",jp:"いちじかん"},{d:"2時間",jp:"にじかん"},
+  {d:"4時間",jp:"よじかん",warn:"よ"},{d:"7時間",jp:"しちじかん",warn:"しち"},
+  // People (〜にん)
+  {d:"1人",jp:"ひとり",warn:"特殊"},{d:"2人",jp:"ふたり",warn:"特殊"},
+  {d:"3人",jp:"さんにん"},{d:"4人",jp:"よにん",warn:"よ"},
+];
+
+const N_GROUPS=[
+  {key:"ones",  icon:"1️⃣",title:"1 〜 10",subtitle:"Basic numbers",data:N_1_10},
+  {key:"tens",  icon:"🔟",title:"10 〜 90",subtitle:"Tens (十)",data:N_10S},
+  {key:"hundreds",icon:"💯",title:"100 〜 900",subtitle:"Hundreds (百) — 300/600/800 音変",data:N_100S},
+  {key:"thousands",icon:"🔢",title:"1,000 〜 9,000",subtitle:"Thousands (千) — 3,000/8,000 音変",data:N_1000S},
+  {key:"tenK",  icon:"💰",title:"10,000+",subtitle:"万 / 億 (ten-thousands)",data:N_10000S},
+  {key:"counters",icon:"📏",title:"助数詞",subtitle:"〜円/〜時/〜時間/〜人",data:N_COUNTERS},
+];
+
+function playNumberJP(jp){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(jp);
+  u.lang="ja-JP";u.rate=.8;
+  window.speechSynthesis.speak(u);
+}
+
+function showNumbersMenu(){
+  currentLesson="numbers";
+  document.getElementById("lessonPicker").style.display="none";
+  document.getElementById("menuScreen").style.display="block";
+  const mc=document.getElementById("menuContent");
+  let h=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">🔢 数字 — Numbers & Counters</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Tap 🔊 to hear pronunciation, or try a quiz</p>`;
+  h+=`<div class="menu-grid"><div class="section-label">📖 発音リスト (Pronunciation List)</div>`;
+  N_GROUPS.forEach(g=>{
+    h+=`<div class="menu-btn" onclick="showNumberGroup('${g.key}')">
+          <div class="icon" style="font-size:1.6rem">${g.icon}</div>
+          <span class="t1">${g.title}</span>
+          <span class="t2">${g.subtitle}</span>
+        </div>`;
+  });
+  h+=`<div class="section-label">✏️ クイズ (Quiz)</div>
+      <div class="menu-btn" onclick="startQuiz('numbers','n_d2j')">
+        <div class="icon">1→いち</div>
+        <span class="t1">数字 → 日本語</span>
+        <span class="t2">See digit, type Japanese reading</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz('numbers','n_j2d')">
+        <div class="icon">いち→1</div>
+        <span class="t1">日本語 → 数字</span>
+        <span class="t2">See Japanese, type digit</span>
+      </div>`;
+  h+=`</div>`;
+  mc.innerHTML=h;
+}
+
+function showNumberGroup(key){
+  const g=N_GROUPS.find(x=>x.key===key);
+  if(!g)return;
+  let h=`<button class="back-lessons" onclick="showNumbersMenu()">← 数字メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${g.icon} ${g.title}</h3>`;
+  h+=`<p style="color:#999;font-size:.82rem;margin-bottom:10px;padding-left:4px">🔊 をタップして発音を聞く</p>`;
+  g.data.forEach((n,i)=>{
+    const warnBadge=n.warn?`<span style="background:#e74c3c;color:#fff;font-size:.65rem;padding:2px 6px;border-radius:6px;margin-left:6px">⚠ ${n.warn}</span>`:"";
+    const altText=n.alt?`<span style="color:#999;font-size:.85rem;margin-left:8px">or ${n.alt}</span>`:"";
+    h+=`<div class="verb-row">
+      <button class="vplay" onclick="playNumberJP('${n.jp}')" title="発音">🔊</button>
+      <span class="vdict" style="min-width:80px;color:#2980b9" onclick="playNumberJP('${n.jp}')">${n.d}</span>
+      <span class="vforms" onclick="playNumberJP('${n.jp}')" style="cursor:pointer">${n.jp}${altText}</span>
+      ${warnBadge}
+    </div>`;
+    if(n.alt){
+      // Optionally let them play the alt reading
+      // already bound above via text click
+    }
+  });
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+// Quiz data: pool all number readings (digit <-> jp)
+function _numbersPool(){
+  const pool=[];
+  [N_1_10,N_10S,N_100S,N_1000S,N_10000S,N_COUNTERS].forEach(arr=>arr.forEach(n=>pool.push(n)));
+  return pool;
+}
+function _normDigit(s){return String(s).replace(/[,，]/g,"").replace(/\s/g,"")}
+
+function genNumbersDigit2Jp(n=15){
+  const pool=_numbersPool();
+  return shuffle([...pool]).slice(0,n).map(num=>{
+    const answers=[num.jp];
+    if(num.alt)answers.push(num.alt);
+    return {qtext:`<span style="font-size:2rem;font-weight:700;color:#2980b9">${num.d}</span>`,
+            hint:"日本語で入力してください",answers,explain:num.jp};
+  });
+}
+function genNumbersJp2Digit(n=15){
+  const pool=_numbersPool();
+  return shuffle([...pool]).slice(0,n).map(num=>{
+    // Accept digit with or without commas
+    const answers=[num.d,_normDigit(num.d)];
+    return {qtext:`<span style="font-size:1.6rem;font-weight:700">${num.jp}</span>${num.alt?` <span style="color:#999;font-size:.9rem">(or ${num.alt})</span>`:""}`,
+            hint:"数字を入力してください (カンマは任意 / commas optional)",
+            answers:[...new Set(answers)],explain:num.d};
+  });
+}
+
+const NUMBERS_GENERATORS={
+  n_d2j:{title:"数字 → 日本語 読み方",gen:()=>genNumbersDigit2Jp(15)},
+  n_j2d:{title:"日本語 → 数字",gen:()=>genNumbersJp2Digit(15)},
+};
+
+// ============================================================
 //  MENU BUILDERS
 // ============================================================
 function buildL2Menu(){
@@ -2208,6 +2371,7 @@ function backToMenu(){
   if(currentLesson){
     document.getElementById("menuScreen").style.display="block";
     if(currentLesson===4)restoreL4View();
+    else if(currentLesson==="numbers")showNumbersMenu();
   }else{
     document.getElementById("lessonPicker").style.display="block";
   }
@@ -2253,7 +2417,8 @@ function startWrongBank(){
 // ========== ENGINE ==========
 function startQuiz(lesson,type){
   let gens;
-  if(lesson===4)gens=L4_GENERATORS;
+  if(lesson==="numbers")gens=NUMBERS_GENERATORS;
+  else if(lesson===4)gens=L4_GENERATORS;
   else if(lesson===3)gens=L3_GENERATORS;
   else gens=L2_GENERATORS;
   const g=gens[type];
