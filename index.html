@@ -2028,6 +2028,130 @@ function genL4Mo(n=15){
 }
 L4_GENERATORS["g_mo"]={title:"も (Also) — Particle Practice",gen:()=>genL4Mo(15)};
 
+// ============================================================
+// L4 Grammar: Particle と (With / And)
+// ============================================================
+const L4_TO_SUBJECTS=[
+  {jp:"わたし",en:"I",drop:true},
+  {jp:"わたし",en:"I",drop:true},
+  {jp:"メアリーさん",en:"Mary"},
+  {jp:"たけしさん",en:"Takeshi"},
+  {jp:"ソラさん",en:"Sora"},
+  {jp:"やまださん",en:"Yamada"},
+];
+const L4_TO_PEOPLE=[
+  {jp:"ソラさん",en:"Sora"},
+  {jp:"たけしさん",en:"Takeshi"},
+  {jp:"メアリーさん",en:"Mary"},
+  {jp:"やまださん",en:"Yamada"},
+  {jp:"さとうさん",en:"Sato"},
+  {jp:"ともだち",en:"my friend"},
+];
+const L4_TO_DEST=[
+  {jp:"かんこく",en:"Korea"},
+  {jp:"とうきょう",en:"Tokyo"},
+  {jp:"おおさか",en:"Osaka"},
+  {jp:"きょうと",en:"Kyoto"},
+  {jp:"こうえん",en:"the park"},
+  {jp:"としょかん",en:"the library"},
+  {jp:"カフェ",en:"a cafe"},
+  {jp:"レストラン",en:"a restaurant"},
+  {jp:"スーパー",en:"the supermarket"},
+  {jp:"ホテル",en:"the hotel"},
+];
+const L4_TO_NOUN_PAIRS=[
+  {a:{jp:"パン",en:"bread"},b:{jp:"やさい",en:"vegetables"},verb:{jp:"たべます",en:"eat"}},
+  {a:{jp:"にく",en:"meat"},b:{jp:"さかな",en:"fish"},verb:{jp:"たべます",en:"eat"}},
+  {a:{jp:"あさごはん",en:"breakfast"},b:{jp:"ばんごはん",en:"dinner"},verb:{jp:"たべました",en:"ate"}},
+  {a:{jp:"コーヒー",en:"coffee"},b:{jp:"おちゃ",en:"tea"},verb:{jp:"のみます",en:"drink"}},
+  {a:{jp:"ほん",en:"a book"},b:{jp:"ノート",en:"a notebook"},verb:{jp:"かいました",en:"bought"}},
+  {a:{jp:"しんぶん",en:"the newspaper"},b:{jp:"ざっし",en:"a magazine"},verb:{jp:"よみます",en:"read"}},
+  {a:{jp:"ほん",en:"a book"},b:{jp:"ざっし",en:"a magazine"},verb:{jp:"よみました",en:"read"}},
+  {a:{jp:"はな",en:"flowers"},b:{jp:"おかし",en:"snacks"},verb:{jp:"かいました",en:"bought"}},
+];
+const L4_TO_MOTION=[
+  {jp:"いきました",en:"went to",past:true},
+  {jp:"きました",en:"came to",past:true},
+  {jp:"かえりました",en:"returned to",past:true},
+];
+
+function _pickToDiff(arr,exclude){
+  let p=pick(arr),tries=0;
+  while(p.jp===exclude.jp&&tries<10){p=pick(arr);tries++}
+  return p;
+}
+
+// Type A: Person と Verb — "with (a person)"
+function makeToWithPerson(){
+  const subj=pick(L4_TO_SUBJECTS);
+  const person=_pickToDiff(L4_TO_PEOPLE,subj);
+  const dest=pick(L4_TO_DEST);
+  const verb=pick(L4_TO_MOTION);
+  const en=`${subj.en} ${verb.en} ${dest.en} with ${person.en}.`;
+  const ja=`${subj.jp}は ${person.jp}と ${dest.jp}に ${verb.jp}。`;
+  const jaDrop=`${person.jp}と ${dest.jp}に ${verb.jp}。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[主語]は + [人]と + [場所]に + [動詞]</b><br><span style="color:#c0392b;font-size:.85em">🧑‍🤝‍🧑 人 + と = with (a person) — 動詞の前に付ける</span>`;
+  return {qtext:en,hint:subj.drop?"「人+と」= with (a person)（「わたしは」は省略可）":"「人+と」= with (a person)",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: A と B connecting nouns — "A and B"
+function makeToAndNouns(){
+  const pair=pick(L4_TO_NOUN_PAIRS);
+  const subj=pick(L4_TO_SUBJECTS);
+  // Build English with 3rd person vs 1st person verb
+  let enVerb=pair.verb.en;
+  if(!subj.drop){
+    // 3rd person — conjugate present tense
+    if(enVerb==="eat")enVerb="eats";
+    else if(enVerb==="drink")enVerb="drinks";
+    else if(enVerb==="read")enVerb="reads";
+    // past tense stays same
+  }
+  const en=`${subj.en} ${enVerb} ${pair.a.en} and ${pair.b.en}.`;
+  const ja=`${subj.jp}は ${pair.a.jp}と ${pair.b.jp}を ${pair.verb.jp}。`;
+  const jaDrop=`${pair.a.jp}と ${pair.b.jp}を ${pair.verb.jp}。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[A]と [B]を + [動詞]</b><br><span style="color:#27ae60;font-size:.85em">📎 A と B = A and B（<u>名詞だけ</u>を繋ぐ / connects nouns only）</span>`;
+  return {qtext:en,hint:"「AとB」= A and B（<u>名詞だけ</u>を繋ぐ）",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: Combined — person と (with) + A と B (and)
+function makeToCombined(){
+  const subj=pick(L4_TO_SUBJECTS);
+  const person=_pickToDiff(L4_TO_PEOPLE,subj);
+  const pair=pick(L4_TO_NOUN_PAIRS);
+  let enVerb=pair.verb.en;
+  if(!subj.drop){
+    if(enVerb==="eat")enVerb="eats";
+    else if(enVerb==="drink")enVerb="drinks";
+    else if(enVerb==="read")enVerb="reads";
+  }
+  const en=`${subj.en} ${enVerb} ${pair.a.en} and ${pair.b.en} with ${person.en}.`;
+  const ja=`${subj.jp}は ${person.jp}と ${pair.a.jp}と ${pair.b.jp}を ${pair.verb.jp}。`;
+  const jaDrop=`${person.jp}と ${pair.a.jp}と ${pair.b.jp}を ${pair.verb.jp}。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[主語]は + <span style="color:#c0392b">[人]と</span> + <span style="color:#27ae60">[A]と [B]</span>を + [動詞]</b><br>
+    <span style="color:#c0392b;font-size:.85em">🔴 1つ目の「と」= with（${person.jp}と）</span><br>
+    <span style="color:#27ae60;font-size:.85em">🟢 2つ目の「と」= and（${pair.a.jp}と${pair.b.jp}）</span>`;
+  return {qtext:en,hint:"2種類の「と」を使う：1つ目=with (人)、2つ目=and (A と B)",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL4To(n=12){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.40)qs.push(makeToWithPerson());
+    else if(r<.80)qs.push(makeToAndNouns());
+    else qs.push(makeToCombined());
+  }
+  return qs;
+}
+L4_GENERATORS["g_to"]={title:"と (With / And) — Particle Practice",gen:()=>genL4To(12)};
+
 // ===== L4 Verb audio list (dict / ました / ませんでした) =====
 const L4_VERB_LIST=[
   // New L4 verbs (typical Genki L4)
@@ -2569,6 +2693,11 @@ function buildL4Menu(){
         <span class="t1">も (Also)</span>
         <span class="t2">は/を → も　vs.　に/で → にも/でも（要注意！）</span>
       </div>
+      <div class="menu-btn full" onclick="showL4ToMenu()" style="border-color:#9b59b6;background:#faf5ff">
+        <div class="icon">🤝</div>
+        <span class="t1">と (With / And)</span>
+        <span class="t2">人と = with　／　AとB = and (名詞のみ)</span>
+      </div>
       <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">🕐</div>
         <span class="t1">時間の長さ (Duration of Time)</span>
@@ -2672,6 +2801,84 @@ function showL4Format(catKey){
 
 function renderL4Main(){
   document.getElementById("menuContent").innerHTML=buildL4Menu();
+}
+
+function showL4ToMenu(){
+  l4State={view:"toMenu",cat:null};
+  let h=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">🤝 と (With / And)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Particle と — 2 different meanings</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL4ToRules()" style="border-color:#9b59b6;background:#faf5ff">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">人と = with　／　AとB = and</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(4,'g_to')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：と を使って文を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4ToRules(){
+  l4State={view:"toRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL4ToMenu()">← と (With / And)</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>🤝 と — With / And</h3>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 同じ「と」でも 2 つの意味！</b><br>
+      <span style="color:#555">意味は文脈と位置で判断します。</span>
+    </div>
+
+    <h3 style="margin-top:14px">🧑‍🤝‍🧑 意味 1：with (a person)</h3>
+    <div class="note" style="border-left-color:#c0392b">
+      <b>[人] と + [動詞]</b><br>
+      <span style="color:#888;font-size:.88em">"Do (verb) with (a person)"</span>
+    </div>
+    <div class="note">
+      例：メアリーさんは <b>ソラさんと</b> かんこくに いきました。<br>
+      <span style="color:#888">Mary went to Korea with Sora.</span>
+    </div>
+    <div class="note">
+      例：<b>ともだちと</b> えいがを みました。<br>
+      <span style="color:#888">I watched a movie with my friend.</span>
+    </div>
+
+    <h3 style="margin-top:14px">📎 意味 2：and (connecting nouns)</h3>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>[A] と [B] を + [動詞]</b><br>
+      <span style="color:#888;font-size:.88em">"A and B"</span><br>
+      <b style="color:#c0392b">⚠ と は <u>名詞だけ</u>を繋ぐ！</b><br>
+      <span style="color:#888;font-size:.85em">（動詞・文は繋げない — needs て-form or そして）</span>
+    </div>
+    <div class="note">
+      例：わたしは <b>パンと やさいを</b> たべます。<br>
+      <span style="color:#888">I eat bread and vegetables.</span>
+    </div>
+    <div class="note">
+      例：<b>ほんと ノートを</b> かいました。<br>
+      <span style="color:#888">I bought a book and a notebook.</span>
+    </div>
+
+    <h3 style="margin-top:14px">🔄 2 つの「と」を同じ文で</h3>
+    <div class="note" style="border-left-color:#8e44ad">
+      例：わたしは <span style="color:#c0392b"><b>ソラさんと</b></span> <span style="color:#27ae60"><b>パンと やさいを</b></span> たべました。<br>
+      <span style="color:#888">I ate bread and vegetables with Sora.</span><br>
+      <span style="color:#c0392b;font-size:.85em">🔴 1つ目の と = with</span><br>
+      <span style="color:#27ae60;font-size:.85em">🟢 2つ目の と = and</span>
+    </div>
+
+    <h3 style="margin-top:14px">💡 見分け方 (How to tell apart)</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      <b>と の前に<u>人</u> → with</b>（動詞は動作系）<br>
+      <b>と の前に<u>物</u> + その後にも名詞 + を → and</b><br>
+      <span style="color:#888;font-size:.85em">※ 人と動詞が離れていたら with; 名詞 と 名詞 + を が続いたら and</span>
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
 }
 
 function showL4MoMenu(){
@@ -2964,6 +3171,8 @@ function restoreL4View(){
   else if(l4State.view==="exRules")showL4ExistenceRules();
   else if(l4State.view==="moMenu")showL4MoMenu();
   else if(l4State.view==="moRules")showL4MoRules();
+  else if(l4State.view==="toMenu")showL4ToMenu();
+  else if(l4State.view==="toRules")showL4ToRules();
   else renderL4Main();
 }
 
