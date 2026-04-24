@@ -1739,6 +1739,149 @@ function genL4Location(n=15){
 
 L4_GENERATORS["g_loc"]={title:"もののある場所 (Describe Where Things Are)",gen:()=>genL4Location(15)};
 
+// ============================================================
+//  L4 Grammar: Expressing Existence (存在) — Xが います/あります
+// ============================================================
+const L4_EX_SUBJECTS=[
+  // Animate (います)
+  {jp:"いぬ",en:"a dog",animate:true},
+  {jp:"ねこ",en:"a cat",animate:true},
+  {jp:"やまださん",en:"Yamada",animate:true},
+  {jp:"さとうさん",en:"Sato",animate:true},
+  {jp:"メアリーさん",en:"Mary",animate:true},
+  {jp:"たけしさん",en:"Takeshi",animate:true},
+  {jp:"こども",en:"a child",animate:true},
+  {jp:"ともだち",en:"a friend",animate:true},
+  {jp:"がいこくじん",en:"a foreigner",animate:true},
+  {jp:"おとこのひと",en:"a man",animate:true},
+  {jp:"おんなのひと",en:"a woman",animate:true},
+  // Inanimate (あります)
+  {jp:"ほん",en:"a book",animate:false},
+  {jp:"つくえ",en:"a desk",animate:false},
+  {jp:"いす",en:"a chair",animate:false},
+  {jp:"かばん",en:"a bag",animate:false},
+  {jp:"はな",en:"a flower",animate:false},
+  {jp:"スマホ",en:"a smartphone",animate:false},
+  {jp:"しゃしん",en:"a photo",animate:false},
+  {jp:"テレビ",en:"a TV",animate:false},
+  {jp:"ざっし",en:"a magazine",animate:false},
+  {jp:"いえ",en:"a house",animate:false},
+  {jp:"ホテル",en:"a hotel",animate:false},
+  {jp:"こうえん",en:"a park",animate:false},
+  {jp:"レストラン",en:"a restaurant",animate:false},
+];
+
+const L4_EX_LOCATIONS=[
+  {jp:"あそこ",en:"over there",inline:true},
+  {jp:"ここ",en:"here",inline:true},
+  {jp:"そこ",en:"there",inline:true},
+  {jp:"うち",en:"home",prep:"at"},
+  {jp:"がっこう",en:"school",prep:"at"},
+  {jp:"こうえん",en:"the park",prep:"at"},
+  {jp:"としょかん",en:"the library",prep:"at"},
+  {jp:"きっさてん",en:"the cafe",prep:"at"},
+  {jp:"スーパー",en:"the supermarket",prep:"at"},
+  {jp:"つくえの うえ",en:"on the desk",inline:true},
+  {jp:"つくえの した",en:"under the desk",inline:true},
+  {jp:"かばんの なか",en:"inside the bag",inline:true},
+  {jp:"ホテルの まえ",en:"in front of the hotel",inline:true},
+  {jp:"びょういんの ちかく",en:"near the hospital",inline:true},
+  {jp:"いすの うえ",en:"on the chair",inline:true},
+];
+
+function _enLoc(loc){
+  // Returns a properly prefixed English location
+  if(loc.inline)return loc.en;           // "over there", "on the desk"
+  return (loc.prep||"at")+" "+loc.en;    // "at home", "at school"
+}
+
+// Type A: Simple existence — "There is X."
+function makeExBasic(){
+  const s=pick(L4_EX_SUBJECTS);
+  const verb=s.animate?"います":"あります";
+  const en=`There is ${s.en}.`;
+  const ja=`${s.jp}が ${verb}。`;
+  const structure=`<b>[X]が + ${verb}</b>　<span style="color:#c0392b">※ ${s.animate?"人・動物 → います":"物 → あります"}</span>`;
+  return {qtext:en,hint:`${s.animate?"人・動物":"物"} → ${verb}`,answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: Existence at location — "There is X at A."
+function makeExLocation(){
+  const s=pick(L4_EX_SUBJECTS);
+  const loc=pick(L4_EX_LOCATIONS);
+  const verb=s.animate?"います":"あります";
+  const en=`There is ${s.en} ${_enLoc(loc)}.`;
+  const ja=`${loc.jp}に ${s.jp}が ${verb}。`;
+  const structure=`<b>[A]に + [X]が + ${verb}</b>　<span style="color:#c0392b">※ 場所に + 主語が + ${s.animate?"います":"あります"}</span>`;
+  return {qtext:en,hint:"[場所]に [X]が います／あります",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: Negative existence — "There is no X..."
+function makeExNegative(){
+  const s=pick(L4_EX_SUBJECTS);
+  const useLoc=Math.random()<.65;
+  const loc=useLoc?pick(L4_EX_LOCATIONS):null;
+  const verbNeg=s.animate?"いません":"ありません";
+  // Strip leading "a "/"an " for negative "no X" phrasing
+  const noun=s.en.replace(/^(a |an )/,"");
+  let en,ja,accept2;
+  if(loc){
+    en=`There is no ${noun} ${_enLoc(loc)}.`;
+    ja=`${loc.jp}に ${s.jp}は ${verbNeg}。`;
+    accept2=`${loc.jp}に ${s.jp}が ${verbNeg}。`;
+  }else{
+    en=`There is no ${noun}.`;
+    ja=`${s.jp}は ${verbNeg}。`;
+    accept2=`${s.jp}が ${verbNeg}。`;
+  }
+  const structure=`<b>[X]は + ${verbNeg}</b>　<span style="color:#c0392b">※ 否定では「が」→「は」になることが多い</span>`;
+  return {qtext:en,hint:"否定形を作ってください (「は」で対比)",answers:[_cleanJa(ja),_cleanJa(accept2)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type D: Question — "Is there X?"
+function makeExQuestion(){
+  const s=pick(L4_EX_SUBJECTS);
+  const useLoc=Math.random()<.7;
+  const loc=useLoc?pick(L4_EX_LOCATIONS):null;
+  const verbQ=s.animate?"いますか":"ありますか";
+  let en,ja;
+  if(loc){
+    en=`Is there ${s.en} ${_enLoc(loc)}?`;
+    ja=`${loc.jp}に ${s.jp}が ${verbQ}。`;
+  }else{
+    en=`Is there ${s.en}?`;
+    ja=`${s.jp}が ${verbQ}。`;
+  }
+  const structure=`<b>[A]に + [X]が + ${verbQ}</b>　<span style="color:#c0392b">※ 疑問文</span>`;
+  return {qtext:en,hint:"疑問文を作ってください",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type E: います vs あります choice (focus on animacy distinction)
+function makeExChoice(){
+  const s=pick(L4_EX_SUBJECTS);
+  const en=`${s.animate?"(animate) ":"(inanimate) "}${s.en} exists. — Which verb: います or あります?`;
+  const correctVerb=s.animate?"います":"あります";
+  const ja=`${s.jp}が ${correctVerb}。`;
+  const structure=`<b>${s.animate?"人・動物 → います":"物 → あります"}</b>`;
+  return {qtext:`Choose the correct verb form:<br><span style="font-size:1.3rem">${s.jp}が ___。</span><br><span style="color:#888;font-size:.88rem">(${s.en} — ${s.animate?"animate":"inanimate"})</span>`,
+          hint:"います か あります か？",answers:[correctVerb],explain:`${s.jp}が ${correctVerb}。`,structure,alwaysShowStructure:true};
+}
+
+function genL4Existence(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.20)qs.push(makeExBasic());
+    else if(r<.55)qs.push(makeExLocation());
+    else if(r<.75)qs.push(makeExNegative());
+    else if(r<.88)qs.push(makeExQuestion());
+    else qs.push(makeExChoice());
+  }
+  return qs;
+}
+
+L4_GENERATORS["g_existence"]={title:"存在を表す (Expressing Existence)",gen:()=>genL4Existence(15)};
+
 // ===== L4 Verb audio list (dict / ました / ませんでした) =====
 const L4_VERB_LIST=[
   // New L4 verbs (typical Genki L4)
@@ -2265,10 +2408,15 @@ function buildL4Menu(){
       </div>
 
       <div class="section-label">文法 GRAMMAR</div>
+      <div class="menu-btn full" onclick="showL4ExistenceMenu()" style="border-color:#8e44ad;background:#faf5ff">
+        <div class="icon">🏠</div>
+        <span class="t1">存在を表す (Expressing Existence)</span>
+        <span class="t2">Xが います/あります　／　AにXが います/あります</span>
+      </div>
       <div class="menu-btn full" onclick="showL4LocMenu()" style="border-color:#2980b9;background:#f0f8ff">
         <div class="icon">📍</div>
         <span class="t1">もののある場所 (Where things are)</span>
-        <span class="t2">～の うえ/した/まえ/うしろ/なか/ちかく/となり/あいだ/みぎ/ひだり に</span>
+        <span class="t2">XはYの[位置]です — 位置を「です」で描述</span>
       </div>
       <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">🕐</div>
@@ -2373,6 +2521,89 @@ function showL4Format(catKey){
 
 function renderL4Main(){
   document.getElementById("menuContent").innerHTML=buildL4Menu();
+}
+
+function showL4ExistenceMenu(){
+  l4State={view:"exMenu",cat:null};
+  let h=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">🏠 存在を表す</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Expressing Existence — います / あります</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL4ExistenceRules()" style="border-color:#8e44ad;background:#faf5ff">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">Xが います/あります パターン</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(4,'g_existence')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：存在の文を作る (affirm/negative/question)</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4ExistenceRules(){
+  l4State={view:"exRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL4ExistenceMenu()">← 存在を表す</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>🏠 Expressing Existence</h3>
+
+    <div class="note">
+      <b>基本パターン 1:</b> <b>X が います/あります</b><br>
+      <span style="color:#888">→ "There is X."</span>
+    </div>
+    <div class="note">
+      <b>基本パターン 2:</b> <b>A に X が います/あります</b><br>
+      <span style="color:#888">→ "There is X at A (location)."</span>
+    </div>
+
+    <h3 style="margin-top:14px">1. います vs あります — 使い分け</h3>
+    <table class="gtable">
+      <tr><th>動詞</th><th>使う対象</th><th>例</th></tr>
+      <tr><td><b>います</b></td><td>人・動物 (animate)</td><td>いぬ / ねこ / 人</td></tr>
+      <tr><td><b>あります</b></td><td>物・建物 (inanimate)</td><td>ほん / つくえ / いえ</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">2. 例文 (Examples — from the video)</h3>
+    <div class="note">
+      <b>いぬが います。</b><br>
+      <span style="color:#888">There is a dog.</span>
+    </div>
+    <div class="note">
+      <b>いえが あります。</b><br>
+      <span style="color:#888">There is a house.</span>
+    </div>
+    <div class="note" style="border-left-color:#8e44ad">
+      <b>あそこに いえが あります。</b><br>
+      <span style="color:#888">There is a house over there.</span>
+    </div>
+    <div class="note" style="border-left-color:#8e44ad">
+      <b>いえに いぬが います。</b><br>
+      <span style="color:#888">There is a dog at home.</span>
+    </div>
+
+    <h3 style="margin-top:14px">3. 否定 (Negative)</h3>
+    <div class="note">
+      <b>Xは いません / ありません</b><br>
+      <span style="color:#888">※ 否定では「が」→「は」（対比）</span><br>
+      ex: うちに ねこは <b>いません</b>。(There is no cat at home.)
+    </div>
+
+    <h3 style="margin-top:14px">4. 疑問文 (Question)</h3>
+    <div class="note">
+      <b>Aに Xが いますか / ありますか</b><br>
+      ex: こうえんに いぬが <b>いますか</b>。(Is there a dog in the park?)
+    </div>
+
+    <h3 style="margin-top:14px">5. ⚠️ です vs あります/います の違い</h3>
+    <div class="note" style="background:#f0f8ff;border-left-color:#2980b9">
+      <b>です</b> = 既知の物の位置を<u>描述</u> (describing location)<br>
+      　ex: マクドナルドは ホテルの まえ<b>です</b>。<br>
+      <b>あります / います</b> = <u>存在</u>を introduce (introducing existence)<br>
+      　ex: あそこに マクドナルドが <b>あります</b>。
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
 }
 
 function showL4LocMenu(){
@@ -2488,6 +2719,8 @@ function restoreL4View(){
   else if(l4State.view==="vocab")showL4Vocab();
   else if(l4State.view==="locMenu")showL4LocMenu();
   else if(l4State.view==="locRules")showL4LocRules();
+  else if(l4State.view==="exMenu")showL4ExistenceMenu();
+  else if(l4State.view==="exRules")showL4ExistenceRules();
   else renderL4Main();
 }
 
