@@ -1882,6 +1882,152 @@ function genL4Existence(n=15){
 
 L4_GENERATORS["g_existence"]={title:"存在を表す (Expressing Existence)",gen:()=>genL4Existence(15)};
 
+// ============================================================
+// L4 Grammar: Particle も (Also)
+// ============================================================
+const L4_MO_PEOPLE=[
+  {jp:"たけしさん",en:"Takeshi"},{jp:"やまださん",en:"Yamada"},
+  {jp:"さとうさん",en:"Sato"},{jp:"メアリーさん",en:"Mary"},
+  {jp:"ソラさん",en:"Sora"},{jp:"すずきさん",en:"Suzuki"},
+  {jp:"たなかさん",en:"Tanaka"},
+];
+const L4_MO_ATTRS=[
+  {jp:"だいがくせい",en:"a university student"},
+  {jp:"がくせい",en:"a student"},
+  {jp:"せんせい",en:"a teacher"},
+  {jp:"にほんじん",en:"Japanese"},
+  {jp:"アメリカじん",en:"American"},
+  {jp:"イギリスじん",en:"British"},
+];
+const L4_MO_DAYS=[
+  {jp:"げつようび",en:"Monday"},{jp:"かようび",en:"Tuesday"},
+  {jp:"すいようび",en:"Wednesday"},{jp:"もくようび",en:"Thursday"},
+  {jp:"きんようび",en:"Friday"},{jp:"どようび",en:"Saturday"},
+  {jp:"にちようび",en:"Sunday"},
+];
+const L4_MO_PLACES_DEST=[
+  {jp:"きょうと",en:"Kyoto"},{jp:"おおさか",en:"Osaka"},
+  {jp:"とうきょう",en:"Tokyo"},{jp:"なごや",en:"Nagoya"},
+  {jp:"よこはま",en:"Yokohama"},
+];
+const L4_MO_PLACES_ACTION=[
+  {jp:"カフェ",en:"a cafe"},{jp:"レストラン",en:"a restaurant"},
+  {jp:"うち",en:"home"},{jp:"きっさてん",en:"a coffee shop"},
+  {jp:"がっこう",en:"school"},{jp:"としょかん",en:"the library"},
+];
+const L4_MO_OBJS_READ=[
+  {jp:"しんぶん",en:"the newspaper"},{jp:"ほん",en:"a book"},
+  {jp:"ざっし",en:"a magazine"},{jp:"まんが",en:"a manga"},
+];
+const L4_MO_OBJS_DRINK=[
+  {jp:"コーヒー",en:"coffee"},{jp:"おちゃ",en:"tea"},{jp:"みず",en:"water"},
+];
+const L4_MO_OBJS_EAT=[
+  {jp:"あさごはん",en:"breakfast"},{jp:"ひるごはん",en:"lunch"},
+  {jp:"ばんごはん",en:"dinner"},{jp:"にく",en:"meat"},{jp:"さかな",en:"fish"},
+];
+
+function _pickMoDiff(arr,exclude){
+  let p=pick(arr),tries=0;
+  while(p.jp===exclude.jp&&tries<10){p=pick(arr);tries++}
+  return p;
+}
+function _moCtx(jaCtx,enCtx){
+  return `<div style="background:#f8f8f8;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:.9em;color:#555;border-left:3px solid #bbb">📘 文脈: ${jaCtx}<br><span style="color:#999;font-style:italic">${enCtx}</span></div>`;
+}
+
+// Type 1: は → も (subject replacement)
+function makeMoHa(){
+  const attr=pick(L4_MO_ATTRS);
+  const subj1=pick(L4_MO_PEOPLE);
+  const subj2=_pickMoDiff(L4_MO_PEOPLE,subj1);
+  const ctxJa=`${subj1.jp}は ${attr.jp}です。`;
+  const ctxEn=`${subj1.en} is ${attr.en}.`;
+  const en=`${subj2.en} is also ${attr.en}.`;
+  const ja=`${subj2.jp}も ${attr.jp}です。`;
+  const structure=`<b>[主語]<s>は</s></b> → <b>[主語]も</b> + ${attr.jp}です<br><span style="color:#c0392b;font-size:.85em">🔁 <b>は → も</b> (置き換え / replace)</span>`;
+  return {qtext:_moCtx(ctxJa,ctxEn)+`<b>${en}</b>`,hint:"「は」を「も」に<u>置き換える</u>",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type 2: を → も (object replacement)
+function makeMoWo(){
+  const day=pick(L4_MO_DAYS);
+  const place=pick([{jp:"がっこう",en:"school"},{jp:"うち",en:"home"},{jp:"としょかん",en:"the library"}]);
+  const verbOpts=[
+    {verb:"よみました",verbPast:"read",pool:L4_MO_OBJS_READ},
+    {verb:"のみました",verbPast:"drank",pool:L4_MO_OBJS_DRINK},
+    {verb:"たべました",verbPast:"ate",pool:L4_MO_OBJS_EAT},
+  ];
+  const v=pick(verbOpts);
+  const obj1=pick(v.pool);
+  const obj2=_pickMoDiff(v.pool,obj1);
+  const ctxJa=`${day.jp}に ${place.jp}で ${obj1.jp}を ${v.verb}。`;
+  const ctxEn=`${v.verbPast[0].toUpperCase()+v.verbPast.slice(1)} ${obj1.en} at ${place.en} on ${day.en}.`;
+  const en=`Also ${v.verbPast} ${obj2.en} (same day, same place).`;
+  const ja=`${day.jp}に ${place.jp}で ${obj2.jp}も ${v.verb}。`;
+  const structure=`<b>[物]<s>を</s></b> → <b>[物]も</b> + [動詞]<br><span style="color:#c0392b;font-size:.85em">🔁 <b>を → も</b> (置き換え / replace)</span>`;
+  return {qtext:_moCtx(ctxJa,ctxEn)+`<b>${en}</b>`,hint:"「を」を「も」に<u>置き換える</u>",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type 3: に → にも (time/day)
+function makeMoNiTime(){
+  const day1=pick(L4_MO_DAYS);
+  const day2=_pickMoDiff(L4_MO_DAYS,day1);
+  const place=pick([{jp:"がっこう",en:"school"},{jp:"としょかん",en:"the library"},{jp:"うち",en:"home"}]);
+  const obj=pick(L4_MO_OBJS_READ);
+  const ctxJa=`${day1.jp}に ${place.jp}で ${obj.jp}を よみました。`;
+  const ctxEn=`(Someone) read ${obj.en} at ${place.en} on ${day1.en}.`;
+  const en=`On ${day2.en} also, (someone) read ${obj.en} at ${place.en}.`;
+  const ja=`${day2.jp}にも ${place.jp}で ${obj.jp}を よみました。`;
+  const structure=`<b>[時間]に</b> → <b>[時間]<u>にも</u></b> + …<br><span style="color:#27ae60;font-size:.85em">➕ <b>に → にも</b> (「に」は残して「も」を追加 / keep に, add も)</span>`;
+  return {qtext:_moCtx(ctxJa,ctxEn)+`<b>${en}</b>`,hint:"「に」は残して後ろに「も」を追加",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type 4: に → にも (destination)
+function makeMoNiDest(){
+  const p1=pick(L4_MO_PLACES_DEST);
+  const p2=_pickMoDiff(L4_MO_PLACES_DEST,p1);
+  const ctxJa=`わたしは せんしゅう ${p1.jp}に いきました。`;
+  const ctxEn=`I went to ${p1.en} last week.`;
+  const en=`I also went to ${p2.en} last week.`;
+  const ja=`わたしは せんしゅう ${p2.jp}にも いきました。`;
+  const jaDrop=`せんしゅう ${p2.jp}にも いきました。`;
+  const structure=`<b>[目的地]に</b> → <b>[目的地]<u>にも</u></b> + いきました<br><span style="color:#27ae60;font-size:.85em">➕ <b>に → にも</b> (「に」は残して「も」を追加)</span>`;
+  return {qtext:_moCtx(ctxJa,ctxEn)+`<b>${en}</b>`,hint:"「に」は残して後ろに「も」を追加（わたしは は省略可）",answers:[_cleanJa(ja),_cleanJa(jaDrop)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type 5: で → でも (place of action)
+function makeMoDe(){
+  const p1=pick(L4_MO_PLACES_ACTION);
+  const p2=_pickMoDiff(L4_MO_PLACES_ACTION,p1);
+  const opts=[
+    {obj:pick(L4_MO_OBJS_DRINK),verb:"のみました",verbPast:"drank"},
+    {obj:pick(L4_MO_OBJS_EAT),verb:"たべました",verbPast:"ate"},
+    {obj:pick(L4_MO_OBJS_READ),verb:"よみました",verbPast:"read"},
+  ];
+  const c=pick(opts);
+  const ctxJa=`${p1.jp}で ${c.obj.jp}を ${c.verb}。`;
+  const ctxEn=`${c.verbPast[0].toUpperCase()+c.verbPast.slice(1)} ${c.obj.en} at ${p1.en}.`;
+  const en=`Also ${c.verbPast} ${c.obj.en} at ${p2.en}.`;
+  const ja=`${p2.jp}でも ${c.obj.jp}を ${c.verb}。`;
+  const structure=`<b>[場所]で</b> → <b>[場所]<u>でも</u></b> + [動作]<br><span style="color:#27ae60;font-size:.85em">➕ <b>で → でも</b> (「で」は残して「も」を追加)</span>`;
+  return {qtext:_moCtx(ctxJa,ctxEn)+`<b>${en}</b>`,hint:"「で」は残して後ろに「も」を追加",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL4Mo(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.20)qs.push(makeMoHa());
+    else if(r<.40)qs.push(makeMoWo());
+    else if(r<.60)qs.push(makeMoNiTime());
+    else if(r<.80)qs.push(makeMoNiDest());
+    else qs.push(makeMoDe());
+  }
+  return qs;
+}
+L4_GENERATORS["g_mo"]={title:"も (Also) — Particle Practice",gen:()=>genL4Mo(15)};
+
 // ===== L4 Verb audio list (dict / ました / ませんでした) =====
 const L4_VERB_LIST=[
   // New L4 verbs (typical Genki L4)
@@ -2418,6 +2564,11 @@ function buildL4Menu(){
         <span class="t1">もののある場所 (Where things are)</span>
         <span class="t2">XはYの[位置]です — 位置を「です」で描述</span>
       </div>
+      <div class="menu-btn full" onclick="showL4MoMenu()" style="border-color:#16a085;background:#f0fff8">
+        <div class="icon">➕</div>
+        <span class="t1">も (Also)</span>
+        <span class="t2">は/を → も　vs.　に/で → にも/でも（要注意！）</span>
+      </div>
       <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">🕐</div>
         <span class="t1">時間の長さ (Duration of Time)</span>
@@ -2521,6 +2672,96 @@ function showL4Format(catKey){
 
 function renderL4Main(){
   document.getElementById("menuContent").innerHTML=buildL4Menu();
+}
+
+function showL4MoMenu(){
+  l4State={view:"moMenu",cat:null};
+  let h=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">➕ も (Also)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Particle も — when to replace & when to combine</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL4MoRules()" style="border-color:#16a085;background:#f0fff8">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">は/を → も　vs.　に/で → にも/でも</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(4,'g_mo')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：「also」の文を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4MoRules(){
+  l4State={view:"moRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL4MoMenu()">← も (Also)</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>➕ も (Also) — Particle Rules</h3>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：2 つのパターンがある！</b><br>
+      <span style="color:#555">使う助詞によって、「も」の付け方が違います。</span>
+    </div>
+
+    <h3 style="margin-top:14px">🔁 パターン A：置き換える (REPLACE)</h3>
+    <div class="note" style="border-left-color:#e74c3c">
+      <b>は → も</b> 　&　 <b>を → も</b><br>
+      <span style="color:#888;font-size:.88em">「は」「を」は消えて、「も」だけ残る</span>
+    </div>
+    <table class="gtable">
+      <tr><th>元の助詞</th><th>も と合わせる</th><th>例</th></tr>
+      <tr><td><b>は</b></td><td>も（置き換え）</td><td>メアリーさん<s>は</s><b>も</b> だいがくせいです。</td></tr>
+      <tr><td><b>を</b></td><td>も（置き換え）</td><td>ざっし<s>を</s><b>も</b> よみました。</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">➕ パターン B：後ろに追加 (COMBINE)</h3>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>に → にも</b> 　&　 <b>で → でも</b> 　&　 <b>へ → へも</b><br>
+      <span style="color:#888;font-size:.88em">「に」「で」「へ」は残して、「も」を後ろにつける</span>
+    </div>
+    <table class="gtable">
+      <tr><th>元の助詞</th><th>も と合わせる</th><th>例</th></tr>
+      <tr><td><b>に</b>（時間）</td><td><b>にも</b>（追加）</td><td>もくようび<b>にも</b> よみました。</td></tr>
+      <tr><td><b>に</b>（目的地）</td><td><b>にも</b>（追加）</td><td>おおさか<b>にも</b> いきました。</td></tr>
+      <tr><td><b>で</b>（場所）</td><td><b>でも</b>（追加）</td><td>レストラン<b>でも</b> たべました。</td></tr>
+      <tr><td><b>へ</b>（方向）</td><td><b>へも</b>（追加）</td><td>きょうと<b>へも</b> いきました。</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">📝 例文（ビデオから）</h3>
+    <div class="note">
+      <b>は → も:</b><br>
+      たけしさんは だいがくせいです。<br>
+      → メアリーさん<b>も</b> だいがくせいです。<br>
+      <span style="color:#888;font-size:.88em">Mary is also a university student.</span>
+    </div>
+    <div class="note">
+      <b>を → も:</b><br>
+      しんぶんを よみました。<br>
+      → ざっし<b>も</b> よみました。<br>
+      <span style="color:#888;font-size:.88em">Also read magazines.</span>
+    </div>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>に → にも (time):</b><br>
+      すいようびに よみました。<br>
+      → もくようび<b>にも</b> よみました。<br>
+      <span style="color:#888;font-size:.88em">Also read on Thursday.</span>
+    </div>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>に → にも (destination):</b><br>
+      きょうとに いきました。<br>
+      → おおさか<b>にも</b> いきました。<br>
+      <span style="color:#888;font-size:.88em">Also went to Osaka.</span>
+    </div>
+
+    <h3 style="margin-top:14px">💡 覚え方 (Memory Tip)</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      <b>は・を</b> → <b>も</b>だけ（消える！）<br>
+      <b>に・で・へ</b> → そのまま + <b>も</b>（残る！）<br>
+      <span style="color:#888;font-size:.85em">は/を は「静か」→ 消える / に/で/へ は「強い」→ 残る</span>
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
 }
 
 function showL4ExistenceMenu(){
@@ -2721,6 +2962,8 @@ function restoreL4View(){
   else if(l4State.view==="locRules")showL4LocRules();
   else if(l4State.view==="exMenu")showL4ExistenceMenu();
   else if(l4State.view==="exRules")showL4ExistenceRules();
+  else if(l4State.view==="moMenu")showL4MoMenu();
+  else if(l4State.view==="moRules")showL4MoRules();
   else renderL4Main();
 }
 
