@@ -1145,6 +1145,7 @@ const L4_CATEGORIES=[
   {key:"things",  jp:"名詞 — 物",        en:"Things / Objects",    icon:"📦"},
   {key:"people",  jp:"名詞 — 人・家族",  en:"People / Family",     icon:"👥"},
   {key:"time",    jp:"名詞 — 時間・日付",en:"Time / Date",         icon:"🕐"},
+  {key:"rel_time",jp:"時間の言葉 — 相対時間",en:"Relative Time (Days/Weeks/Months/Years)",icon:"📅"},
   {key:"verbs",   jp:"動詞",             en:"Verbs",               icon:"🏃"},
   {key:"adj",     jp:"形容詞",           en:"Adjectives",          icon:"🎨"},
   {key:"adv",     jp:"副詞・その他",     en:"Adverbs / Others",    icon:"💫"},
@@ -1200,17 +1201,41 @@ const L4_VOCAB={
     "あなた":"you",
   },
   time:{
-    // Time (from textbook "Time" section)
-    "きのう":"yesterday",
+    // Time (from textbook "Time" section) — relative time words moved to rel_time
     "～じかん":"...hour(s)",
     "いちじかん":"one hour",
-    "せんしゅう":"last week",
     "とき":"when...; at the time of...",
     "げつようび":"Monday",
     "かようび":"Tuesday",
     "すいようび":"Wednesday",
     "もくようび":"Thursday",
     "きんようび":"Friday",
+  },
+  rel_time:{
+    // Days (5)
+    "おととい":"the day before yesterday",
+    "きのう":"yesterday",
+    "きょう":"today",
+    "あした":"tomorrow",
+    "あさって":"the day after tomorrow",
+    // Weeks (5)
+    "にしゅうかんまえ":"two weeks ago",
+    "せんしゅう":"last week",
+    "こんしゅう":"this week",
+    "らいしゅう":"next week",
+    "さらいしゅう":"the week after next",
+    // Months (5)
+    "にかげつまえ":"two months ago",
+    "せんげつ":"last month",
+    "こんげつ":"this month",
+    "らいげつ":"next month",
+    "さらいげつ":"the month after next",
+    // Years (5)
+    "おととし":"the year before last",
+    "きょねん":"last year",
+    "ことし":"this year",
+    "らいねん":"next year",
+    "さらいねん":"the year after next",
   },
   verbs:{
     // U-verbs
@@ -1783,9 +1808,38 @@ function showL4VocabAudio(catKey){
   let h=`<button class="back-lessons" onclick="showL4Format('${catKey}')">← テスト形式</button>`;
   h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp} — 単語リスト</h3>`;
   h+=`<p style="color:#999;font-size:.82rem;margin-bottom:10px;padding-left:4px">🔊 をタップして発音を聞く (tap to hear pronunciation)</p>`;
-  keys.forEach((k,idx)=>{
-    h+=_wordRowHTML(k,dict[k],idx);
-  });
+  // Special note for relative time
+  if(catKey==="rel_time"){
+    h+=`<div style="padding:10px 14px;background:#fff5f5;border-left:3px solid #e74c3c;border-radius:0 8px 8px 0;font-size:.88rem;color:#c62828;margin-bottom:12px;line-height:1.6">
+      ⚠️ <b>これらは相対時間 (relative time) の言葉です。</b><br>
+      <b>「に」を後ろにつけないでください！</b><br>
+      <span style="color:#888;font-size:.82rem">Do not put に after these words!<br>
+      ✅ <b>きのう</b> べんきょうしました。<br>
+      ❌ きのう<u>に</u> べんきょうしました。</span>
+    </div>`;
+  }
+  // Group the relative time words by category
+  if(catKey==="rel_time"){
+    const groups=[
+      {label:"📅 日 (Days)",words:["おととい","きのう","きょう","あした","あさって"]},
+      {label:"📆 週 (Weeks)",words:["にしゅうかんまえ","せんしゅう","こんしゅう","らいしゅう","さらいしゅう"]},
+      {label:"🗓️ 月 (Months)",words:["にかげつまえ","せんげつ","こんげつ","らいげつ","さらいげつ"]},
+      {label:"📅 年 (Years)",words:["おととし","きょねん","ことし","らいねん","さらいねん"]},
+    ];
+    groups.forEach(g=>{
+      h+=`<div class="section-label" style="margin:12px 0 6px">${g.label}</div>`;
+      g.words.forEach(w=>{
+        if(dict[w]){
+          const idx=keys.indexOf(w);
+          h+=_wordRowHTML(w,dict[w],idx);
+        }
+      });
+    });
+  }else{
+    keys.forEach((k,idx)=>{
+      h+=_wordRowHTML(k,dict[k],idx);
+    });
+  }
   document.getElementById("menuContent").innerHTML=h;
 }
 
