@@ -2152,6 +2152,191 @@ function genL4To(n=12){
 }
 L4_GENERATORS["g_to"]={title:"と (With / And) — Particle Practice",gen:()=>genL4To(12)};
 
+// ============================================================
+// L4 Grammar: Asking "when" with いつ
+// ============================================================
+const L4_WHEN_VERBS=[
+  // Motion verbs (with に destination)
+  {jp:"いきます",past:"いきました",en:"go to",enPast:"went to",isMotion:true},
+  {jp:"きます",past:"きました",en:"come to",enPast:"came to",isMotion:true},
+  {jp:"かえります",past:"かえりました",en:"return to",enPast:"returned to",isMotion:true},
+  // Object verbs (with を)
+  {jp:"たべます",past:"たべました",en:"eat",enPast:"ate",isObj:true},
+  {jp:"のみます",past:"のみました",en:"drink",enPast:"drank",isObj:true},
+  {jp:"よみます",past:"よみました",en:"read",enPast:"read",isObj:true},
+  {jp:"みます",past:"みました",en:"watch",enPast:"watched",isObj:true},
+  {jp:"かいます",past:"かいました",en:"buy",enPast:"bought",isObj:true},
+  // Intransitive verbs (no object, no destination — common with なんじ)
+  {jp:"おきます",past:"おきました",en:"get up",enPast:"got up",isIntr:true},
+  {jp:"ねます",past:"ねました",en:"go to sleep",enPast:"went to sleep",isIntr:true},
+];
+
+// Clock times for なんじ answers
+const L4_CLOCK_TIMES=[
+  {jp:"ろくじ",en:"6:00"},{jp:"しちじ",en:"7:00"},
+  {jp:"はちじ",en:"8:00"},{jp:"くじ",en:"9:00"},
+  {jp:"じゅうじ",en:"10:00"},{jp:"じゅういちじ",en:"11:00"},
+  {jp:"じゅうにじ",en:"12:00"},{jp:"いちじ",en:"1:00"},
+  {jp:"ろくじはん",en:"6:30"},{jp:"しちじはん",en:"7:30"},
+  {jp:"はちじはん",en:"8:30"},{jp:"くじはん",en:"9:30"},
+];
+const L4_WHEN_DESTS=[
+  {jp:"としょかん",en:"the library"},{jp:"がっこう",en:"school"},
+  {jp:"こうえん",en:"the park"},{jp:"カフェ",en:"a cafe"},
+  {jp:"レストラン",en:"a restaurant"},{jp:"うち",en:"home"},
+  {jp:"きょうと",en:"Kyoto"},{jp:"とうきょう",en:"Tokyo"},
+  {jp:"おおさか",en:"Osaka"},{jp:"かんこく",en:"Korea"},
+  {jp:"スーパー",en:"the supermarket"},{jp:"びょういん",en:"the hospital"},
+];
+// Verb-specific object pools (semantic match)
+const L4_WHEN_OBJS_BY_VERB={
+  "たべます":[{jp:"あさごはん",en:"breakfast"},{jp:"ひるごはん",en:"lunch"},{jp:"ばんごはん",en:"dinner"},{jp:"パン",en:"bread"},{jp:"にく",en:"meat"},{jp:"さかな",en:"fish"}],
+  "のみます":[{jp:"コーヒー",en:"coffee"},{jp:"おちゃ",en:"tea"},{jp:"みず",en:"water"}],
+  "よみます":[{jp:"ほん",en:"a book"},{jp:"ざっし",en:"a magazine"},{jp:"しんぶん",en:"the newspaper"}],
+  "みます":[{jp:"テレビ",en:"TV"},{jp:"えいが",en:"a movie"}],
+  "かいます":[{jp:"ほん",en:"a book"},{jp:"はな",en:"flowers"},{jp:"パン",en:"bread"},{jp:"くだもの",en:"fruit"},{jp:"ノート",en:"a notebook"},{jp:"ざっし",en:"a magazine"}],
+};
+function _pickObj(verbJp){return pick(L4_WHEN_OBJS_BY_VERB[verbJp]||L4_WHEN_OBJS_BY_VERB["たべます"])}
+// Past-compatible time refs
+const L4_WHEN_TIMES_PAST=[
+  {jp:"きのう",en:"yesterday"},{jp:"きょう",en:"today"},
+  {jp:"まいにち",en:"every day"},{jp:"まいばん",en:"every night"},
+];
+// Future-compatible time refs
+const L4_WHEN_TIMES_FUT=[
+  {jp:"あした",en:"tomorrow"},{jp:"きょう",en:"today"},
+  {jp:"まいにち",en:"every day"},{jp:"まいばん",en:"every night"},
+];
+// Times that take に
+const L4_WHEN_TIMES_NI=[
+  {jp:"げつようび",en:"on Monday"},{jp:"かようび",en:"on Tuesday"},
+  {jp:"すいようび",en:"on Wednesday"},{jp:"もくようび",en:"on Thursday"},
+  {jp:"きんようび",en:"on Friday"},{jp:"どようび",en:"on Saturday"},
+  {jp:"にちようび",en:"on Sunday"},
+];
+// Times that do NOT take に (relative)
+const L4_WHEN_TIMES_NONI=[
+  {jp:"あした",en:"tomorrow"},{jp:"きょう",en:"today"},
+  {jp:"きのう",en:"yesterday"},{jp:"まいにち",en:"every day"},
+];
+
+// Type A: Form an いつ question (future or past)
+function makeWhenQ(){
+  const v=pick(L4_WHEN_VERBS);
+  const past=Math.random()<.55;
+  const verbForm=past?v.past:v.jp;
+  let en,ja;
+  if(v.isMotion){
+    const dest=pick(L4_WHEN_DESTS);
+    en=past?`When did you ${v.en} ${dest.en}?`:`When will you ${v.en} ${dest.en}?`;
+    ja=`いつ ${dest.jp}に ${verbForm}か。`;
+  }else if(v.isObj){
+    const obj=_pickObj(v.jp);
+    en=past?`When did you ${v.en} ${obj.en}?`:`When will you ${v.en} ${obj.en}?`;
+    ja=`いつ ${obj.jp}を ${verbForm}か。`;
+  }else{ // isIntr (おきます / ねます)
+    en=past?`When did you ${v.en}?`:`When will you ${v.en}?`;
+    ja=`いつ ${verbForm}か。`;
+  }
+  const structure=`<b>いつ + [場所]に / [物]を + [動詞 ${past?"ました":"ます"}] + か</b><br><span style="color:#c0392b;font-size:.85em">⚠ <b>「いつ」には「に」を付けない！</b><br>❌ いつ<u>に</u>　✅ いつ ……</span>`;
+  return {qtext:en,hint:"「いつ」+ 動詞 + か（「いつ」に「に」は不要）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: Answer with specific time (given context Q)
+function makeWhenA(){
+  const v=pick(L4_WHEN_VERBS);
+  const useNi=Math.random()<.65;
+  const time=useNi?pick(L4_WHEN_TIMES_NI):pick(L4_WHEN_TIMES_PAST);
+  const timeJp=useNi?`${time.jp}に`:time.jp;
+  let ctxQ,en,ja;
+  if(v.isMotion){
+    const dest=pick(L4_WHEN_DESTS);
+    ctxQ=`Q：いつ ${dest.jp}に ${v.past}か。<br><span style="color:#888">(When did you ${v.en} ${dest.en}?)</span>`;
+    en=`A: I ${v.enPast} ${dest.en} ${time.en}.`;
+    ja=`${timeJp} ${dest.jp}に ${v.past}。`;
+  }else if(v.isObj){
+    const obj=_pickObj(v.jp);
+    ctxQ=`Q：いつ ${obj.jp}を ${v.past}か。<br><span style="color:#888">(When did you ${v.en} ${obj.en}?)</span>`;
+    en=`A: I ${v.enPast} ${obj.en} ${time.en}.`;
+    ja=`${timeJp} ${obj.jp}を ${v.past}。`;
+  }else{
+    ctxQ=`Q：いつ ${v.past}か。<br><span style="color:#888">(When did you ${v.en}?)</span>`;
+    en=`A: I ${v.enPast} ${time.en}.`;
+    ja=`${timeJp} ${v.past}。`;
+  }
+  const structure=`<b>[時間] + [...]を/に + [動詞 ました]</b><br><span style="color:#27ae60;font-size:.85em">⚠ <b>げつようび → に必要</b> / <b>あした・まいにち → に不要</b></span>`;
+  return {qtext:`<div style="background:#f8f8f8;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:.9em;color:#555;border-left:3px solid #bbb">📘 ${ctxQ}</div><b>${en}</b>`,
+          hint:"「に」が必要か確認 — げつようびに（に必要）／ あした（に不要）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: なんじ question — "What time will/did you VERB?"
+function makeNanjiQ(){
+  const v=pick(L4_WHEN_VERBS);
+  const past=Math.random()<.5;
+  const verbForm=past?v.past:v.jp;
+  // Optionally add a relative time reference matching the tense
+  const useRef=Math.random()<.5;
+  const ref=useRef?pick(past?L4_WHEN_TIMES_PAST:L4_WHEN_TIMES_FUT):null;
+  const refJa=ref?ref.jp+" ":"";
+  const refEn=ref?` ${ref.en}`:"";
+  let en,ja;
+  if(v.isMotion){
+    const dest=pick(L4_WHEN_DESTS);
+    en=past?`What time did you ${v.en} ${dest.en}${refEn}?`:`What time will you ${v.en} ${dest.en}${refEn}?`;
+    ja=`${refJa}なんじに ${dest.jp}に ${verbForm}か。`;
+  }else if(v.isObj){
+    const obj=_pickObj(v.jp);
+    en=past?`What time did you ${v.en} ${obj.en}${refEn}?`:`What time will you ${v.en} ${obj.en}${refEn}?`;
+    ja=`${refJa}なんじに ${obj.jp}を ${verbForm}か。`;
+  }else{
+    // Intransitive (おきます, ねます)
+    en=past?`What time did you ${v.en}${refEn}?`:`What time will you ${v.en}${refEn}?`;
+    ja=`${refJa}なんじに ${verbForm}か。`;
+  }
+  const structure=`<b>${ref?"[相対時間] + ":""}なんじに + [動詞 ${past?"ました":"ます"}] + か</b><br><span style="color:#27ae60;font-size:.85em">⚠ <b>「なんじ」には「に」が必要！</b><br>✅ なんじ<u>に</u>　❌ なんじ（だけ）</span>`;
+  return {qtext:en,hint:"「なんじ」+「に」を忘れずに！",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type D: Answer with clock time (e.g., "I got up at 7:30 yesterday.")
+function makeNanjiA(){
+  const v=pick(L4_WHEN_VERBS);
+  const clock=pick(L4_CLOCK_TIMES);
+  // Past tense answer paired with past-compatible time ref
+  const ref=pick(L4_WHEN_TIMES_PAST);
+  let en,ja,ctxQ;
+  if(v.isMotion){
+    const dest=pick(L4_WHEN_DESTS);
+    ctxQ=`Q：${ref.jp} なんじに ${dest.jp}に ${v.past}か。<br><span style="color:#888">(What time did you ${v.en} ${dest.en} ${ref.en}?)</span>`;
+    en=`A: I ${v.enPast} ${dest.en} at ${clock.en} ${ref.en}.`;
+    ja=`${ref.jp} ${clock.jp}に ${dest.jp}に ${v.past}。`;
+  }else if(v.isObj){
+    const obj=_pickObj(v.jp);
+    ctxQ=`Q：${ref.jp} なんじに ${obj.jp}を ${v.past}か。<br><span style="color:#888">(What time did you ${v.en} ${obj.en} ${ref.en}?)</span>`;
+    en=`A: I ${v.enPast} ${obj.en} at ${clock.en} ${ref.en}.`;
+    ja=`${ref.jp} ${clock.jp}に ${obj.jp}を ${v.past}。`;
+  }else{
+    ctxQ=`Q：${ref.jp} なんじに ${v.past}か。<br><span style="color:#888">(What time did you ${v.en} ${ref.en}?)</span>`;
+    en=`A: I ${v.enPast} at ${clock.en} ${ref.en}.`;
+    ja=`${ref.jp} ${clock.jp}に ${v.past}。`;
+  }
+  const structure=`<b>[相対時間] + [時刻]に + [動詞 ました]</b><br><span style="color:#c0392b;font-size:.85em">⚠ 時刻 (clock) → に必要 ／ 相対時間 (yesterday) → に不要</span>`;
+  return {qtext:`<div style="background:#f8f8f8;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:.9em;color:#555;border-left:3px solid #bbb">📘 ${ctxQ}</div><b>${en}</b>`,
+          hint:"時刻にはに必要、相対時間にはに不要",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL4When(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.25)qs.push(makeWhenQ());       // いつ question
+    else if(r<.45)qs.push(makeWhenA());  // answer (no に / 曜日に)
+    else if(r<.75)qs.push(makeNanjiQ()); // なんじ question
+    else qs.push(makeNanjiA());           // answer with clock time
+  }
+  return qs;
+}
+L4_GENERATORS["g_when"]={title:"いつ・なんじ — 時間の質問",gen:()=>genL4When(15)};
+
 // ===== L4 Verb audio list (dict / ました / ませんでした) =====
 const L4_VERB_LIST=[
   // New L4 verbs (typical Genki L4)
@@ -2698,6 +2883,11 @@ function buildL4Menu(){
         <span class="t1">と (With / And)</span>
         <span class="t2">人と = with　／　AとB = and (名詞のみ)</span>
       </div>
+      <div class="menu-btn full" onclick="showL4WhenMenu()" style="border-color:#f39c12;background:#fffbe6">
+        <div class="icon">❓</div>
+        <span class="t1">いつ・なんじ (When? / What time?)</span>
+        <span class="t2">いつ → に不要　／　なんじ → に必要</span>
+      </div>
       <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">🕐</div>
         <span class="t1">時間の長さ (Duration of Time)</span>
@@ -2801,6 +2991,121 @@ function showL4Format(catKey){
 
 function renderL4Main(){
   document.getElementById("menuContent").innerHTML=buildL4Menu();
+}
+
+function showL4WhenMenu(){
+  l4State={view:"whenMenu",cat:null};
+  let h=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">❓ いつ・なんじ (When? / What time?)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Asking about time — いつ (general) vs. なんじ (clock)</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL4WhenRules()" style="border-color:#f39c12;background:#fffbe6">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">いつ vs なんじ — 「に」の使い分け</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(4,'g_when')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：いつ で質問・回答する</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4WhenRules(){
+  l4State={view:"whenRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL4WhenMenu()">← いつ・なんじ</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>❓ いつ・なんじ — Asking "When?" / "What time?"</h3>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：「いつ」と「なんじ」の使い分け！</b><br>
+      <span style="color:#555">「に」の付け方が違う！</span>
+    </div>
+
+    <h3 style="margin-top:14px">⚖️ いつ vs なんじ</h3>
+    <table class="gtable">
+      <tr><th>疑問詞</th><th>意味</th><th>「に」</th><th>例</th></tr>
+      <tr><td><b>いつ</b></td><td>when (general)</td><td><b>×</b> 不要</td><td><b>いつ</b> いきますか</td></tr>
+      <tr><td><b>なんじ</b></td><td>what time (clock)</td><td><b>○</b> 必要</td><td><b>なんじに</b> いきますか</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">❓ いつ — Asking "When?"</h3>
+
+    <div class="note">
+      <b>基本パターン:</b><br>
+      いつ + [動詞 ます/ました] + か<br>
+      <span style="color:#888;font-size:.88em">→ "When will/did (someone) do (verb)?"</span>
+    </div>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：「いつ」には「に」を付けない！</b><br>
+      <span style="color:#555">時間の reference を「いつ」に置き換えるとき、「に」は消える</span><br>
+      ✅ <b>いつ</b> としょかんに いきますか。<br>
+      ❌ <b>いつに</b> としょかんに いきますか。
+    </div>
+
+    <h3 style="margin-top:14px">📝 例文（ビデオから）</h3>
+    <div class="note">
+      <b>未来形（will / future）:</b><br>
+      <b>いつ</b> としょかんに いき<u>ます</u>か。<br>
+      <span style="color:#888">When will you go to the library?</span>
+    </div>
+    <div class="note">
+      <b>過去形（did / past）:</b><br>
+      <b>いつ</b> としょかんに いき<u>ました</u>か。<br>
+      <span style="color:#888">When did you go to the library?</span>
+    </div>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>答え（answer）— 具体的な時間で答える:</b><br>
+      <b>げつようびに</b> いきました。<br>
+      <span style="color:#888">I went on Monday.</span>
+    </div>
+
+    <h3 style="margin-top:14px">🕐 なんじ — Asking "What time?"</h3>
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ なんじ は「に」が必要！</b><br>
+      ✅ <b>なんじに</b> おきますか。<br>
+      ❌ なんじ おきますか。
+    </div>
+    <div class="note">
+      <b>未来形（will / future）:</b><br>
+      あした <b>なんじに</b> おき<u>ます</u>か。<br>
+      <span style="color:#888">What time will you get up tomorrow?</span>
+    </div>
+    <div class="note">
+      <b>過去形（did / past）:</b><br>
+      きのう <b>なんじに</b> おき<u>ました</u>か。<br>
+      <span style="color:#888">What time did you get up yesterday?</span>
+    </div>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>答え — 時刻（clock time）で答える:</b><br>
+      きのう <b>しちじはんに</b> おきました。<br>
+      <span style="color:#888">I got up at 7:30 yesterday.</span>
+    </div>
+
+    <h3 style="margin-top:14px">💡 ポイント</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      <b>「あした なんじに …」</b> と言える！<br>
+      <span style="color:#888;font-size:.85em">→ 相対時間（あした、きのう）+ なんじに → 両方使える</span><br>
+      ✅ あした なんじに おきますか。<br>
+      ✅ きのう なんじに ねましたか。
+    </div>
+
+    <h3 style="margin-top:14px">📌 答え方の「に」</h3>
+    <div class="note">
+      具体的な日 → <b>に必要</b><br>
+      ✅ <b>げつようびに</b> いきました。(on Monday)<br>
+      ✅ <b>くじに</b> いきました。(at 9:00)
+    </div>
+    <div class="note" style="border-left-color:#27ae60">
+      相対時間 → <b>に不要</b><br>
+      ✅ <b>あした</b> いきます。(tomorrow)<br>
+      ✅ <b>きのう</b> いきました。(yesterday)<br>
+      ✅ <b>まいにち</b> いきます。(every day)
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
 }
 
 function showL4ToMenu(){
@@ -3173,6 +3478,8 @@ function restoreL4View(){
   else if(l4State.view==="moRules")showL4MoRules();
   else if(l4State.view==="toMenu")showL4ToMenu();
   else if(l4State.view==="toRules")showL4ToRules();
+  else if(l4State.view==="whenMenu")showL4WhenMenu();
+  else if(l4State.view==="whenRules")showL4WhenRules();
   else renderL4Main();
 }
 
