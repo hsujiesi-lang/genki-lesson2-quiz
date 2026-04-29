@@ -2337,6 +2337,127 @@ function genL4When(n=15){
 }
 L4_GENERATORS["g_when"]={title:"いつ・なんじ — 時間の質問",gen:()=>genL4When(15)};
 
+// ============================================================
+// L4 Grammar: Asking "where" with どこ
+// ============================================================
+const L4_DOKO_SUBJ=[
+  {jp:"メアリーさん",en:"Mary"},
+  {jp:"たけしさん",en:"Takeshi"},
+  {jp:"ソラさん",en:"Sora"},
+  {jp:"やまださん",en:"Yamada"},
+  {jp:"わたし",en:"you",drop:true},
+];
+const L4_DOKO_MOTION=[
+  {jp:"いきます",past:"いきました",en:"go",enPast:"went"},
+  {jp:"きます",past:"きました",en:"come",enPast:"came"},
+  {jp:"かえります",past:"かえりました",en:"return",enPast:"returned"},
+];
+const L4_DOKO_ACTION=[
+  {jp:"たべます",past:"たべました",en:"eat",enPast:"ate",pool:[{jp:"あさごはん",en:"breakfast"},{jp:"ひるごはん",en:"lunch"},{jp:"ばんごはん",en:"dinner"},{jp:"パン",en:"bread"}]},
+  {jp:"のみます",past:"のみました",en:"drink",enPast:"drank",pool:[{jp:"コーヒー",en:"coffee"},{jp:"おちゃ",en:"tea"},{jp:"みず",en:"water"}]},
+  {jp:"よみます",past:"よみました",en:"read",enPast:"read",pool:[{jp:"ほん",en:"a book"},{jp:"ざっし",en:"a magazine"},{jp:"しんぶん",en:"the newspaper"}]},
+  {jp:"みます",past:"みました",en:"watch",enPast:"watched",pool:[{jp:"テレビ",en:"TV"},{jp:"えいが",en:"a movie"}]},
+  {jp:"かいます",past:"かいました",en:"buy",enPast:"bought",pool:[{jp:"ほん",en:"a book"},{jp:"はな",en:"flowers"},{jp:"パン",en:"bread"},{jp:"くだもの",en:"fruit"}]},
+  {jp:"べんきょうします",past:"べんきょうしました",en:"study",enPast:"studied",pool:null},
+];
+const L4_DOKO_PLACES=[
+  {jp:"としょかん",en:"the library"},{jp:"がっこう",en:"school"},
+  {jp:"こうえん",en:"the park"},{jp:"カフェ",en:"a cafe"},
+  {jp:"レストラン",en:"a restaurant"},{jp:"うち",en:"home"},
+  {jp:"きょうと",en:"Kyoto"},{jp:"とうきょう",en:"Tokyo"},
+  {jp:"スーパー",en:"the supermarket"},{jp:"きっさてん",en:"a coffee shop"},
+  {jp:"ホテル",en:"the hotel"},{jp:"おてら",en:"the temple"},
+];
+
+// Type A: どこに question (motion verb — destination)
+function makeDokoNi(){
+  const subj=pick(L4_DOKO_SUBJ);
+  const v=pick(L4_DOKO_MOTION);
+  const past=Math.random()<.55;
+  const verbForm=past?v.past:v.jp;
+  const useTime=Math.random()<.45;
+  const time=useTime?pick(past?L4_WHEN_TIMES_PAST:L4_WHEN_TIMES_FUT):null;
+  const timeJa=time?`${time.jp} `:"";
+  const timeEn=time?` ${time.en}`:"";
+  const auxEn=past?"did":"will";
+  const en=`Where ${auxEn} ${subj.en} ${v.en}${timeEn}?`;
+  const ja=`${subj.jp}は ${timeJa}どこに ${verbForm}か。`;
+  const jaDrop=`${timeJa}どこに ${verbForm}か。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[主語]は + ${time?"[時間] + ":""}どこに + [移動動詞 ${past?"ました":"ます"}] + か</b><br><span style="color:#c0392b;font-size:.85em">🚶 移動動詞 (いく/くる/かえる) → <b>どこ<u>に</u></b>（「に」必要）</span>`;
+  return {qtext:en,hint:"移動動詞は「どこに」",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: どこで question (action verb — place of action)
+function makeDokoDe(){
+  const subj=pick(L4_DOKO_SUBJ);
+  const v=pick(L4_DOKO_ACTION);
+  const past=Math.random()<.55;
+  const verbForm=past?v.past:v.jp;
+  const useTime=Math.random()<.45;
+  const time=useTime?pick(past?L4_WHEN_TIMES_PAST:L4_WHEN_TIMES_FUT):null;
+  const timeJa=time?`${time.jp} `:"";
+  const timeEn=time?` ${time.en}`:"";
+  const auxEn=past?"did":"will";
+  let en,ja,jaDrop;
+  if(v.pool){
+    const obj=pick(v.pool);
+    en=`Where ${auxEn} ${subj.en} ${v.en} ${obj.en}${timeEn}?`;
+    ja=`${subj.jp}は ${timeJa}どこで ${obj.jp}を ${verbForm}か。`;
+    jaDrop=`${timeJa}どこで ${obj.jp}を ${verbForm}か。`;
+  }else{
+    en=`Where ${auxEn} ${subj.en} ${v.en}${timeEn}?`;
+    ja=`${subj.jp}は ${timeJa}どこで ${verbForm}か。`;
+    jaDrop=`${timeJa}どこで ${verbForm}か。`;
+  }
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[主語]は + ${time?"[時間] + ":""}どこで + ${v.pool?"[物]を + ":""}[動詞 ${past?"ました":"ます"}] + か</b><br><span style="color:#27ae60;font-size:.85em">📍 動作動詞 (たべる/よむ etc.) → <b>どこ<u>で</u></b>（場所で動作する）</span>`;
+  return {qtext:en,hint:"動作動詞は「どこで」",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: Answer with specific place
+function makeDokoA(){
+  const useMotion=Math.random()<.5;
+  const subj=pick(L4_DOKO_SUBJ);
+  const place=pick(L4_DOKO_PLACES);
+  let ctxQ,en,ja;
+  if(useMotion){
+    const v=pick(L4_DOKO_MOTION);
+    ctxQ=`Q：${subj.jp}は どこに ${v.past}か。<br><span style="color:#888">(Where did ${subj.en} ${v.en}?)</span>`;
+    en=`A: ${subj.en==="you"?"I":subj.en} ${v.enPast} to ${place.en}.`;
+    ja=`${subj.jp==="わたし"?"わたし":subj.jp}は ${place.jp}に ${v.past}。`;
+  }else{
+    const v=pick(L4_DOKO_ACTION);
+    if(v.pool){
+      const obj=pick(v.pool);
+      ctxQ=`Q：${subj.jp}は どこで ${obj.jp}を ${v.past}か。<br><span style="color:#888">(Where did ${subj.en} ${v.en} ${obj.en}?)</span>`;
+      en=`A: ${subj.en==="you"?"I":subj.en} ${v.enPast} ${obj.en} at ${place.en}.`;
+      ja=`${subj.jp}は ${place.jp}で ${obj.jp}を ${v.past}。`;
+    }else{
+      ctxQ=`Q：${subj.jp}は どこで ${v.past}か。<br><span style="color:#888">(Where did ${subj.en} ${v.en}?)</span>`;
+      en=`A: ${subj.en==="you"?"I":subj.en} ${v.enPast} at ${place.en}.`;
+      ja=`${subj.jp}は ${place.jp}で ${v.past}。`;
+    }
+  }
+  const structure=`<b>[主語]は + [場所]<span style="color:#c0392b">に</span>／<span style="color:#27ae60">で</span> + [...] + [動詞 ました]</b><br><span style="color:#888;font-size:.85em">🚶 移動動詞 → に　／　📍 動作動詞 → で</span>`;
+  return {qtext:`<div style="background:#f8f8f8;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:.9em;color:#555;border-left:3px solid #bbb">📘 ${ctxQ}</div><b>${en}</b>`,
+          hint:"動詞によって「に」か「で」を選ぶ",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL4Doko(n=12){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.40)qs.push(makeDokoNi());
+    else if(r<.80)qs.push(makeDokoDe());
+    else qs.push(makeDokoA());
+  }
+  return qs;
+}
+L4_GENERATORS["g_doko"]={title:"どこ (Where?) — Asking About Places",gen:()=>genL4Doko(12)};
+
 // ===== L4 Verb audio list (dict / ました / ませんでした) =====
 const L4_VERB_LIST=[
   // New L4 verbs (typical Genki L4)
@@ -2888,6 +3009,11 @@ function buildL4Menu(){
         <span class="t1">いつ・なんじ (When? / What time?)</span>
         <span class="t2">いつ → に不要　／　なんじ → に必要</span>
       </div>
+      <div class="menu-btn full" onclick="showL4DokoMenu()" style="border-color:#16a085;background:#f0fff8">
+        <div class="icon">📍</div>
+        <span class="t1">どこ (Where?)</span>
+        <span class="t2">どこに（移動動詞）／ どこで（動作動詞）</span>
+      </div>
       <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">🕐</div>
         <span class="t1">時間の長さ (Duration of Time)</span>
@@ -2991,6 +3117,92 @@ function showL4Format(catKey){
 
 function renderL4Main(){
   document.getElementById("menuContent").innerHTML=buildL4Menu();
+}
+
+function showL4DokoMenu(){
+  l4State={view:"dokoMenu",cat:null};
+  let h=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">📍 どこ (Where?)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Asking about places — どこに (motion) vs. どこで (action location)</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL4DokoRules()" style="border-color:#16a085;background:#f0fff8">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">どこに（移動）vs どこで（動作）</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(4,'g_doko')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：どこ で質問・回答する</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4DokoRules(){
+  l4State={view:"dokoRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL4DokoMenu()">← どこ (Where?)</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>📍 どこ — Asking "Where?"</h3>
+
+    <div class="note">
+      <b>基本パターン:</b><br>
+      [主語]は + どこ<b>に</b>/<b>で</b> + [動詞] + か<br>
+      <span style="color:#888;font-size:.88em">→ "Where (did/will) (someone) (verb)?"</span>
+    </div>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 「どこに」と「どこで」の使い分け！</b><br>
+      <span style="color:#555">動詞のタイプで決まる！</span>
+    </div>
+
+    <h3 style="margin-top:14px">⚖️ どこに vs どこで</h3>
+    <table class="gtable">
+      <tr><th>助詞</th><th>動詞タイプ</th><th>例</th></tr>
+      <tr><td><b>どこに</b></td><td>🚶 移動 (motion)<br>いく・くる・かえる</td><td>どこ<b>に</b> いきましたか</td></tr>
+      <tr><td><b>どこで</b></td><td>📍 動作 (action)<br>たべる・よむ・かう・する</td><td>どこ<b>で</b> たべましたか</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">🚶 例文 1：どこに（移動）</h3>
+    <div class="note" style="border-left-color:#c0392b">
+      <b>もとの文:</b><br>
+      メアリーさんは きのう <u>としょかんに</u> いきました。<br>
+      <span style="color:#888">Mary went to the library yesterday.</span>
+    </div>
+    <div class="note">
+      <b>質問形:</b> 場所を「どこ」に置き換える（に は残す）<br>
+      メアリーさんは きのう <b>どこに</b> いきましたか。<br>
+      <span style="color:#888">Where did Mary go yesterday?</span>
+    </div>
+
+    <h3 style="margin-top:14px">📍 例文 2：どこで（動作）</h3>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>もとの文:</b><br>
+      メアリーさんは きのう <u>としょかんで</u> ざっしを よみました。<br>
+      <span style="color:#888">Mary read magazines in the library yesterday.</span>
+    </div>
+    <div class="note">
+      <b>質問形:</b> 場所を「どこ」に置き換える（で は残す）<br>
+      メアリーさんは きのう <b>どこで</b> ざっしを よみましたか。<br>
+      <span style="color:#888">Where did Mary read magazines yesterday?</span>
+    </div>
+
+    <h3 style="margin-top:14px">💡 答え方</h3>
+    <div class="note">
+      <b>移動 (に):</b> としょかんに いきました。<br>
+      <b>動作 (で):</b> としょかんで よみました。
+    </div>
+
+    <h3 style="margin-top:14px">📌 重要ポイント</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      <b>「に」「で」の使い分けは動詞次第！</b><br>
+      <span style="color:#555;font-size:.85em">
+      🚶 動詞が <b>移動</b> なら → 「に」<br>
+      📍 動詞が <b>動作</b> なら → 「で」<br>
+      （いつ・なんじ と違って、どこ は前の助詞を<u>残す</u>）
+      </span>
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
 }
 
 function showL4WhenMenu(){
@@ -3480,6 +3692,8 @@ function restoreL4View(){
   else if(l4State.view==="toRules")showL4ToRules();
   else if(l4State.view==="whenMenu")showL4WhenMenu();
   else if(l4State.view==="whenRules")showL4WhenRules();
+  else if(l4State.view==="dokoMenu")showL4DokoMenu();
+  else if(l4State.view==="dokoRules")showL4DokoRules();
   else renderL4Main();
 }
 
