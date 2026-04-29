@@ -2458,6 +2458,119 @@ function genL4Doko(n=12){
 }
 L4_GENERATORS["g_doko"]={title:"どこ (Where?) — Asking About Places",gen:()=>genL4Doko(12)};
 
+// ============================================================
+// L4 Grammar: Asking "what" with なに (なにを しましたか)
+// ============================================================
+const L4_NANI_SUBJ=[
+  {jp:"メアリーさん",en:"Mary"},
+  {jp:"たけしさん",en:"Takeshi"},
+  {jp:"ソラさん",en:"Sora"},
+  {jp:"やまださん",en:"Yamada"},
+  {jp:"さとうさん",en:"Sato"},
+  {jp:"わたし",en:"you",drop:true},
+];
+const L4_NANI_TIMES_PAST=[
+  {jp:"きのう",en:"yesterday"},{jp:"きょう",en:"today"},
+  {jp:"せんしゅう",en:"last week"},{jp:"せんげつ",en:"last month"},
+  {jp:"おととい",en:"the day before yesterday"},
+];
+const L4_NANI_TIMES_FUT=[
+  {jp:"あした",en:"tomorrow"},{jp:"きょう",en:"today"},
+  {jp:"こんばん",en:"tonight"},{jp:"らいしゅう",en:"next week"},
+  {jp:"しゅうまつに",en:"this weekend"},
+];
+const L4_NANI_PLACES=[
+  {jp:"としょかん",en:"the library"},{jp:"がっこう",en:"school"},
+  {jp:"こうえん",en:"the park"},{jp:"カフェ",en:"a cafe"},
+  {jp:"レストラン",en:"a restaurant"},{jp:"うち",en:"home"},
+  {jp:"きっさてん",en:"a coffee shop"},{jp:"ホテル",en:"a hotel"},
+];
+const L4_NANI_VERBOBJS=[
+  {verb:"よみました",verbEn:"read",obj:{jp:"ざっし",en:"a magazine"}},
+  {verb:"よみました",verbEn:"read",obj:{jp:"ほん",en:"a book"}},
+  {verb:"よみました",verbEn:"read",obj:{jp:"しんぶん",en:"the newspaper"}},
+  {verb:"のみました",verbEn:"drank",obj:{jp:"コーヒー",en:"coffee"}},
+  {verb:"のみました",verbEn:"drank",obj:{jp:"おちゃ",en:"tea"}},
+  {verb:"たべました",verbEn:"ate",obj:{jp:"ばんごはん",en:"dinner"}},
+  {verb:"たべました",verbEn:"ate",obj:{jp:"ひるごはん",en:"lunch"}},
+  {verb:"みました",verbEn:"watched",obj:{jp:"テレビ",en:"TV"}},
+  {verb:"みました",verbEn:"watched",obj:{jp:"えいが",en:"a movie"}},
+  {verb:"かいました",verbEn:"bought",obj:{jp:"ほん",en:"a book"}},
+  {verb:"かいました",verbEn:"bought",obj:{jp:"パン",en:"bread"}},
+  {verb:"べんきょうしました",verbEn:"studied",obj:null},
+];
+
+// Type A: General "What did/will X do?" (no place specified)
+function makeNaniGeneral(){
+  const subj=pick(L4_NANI_SUBJ);
+  const past=Math.random()<.55;
+  const time=past?pick(L4_NANI_TIMES_PAST):pick(L4_NANI_TIMES_FUT);
+  const verbForm=past?"しましたか":"しますか";
+  const auxEn=past?"did":"will";
+  const en=`What ${auxEn} ${subj.en} do ${time.en}?`;
+  const ja=`${subj.jp}は ${time.jp} なにを ${verbForm}。`;
+  const jaDrop=`${time.jp} なにを ${verbForm}。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[主語]は + [時間] + なにを + ${verbForm}</b><br><span style="color:#c0392b;font-size:.85em">⚠ <b>なにを する</b> = do "what" (一般動作を聞く)</span>`;
+  return {qtext:en,hint:"動作を聞く：なにを します／しました + か",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: "What did/will X do at a specific place?"
+function makeNaniAtPlace(){
+  const subj=pick(L4_NANI_SUBJ);
+  const past=Math.random()<.55;
+  const time=past?pick(L4_NANI_TIMES_PAST):pick(L4_NANI_TIMES_FUT);
+  const place=pick(L4_NANI_PLACES);
+  const verbForm=past?"しましたか":"しますか";
+  const auxEn=past?"did":"will";
+  const en=`What ${auxEn} ${subj.en} do at ${place.en} ${time.en}?`;
+  const ja=`${subj.jp}は ${time.jp} ${place.jp}で なにを ${verbForm}。`;
+  const jaDrop=`${time.jp} ${place.jp}で なにを ${verbForm}。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[主語]は + [時間] + [場所]で + なにを + ${verbForm}</b><br><span style="color:#27ae60;font-size:.85em">⚠ 場所「で」は<b>残す</b>、動作だけ「なにを」に置き換える</span>`;
+  return {qtext:en,hint:"場所「で」は残して、動作を「なにを」に置き換える",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: Answer the なにを しましたか question with specific verb
+function makeNaniAnswer(){
+  const subj=pick(L4_NANI_SUBJ);
+  const time=pick(L4_NANI_TIMES_PAST);
+  const usePlace=Math.random()<.55;
+  const place=usePlace?pick(L4_NANI_PLACES):null;
+  const vo=pick(L4_NANI_VERBOBJS);
+  const placeQ=place?`${place.jp}で `:"";
+  const placeQEn=place?` at ${place.en}`:"";
+  const ctxQ=`Q：${subj.jp}は ${time.jp} ${placeQ}なにを しましたか。<br><span style="color:#888">(What did ${subj.en} do${placeQEn} ${time.en}?)</span>`;
+  let en,ja,jaFull;
+  if(vo.obj){
+    en=`A: ${subj.en==="you"?"I":subj.en} ${vo.verbEn} ${vo.obj.en}.`;
+    ja=`${vo.obj.jp}を ${vo.verb}。`;
+    jaFull=`${subj.jp}は ${time.jp} ${placeQ}${vo.obj.jp}を ${vo.verb}。`;
+  }else{
+    // No object verb (studied)
+    en=`A: ${subj.en==="you"?"I":subj.en} ${vo.verbEn}.`;
+    ja=`${vo.verb}。`;
+    jaFull=`${subj.jp}は ${time.jp} ${placeQ}${vo.verb}。`;
+  }
+  const structure=`<b>${vo.obj?"[物]を + ":""}[動詞 ました]</b><br><span style="color:#888;font-size:.85em">具体的な動作で答える（短い形 / 完整形 どちらもOK）</span>`;
+  return {qtext:`<div style="background:#f8f8f8;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:.9em;color:#555;border-left:3px solid #bbb">📘 ${ctxQ}</div><b>${en}</b>`,
+          hint:"具体的な動作で答える（短い形・完整形どちらもOK）",answers:[_cleanJa(ja),_cleanJa(jaFull)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL4Nani(n=12){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.40)qs.push(makeNaniGeneral());
+    else if(r<.75)qs.push(makeNaniAtPlace());
+    else qs.push(makeNaniAnswer());
+  }
+  return qs;
+}
+L4_GENERATORS["g_nani"]={title:"なに (What?) — Asking About Actions",gen:()=>genL4Nani(12)};
+
 // ===== L4 Verb audio list (dict / ました / ませんでした) =====
 const L4_VERB_LIST=[
   // New L4 verbs (typical Genki L4)
@@ -3014,6 +3127,11 @@ function buildL4Menu(){
         <span class="t1">どこ (Where?)</span>
         <span class="t2">どこに（移動動詞）／ どこで（動作動詞）</span>
       </div>
+      <div class="menu-btn full" onclick="showL4NaniMenu()" style="border-color:#e91e63;background:#fff5f8">
+        <div class="icon">❔</div>
+        <span class="t1">なに (What?)</span>
+        <span class="t2">なにを しましたか — 動作を聞く</span>
+      </div>
       <div class="menu-btn full" onclick="startQuiz(4,'g_duration')" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">🕐</div>
         <span class="t1">時間の長さ (Duration of Time)</span>
@@ -3117,6 +3235,95 @@ function showL4Format(catKey){
 
 function renderL4Main(){
   document.getElementById("menuContent").innerHTML=buildL4Menu();
+}
+
+function showL4NaniMenu(){
+  l4State={view:"naniMenu",cat:null};
+  let h=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">❔ なに (What?)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Asking about actions — なにを しましたか</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL4NaniRules()" style="border-color:#e91e63;background:#fff5f8">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">なにを する で動作を聞く</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(4,'g_nani')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：なにを + する で質問・答え</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL4NaniRules(){
+  l4State={view:"naniRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL4NaniMenu()">← なに (What?)</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>❔ なに — Asking "What did/will someone do?"</h3>
+
+    <div class="note">
+      <b>基本パターン:</b><br>
+      [主語]は + [時間] + なにを + しましたか／しますか<br>
+      <span style="color:#888;font-size:.88em">→ "What did/will (someone) do?"</span>
+    </div>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：「なにを する」で動作を聞く！</b><br>
+      <span style="color:#555;font-size:.88em">具体的な動詞の代わりに「する」を使う。</span>
+    </div>
+
+    <h3 style="margin-top:14px">📝 例文 1：一般「何をした？」</h3>
+    <div class="note">
+      <b>もとの文（具体的な動作）:</b><br>
+      メアリーさんは きのう <u>としょかんに いきました</u>。<br>
+      <span style="color:#888">Mary went to the library yesterday.</span>
+    </div>
+    <div class="note">
+      <b>質問形:</b> 動作（としょかんにいきました）を「<b>なにをしましたか</b>」に置き換える<br>
+      メアリーさんは きのう <b>なにを しましたか</b>。<br>
+      <span style="color:#888">What did Mary do yesterday?</span>
+    </div>
+
+    <h3 style="margin-top:14px">📝 例文 2：「特定の場所で何をした？」</h3>
+    <div class="note">
+      <b>もとの文:</b><br>
+      メアリーさんは きのう <u>としょかんで</u> <u>ざっしを よみました</u>。<br>
+      <span style="color:#888">Mary read magazines in the library yesterday.</span>
+    </div>
+    <div class="note">
+      <b>質問形:</b> 場所（としょかんで）は<u>残す</u>、動作だけ「なにを しましたか」に置き換える<br>
+      メアリーさんは きのう <b>としょかんで</b> <b>なにを しましたか</b>。<br>
+      <span style="color:#888">What did Mary do at the library yesterday?</span>
+    </div>
+
+    <h3 style="margin-top:14px">💬 答え方</h3>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>具体的な動作で答える:</b><br>
+      <b>短い形:</b> ざっしを よみました。<br>
+      <b>完整形:</b> としょかんで ざっしを よみました。<br>
+      <span style="color:#888">(short or full — both work)</span>
+    </div>
+
+    <h3 style="margin-top:14px">⚖️ 質問詞のまとめ</h3>
+    <table class="gtable">
+      <tr><th>質問詞</th><th>聞く対象</th><th>例</th></tr>
+      <tr><td><b>なに</b></td><td>動作 (action)</td><td><b>なにを</b> しましたか</td></tr>
+      <tr><td><b>どこ</b></td><td>場所 (place)</td><td><b>どこに/で</b> ...か</td></tr>
+      <tr><td><b>いつ</b></td><td>時間 (general time)</td><td><b>いつ</b> ...か（に不要）</td></tr>
+      <tr><td><b>なんじ</b></td><td>時刻 (clock time)</td><td><b>なんじに</b> ...か</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">💡 ポイント</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      <b>「なにを + する」は動詞そのものを問う表現</b><br>
+      <span style="color:#555;font-size:.85em">
+      動詞（食べる/読む/etc.）を知らない場合や、何でもいいから知りたい時に使う。<br>
+      答えは具体的な動詞で返す（よみました、たべました、etc.）
+      </span>
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
 }
 
 function showL4DokoMenu(){
@@ -3694,6 +3901,8 @@ function restoreL4View(){
   else if(l4State.view==="whenRules")showL4WhenRules();
   else if(l4State.view==="dokoMenu")showL4DokoMenu();
   else if(l4State.view==="dokoRules")showL4DokoRules();
+  else if(l4State.view==="naniMenu")showL4NaniMenu();
+  else if(l4State.view==="naniRules")showL4NaniRules();
   else renderL4Main();
 }
 
