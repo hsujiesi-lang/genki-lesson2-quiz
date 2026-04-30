@@ -130,6 +130,11 @@
         <span class="ltitle">メアリーさんの 週末</span>
         <span class="lsub">Mary's Weekend</span>
       </div>
+      <div class="lesson-card" onclick="selectLesson(5)">
+        <div class="lnum">L5</div>
+        <span class="ltitle">おきなわ旅行</span>
+        <span class="lsub">Trip to Okinawa</span>
+      </div>
       <div class="lesson-card" onclick="showNumbersMenu()" style="border-color:#2ecc71">
         <div class="lnum" style="color:#2ecc71">123</div>
         <span class="ltitle">数字 (Numbers)</span>
@@ -1355,6 +1360,165 @@ const L4_GENERATORS={};
 L4_CATEGORIES.forEach(c=>{
   L4_GENERATORS[`v_${c.key}_en2jp`]={title:`${c.jp}：English → 日本語`,gen:()=>genL4VocabEn2Jp(c.key,15)};
   L4_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL4VocabJp2En(c.key,15)};
+});
+
+// ============================================================
+//  LESSON 5 DATA & GENERATORS  (Genki 1, 第5課「おきなわ旅行」)
+// ============================================================
+const L5_CATEGORIES=[
+  {key:"places", jp:"名詞 — 場所",      en:"Places",            icon:"📍"},
+  {key:"things", jp:"名詞 — 物",        en:"Things",            icon:"📦"},
+  {key:"food",   jp:"名詞 — 食べ物",    en:"Food & Drink",      icon:"🍱"},
+  {key:"people", jp:"名詞 — 人",        en:"People",            icon:"👥"},
+  {key:"time",   jp:"名詞 — 時間",      en:"Time-related",      icon:"🕐"},
+  {key:"nature", jp:"名詞 — 自然・動物",en:"Nature & Animals",  icon:"🌿"},
+  {key:"i_adj",  jp:"い形容詞",         en:"i-Adjectives",      icon:"💡"},
+  {key:"na_adj", jp:"な形容詞",         en:"na-Adjectives",     icon:"🌸"},
+  {key:"verbs",  jp:"動詞",             en:"Verbs",             icon:"🏃"},
+  {key:"adv",    jp:"副詞・その他",     en:"Adverbs / Others",  icon:"💫"},
+  {key:"expr",   jp:"表現",             en:"Expressions",       icon:"💬"},
+];
+
+const L5_VOCAB={
+  places:{
+    "うみ":"sea; ocean",
+    "やま":"mountain",
+    "しょくどう":"cafeteria; dining hall",
+    "おきなわ":"Okinawa",
+    "ホームステイ":"homestay",
+    "おんせん":"hot spring",
+  },
+  things:{
+    "きょうかしょ":"textbook",
+    "けいたい":"cell phone",
+    "にもつ":"baggage; luggage",
+    "なまえ":"name",
+    "やくそく":"promise; appointment",
+    "たんじょうび":"birthday",
+    "しゅくだい":"homework",
+    "りょこう":"travel; trip",
+    "おみやげ":"souvenir",
+  },
+  food:{
+    "おかし":"snack; sweets",
+    "くだもの":"fruit",
+    "たまご":"egg",
+    "すきやき":"sukiyaki",
+    "ステーキ":"steak",
+  },
+  people:{
+    "かいしゃいん":"office worker",
+    "おとうと":"younger brother",
+    "いもうと":"younger sister",
+  },
+  time:{
+    "このあいだ":"the other day",
+    "やすみ":"holiday; day off; absence",
+    "はる":"spring",
+    "なつ":"summer",
+    "あき":"autumn; fall",
+    "ふゆ":"winter",
+    "～じはん":"half past ~",
+  },
+  nature:{
+    "ゆき":"snow",
+    "あめ":"rain",
+    "てんき":"weather",
+    "そら":"sky",
+    "どうぶつ":"animal",
+    "ねこ":"cat",
+    "いぬ":"dog",
+    "さかな":"fish",
+  },
+  i_adj:{
+    "あたらしい":"new",
+    "ふるい":"old (for things, not people)",
+    "おおきい":"big; large",
+    "ちいさい":"small",
+    "あつい":"hot (weather)",
+    "さむい":"cold (weather)",
+    "あつい (もの)":"hot (object/drink)",
+    "つめたい":"cold (object/drink)",
+    "おもしろい":"interesting; funny",
+    "つまらない":"boring; dull",
+    "むずかしい":"difficult",
+    "やさしい":"easy; kind",
+    "たのしい":"fun; enjoyable",
+    "いそがしい":"busy",
+    "かわいい":"cute",
+    "いい":"good",
+    "わるい":"bad",
+    "かっこいい":"good-looking; cool",
+    "やすい":"cheap; inexpensive",
+    "たかい":"expensive; tall",
+  },
+  na_adj:{
+    "きれい":"pretty; clean",
+    "げんき":"healthy; energetic",
+    "しずか":"quiet",
+    "にぎやか":"lively",
+    "ひま":"free time; not busy",
+    "すき":"liked; favorite",
+    "きらい":"disliked; hated",
+    "だいすき":"very fond of; love",
+    "だいきらい":"to hate",
+    "ゆうめい":"famous",
+    "しんせつ":"kind (person)",
+    "べんり":"convenient",
+  },
+  verbs:{
+    // Lesson 5 doesn't introduce many new verbs; mostly review
+  },
+  adv:{
+    "とても":"very",
+    "あまり":"not very (with negative)",
+    "どんな":"what kind of (+ noun)",
+    "そして":"and (sentence connector)",
+    "でも":"but",
+    "まあまあ":"so-so",
+    "～が":"but (clause connector)",
+  },
+  expr:{
+    "そうですね":"Let me see; That's right",
+    "ええ":"yes (casual)",
+  },
+};
+
+function genL5VocabEn2Jp(cat,n=15){
+  const dict=L5_VOCAB[cat]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return null;
+  }
+  return shuffle([...keys]).slice(0,n).map(k=>({
+    qtext:`<span style="font-size:1.3rem;font-weight:700">${dict[k]}</span>`,
+    hint:"日本語で入力してください",answers:[k],explain:k
+  }));
+}
+
+function genL5VocabJp2En(cat,n=15){
+  const dict=L5_VOCAB[cat]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return null;
+  }
+  return shuffle([...keys]).slice(0,n).map(k=>{
+    const alts=dict[k].split(";").map(s=>s.trim());
+    alts.push(...dict[k].split("/").map(s=>s.trim()));
+    const base=dict[k].replace(/\s*\(.*?\)\s*/g,"").trim();
+    if(base)alts.push(base);
+    return {qtext:`<span style="font-size:1.6rem;font-weight:700">${k}</span>`,
+            hint:"Type the English meaning",
+            answers:[...new Set(alts)],explain:dict[k]};
+  });
+}
+
+const L5_GENERATORS={};
+L5_CATEGORIES.forEach(c=>{
+  L5_GENERATORS[`v_${c.key}_en2jp`]={title:`${c.jp}：English → 日本語`,gen:()=>genL5VocabEn2Jp(c.key,15)};
+  L5_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL5VocabJp2En(c.key,15)};
 });
 
 // ===== L4 Grammar: Duration of Time (じかん) =====
@@ -3907,13 +4071,121 @@ function restoreL4View(){
 }
 
 // ============================================================
+//  LESSON 5 NAVIGATION (Vocabulary only)
+// ============================================================
+let l5State={view:"main",cat:null};
+
+function buildL5Menu(){
+  l5State={view:"main",cat:null};
+  return `
+    <div style="padding:10px 12px;background:#fffbe6;border:1px dashed #f39c12;border-radius:8px;font-size:.82rem;color:#a0662a;margin-bottom:10px">📌 Lesson 5 — 単語復習のみ (Vocabulary review only — grammar coming soon)</div>
+    <div class="menu-grid">
+      <div class="menu-btn full" onclick="showL5Vocab()" style="padding:24px 16px;border-color:#e67e22;background:#fff8ee">
+        <div class="icon" style="font-size:2rem">📚</div>
+        <span class="t1" style="font-size:1.1rem">単語復習 (Vocabulary Review)</span>
+        <span class="t2">Browse vocabulary by topic (with audio)</span>
+      </div>
+    </div>`;
+}
+
+function showL5Vocab(){
+  l5State={view:"vocab",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 10px;font-size:1.05rem">📚 単語復習 — 主題を選んでください</h3>`;
+  h+=`<div class="menu-grid">`;
+  L5_CATEGORIES.forEach(c=>{
+    h+=`<div class="menu-btn" onclick="showL5Format('${c.key}')">
+          <div class="icon" style="font-size:1.6rem">${c.icon}</div>
+          <span class="t1">${c.jp}</span>
+          <span class="t2">${c.en}</span>
+        </div>`;
+  });
+  h+=`</div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5Format(catKey){
+  const cat=L5_CATEGORIES.find(c=>c.key===catKey);
+  if(!cat)return;
+  l5State={view:"format",cat:catKey};
+  let h=`<button class="back-lessons" onclick="showL5Vocab()">← 主題選択</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp}</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">${cat.en} — テスト形式を選んでください</p>`;
+  h+=`<div class="menu-grid">`;
+  if(Object.keys(L5_VOCAB[catKey]||{}).length>0){
+    h+=`<div class="menu-btn full" onclick="showL5VocabAudio('${catKey}')" style="border-color:#9b59b6;background:#faf5ff">
+          <div class="icon">📖</div>
+          <span class="t1">単語リスト (発音を聞く)</span>
+          <span class="t2">Review vocabulary with pronunciation before testing</span>
+        </div>`;
+  }
+  h+=`<div class="menu-btn" onclick="startQuiz(5,'v_${catKey}_en2jp')">
+        <div class="icon">🇬🇧→🇯🇵</div>
+        <span class="t1">English → 日本語</span>
+        <span class="t2">See English, type Japanese</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(5,'v_${catKey}_jp2en')">
+        <div class="icon">🇯🇵→🇬🇧</div>
+        <span class="t1">日本語 → English</span>
+        <span class="t2">See Japanese, type English</span>
+      </div>`;
+  h+=`</div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5VocabAudio(catKey){
+  const cat=L5_CATEGORIES.find(c=>c.key===catKey);
+  if(!cat)return;
+  const dict=L5_VOCAB[catKey]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return;
+  }
+  _currentVocabList=keys;
+  l5State={view:"vocabAudio",cat:catKey};
+  let h=`<button class="back-lessons" onclick="showL5Format('${catKey}')">← テスト形式</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp} — 単語リスト</h3>`;
+  h+=`<p style="color:#999;font-size:.82rem;margin-bottom:10px;padding-left:4px">🔊 をタップして発音を聞く (tap to hear pronunciation)</p>`;
+  // Special note for adjective categories
+  if(catKey==="i_adj"){
+    h+=`<div style="padding:10px 14px;background:#fff8ee;border-left:3px solid #f39c12;border-radius:0 8px 8px 0;font-size:.85rem;color:#a0662a;margin-bottom:12px;line-height:1.6">
+      💡 <b>い形容詞</b>：辞書形は「い」で終わる<br>
+      <span style="color:#666;font-size:.82rem">名詞の前に直接付く：<b>あたらしい</b> ほん／<b>おもしろい</b> えいが</span>
+    </div>`;
+  }else if(catKey==="na_adj"){
+    h+=`<div style="padding:10px 14px;background:#fff5f8;border-left:3px solid #e91e63;border-radius:0 8px 8px 0;font-size:.85rem;color:#a0244c;margin-bottom:12px;line-height:1.6">
+      🌸 <b>な形容詞</b>：名詞の前に「な」が必要<br>
+      <span style="color:#666;font-size:.82rem">例：<b>きれい<u>な</u></b> はな／<b>げんき<u>な</u></b> こども</span>
+    </div>`;
+  }
+  keys.forEach((k,idx)=>{
+    h+=_wordRowHTML(k,dict[k],idx);
+  });
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function renderL5Main(){
+  document.getElementById("menuContent").innerHTML=buildL5Menu();
+}
+
+function restoreL5View(){
+  if(!l5State)return;
+  if(l5State.view==="vocabAudio"&&l5State.cat)showL5VocabAudio(l5State.cat);
+  else if(l5State.view==="format"&&l5State.cat)showL5Format(l5State.cat);
+  else if(l5State.view==="vocab")showL5Vocab();
+  else renderL5Main();
+}
+
+// ============================================================
 //  NAVIGATION
 // ============================================================
 function selectLesson(num){
   currentLesson=num;
   document.getElementById("lessonPicker").style.display="none";
   const mc=document.getElementById("menuContent");
-  if(num===4)mc.innerHTML=buildL4Menu();
+  if(num===5)mc.innerHTML=buildL5Menu();
+  else if(num===4)mc.innerHTML=buildL4Menu();
   else if(num===3)mc.innerHTML=buildL3Menu();
   else mc.innerHTML=buildL2Menu();
   document.getElementById("menuScreen").style.display="block";
@@ -3930,7 +4202,8 @@ function backToMenu(){
   document.getElementById("quizArea").classList.remove("active");
   if(currentLesson){
     document.getElementById("menuScreen").style.display="block";
-    if(currentLesson===4)restoreL4View();
+    if(currentLesson===5)restoreL5View();
+    else if(currentLesson===4)restoreL4View();
     else if(currentLesson==="numbers")showNumbersMenu();
   }else{
     document.getElementById("lessonPicker").style.display="block";
@@ -3978,6 +4251,7 @@ function startWrongBank(){
 function startQuiz(lesson,type){
   let gens;
   if(lesson==="numbers")gens=NUMBERS_GENERATORS;
+  else if(lesson===5)gens=L5_GENERATORS;
   else if(lesson===4)gens=L4_GENERATORS;
   else if(lesson===3)gens=L3_GENERATORS;
   else gens=L2_GENERATORS;
