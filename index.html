@@ -84,6 +84,29 @@
   .gtable tr:nth-child(even) td{background:#fdf6ec}
   .note{background:#fff8ee;border-left:3px solid #e67e22;padding:10px 14px;margin:10px 0;border-radius:0 8px 8px 0;font-size:.85rem;line-height:1.6}
 
+  /* Flashcards */
+  .fcard{background:#fff;border-radius:18px;padding:36px 22px;margin:14px 0;box-shadow:0 4px 18px rgba(0,0,0,.08);text-align:center;min-height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:all .2s;user-select:none}
+  .fcard:hover{box-shadow:0 6px 22px rgba(0,0,0,.12)}
+  .fcard.flipped{background:linear-gradient(135deg,#fff8ee,#fffbe6)}
+  .fcard .ftop{font-size:.78rem;color:#aaa;margin-bottom:14px;letter-spacing:1px}
+  .fcard .fword{font-size:2.1rem;font-weight:700;color:#333;margin:6px 0;line-height:1.3}
+  .fcard .fmeaning{font-size:1.4rem;color:#e67e22;font-weight:700;margin:10px 0 4px}
+  .fcard .ftap{font-size:.85rem;color:#bbb;margin-top:18px;font-style:italic}
+  .fcard .fdivider{width:55%;height:1px;background:#eee;margin:14px auto}
+  .fcard .fwbHint{font-size:.72rem;color:#e74c3c;margin-top:8px;background:#fff5f5;padding:3px 8px;border-radius:6px;display:inline-block}
+  .fc-actions{display:none;margin-top:14px;gap:10px}
+  .fc-actions.show{display:flex}
+  .fc-actions button{flex:1;padding:14px 12px;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .15s;line-height:1.3}
+  .fc-actions .fc-hard{background:#e74c3c;color:#fff}
+  .fc-actions .fc-hard:hover{background:#c0392b;transform:translateY(-1px)}
+  .fc-actions .fc-easy{background:#27ae60;color:#fff}
+  .fc-actions .fc-easy:hover{background:#1e8449;transform:translateY(-1px)}
+  .fc-stats{display:flex;justify-content:space-around;font-size:.85rem;color:#666;margin:10px 0;flex-wrap:wrap;gap:6px}
+  .fc-stats .stat{padding:5px 10px;border-radius:8px;background:#f8f8f8}
+  .fc-stats .stat b{color:#333}
+  .fc-dir-toggle{background:#f4f4f4;border:1.5px solid #ddd;border-radius:10px;padding:7px 14px;font-size:.85rem;cursor:pointer;color:#555}
+  .fc-dir-toggle:hover{border-color:#e67e22;color:#e67e22}
+
   /* Verb audio list */
   .verb-row{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #f0d9b5;border-radius:12px;padding:12px 14px;margin-bottom:8px;transition:all .2s;flex-wrap:wrap}
   .verb-row:hover{border-color:#e67e22;box-shadow:0 3px 10px rgba(230,126,34,.12)}
@@ -2938,6 +2961,216 @@ function _wordRowHTML(word,en,idx,warnLabel){
   </div>`;
 }
 
+// ============================================================
+//  ANKI-STYLE FLASHCARDS (with spaced repetition + wrong-bank integration)
+// ============================================================
+let _flashState=null;
+
+function startFlashcards(lesson,catKey,direction){
+  direction=direction||"jp2en";
+  const vocab=lesson===5?L5_VOCAB:L4_VOCAB;
+  const cats=lesson===5?L5_CATEGORIES:L4_CATEGORIES;
+  const dict=vocab[catKey]||{};
+  const cat=cats.find(c=>c.key===catKey);
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。");
+    return;
+  }
+  const wb=wbLoad();
+  const cards=keys.map(jp=>{
+    const en=dict[jp];
+    // Boost weight for words already in wrong bank (in either direction)
+    const wbCount=(wb[jp]?.count||0)+(wb[en]?.count||0);
+    return {
+      jp,en,
+      weight:1.0+Math.min(wbCount*0.7,4.0),  // up to 5x more likely if frequently wrong
+      seen:0,knew:0,forgot:0,streak:0,
+      wbCount,
+    };
+  });
+  _flashState={
+    lesson,catKey,catLabel:cat?cat.jp:catKey,direction,cards,
+    sessionSize:Math.min(20,Math.max(10,cards.length*2)),
+    totalSeen:0,
+    correctCount:0,
+    currentCard:null,
+    flipped:false,
+  };
+  if(lesson===5)l5State={view:"flashcards",cat:catKey};
+  else if(lesson===4)l4State={view:"flashcards",cat:catKey};
+  renderFlashcardsScreen();
+  nextFlashcard();
+}
+
+function renderFlashcardsScreen(){
+  const fs=_flashState;
+  const backFn=fs.lesson===5?`showL5Format('${fs.catKey}')`:`showL4Format('${fs.catKey}')`;
+  let h=`<button class="back-lessons" onclick="${backFn}">← テスト形式</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">🃏 ${fs.catLabel} — 単語カード</h3>`;
+  h+=`<p style="color:#999;font-size:.82rem;margin-bottom:8px;padding-left:4px">Anki式：間違えた単語が多く出ます</p>`;
+  h+=`<div style="text-align:center;margin:10px 0">
+    <button class="fc-dir-toggle" onclick="toggleFlashDir()">🔄 ${fs.direction==="jp2en"?"日本語 → English":"English → 日本語"}</button>
+  </div>`;
+  h+=`<div class="fc-stats">
+    <span class="stat">📊 <b id="fcSeen">${fs.totalSeen}</b>/${fs.sessionSize}</span>
+    <span class="stat">✅ <b id="fcKnew">${fs.correctCount}</b></span>
+    <span class="stat">📚 <b>${fs.cards.length}</b> 単語</span>
+  </div>`;
+  h+=`<div id="fcContainer"></div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function pickNextFlashcard(){
+  const cards=_flashState.cards;
+  const totalWeight=cards.reduce((s,c)=>s+c.weight,0);
+  if(totalWeight<=0)return cards[Math.floor(Math.random()*cards.length)];
+  let r=Math.random()*totalWeight;
+  for(const c of cards){
+    r-=c.weight;
+    if(r<=0)return c;
+  }
+  return cards[cards.length-1];
+}
+
+function nextFlashcard(){
+  const fs=_flashState;
+  if(fs.totalSeen>=fs.sessionSize){
+    finishFlashSession();
+    return;
+  }
+  fs.currentCard=pickNextFlashcard();
+  fs.flipped=false;
+  renderFlashcardBody();
+}
+
+function renderFlashcardBody(){
+  const fs=_flashState;
+  const c=fs.currentCard;
+  const dir=fs.direction;
+  const front=dir==="jp2en"?c.jp:c.en;
+  const back=dir==="jp2en"?c.en:c.jp;
+  const wbBadge=c.wbCount>0?`<div class="fwbHint">⚠ よく間違えた (${c.wbCount}回)</div>`:"";
+  const audioWord=c.jp;  // always speak the JP version
+  let h;
+  if(!fs.flipped){
+    h=`<div class="fcard" onclick="flipFlashcard()">
+      <div class="ftop">CARD ${fs.totalSeen+1} / ${fs.sessionSize}</div>
+      <div class="fword">${front}</div>
+      ${wbBadge}
+      <div class="ftap">タップして裏を見る (tap to flip)</div>
+    </div>`;
+  }else{
+    h=`<div class="fcard flipped">
+      <div class="ftop">CARD ${fs.totalSeen+1} / ${fs.sessionSize}</div>
+      <div class="fword">${front}</div>
+      <div class="fdivider"></div>
+      <div class="fmeaning">${back}</div>
+      ${wbBadge}
+      <button onclick="event.stopPropagation();playWord('${audioWord}')" style="margin-top:12px;background:#e67e22;color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:1rem;cursor:pointer">🔊</button>
+    </div>
+    <div class="fc-actions show">
+      <button class="fc-hard" onclick="rateFlashcard(false)">😅 覚えてない<br><span style="font-size:.72rem;opacity:.85">Didn't know</span></button>
+      <button class="fc-easy" onclick="rateFlashcard(true)">😊 知ってた<br><span style="font-size:.72rem;opacity:.85">Knew it</span></button>
+    </div>`;
+  }
+  document.getElementById("fcContainer").innerHTML=h;
+}
+
+function flipFlashcard(){
+  if(!_flashState||_flashState.flipped)return;
+  _flashState.flipped=true;
+  renderFlashcardBody();
+}
+
+function toggleFlashDir(){
+  if(!_flashState)return;
+  _flashState.direction=_flashState.direction==="jp2en"?"en2jp":"jp2en";
+  renderFlashcardsScreen();
+  if(_flashState.currentCard)renderFlashcardBody();
+}
+
+function rateFlashcard(known){
+  const fs=_flashState;
+  const c=fs.currentCard;
+  c.seen++;
+  fs.totalSeen++;
+  if(known){
+    c.knew++;
+    c.streak++;
+    c.weight=Math.max(0.1,c.weight*0.4);
+    fs.correctCount++;
+    // Decrement wrong bank (both possible keys)
+    const bank=wbLoad();
+    let changed=false;
+    [c.jp,c.en].forEach(key=>{
+      if(bank[key]&&bank[key].count>0){
+        bank[key].count--;
+        if(bank[key].count<=0)delete bank[key];
+        changed=true;
+      }
+    });
+    if(changed)wbSave(bank);
+  }else{
+    c.forgot++;
+    c.streak=0;
+    c.weight=Math.min(8,c.weight*2.5);
+    // Add to wrong bank under JP key (matches en→jp quiz convention)
+    const bank=wbLoad();
+    const key=c.jp;
+    if(!bank[key]){
+      bank[key]={count:0,q:{qtext:`<span style="font-size:1.3rem;font-weight:700">${c.en}</span>`,hint:"日本語で入力してください",sentence:"",answers:[c.jp],explain:c.jp,isTranslation:false},history:[]};
+    }
+    bank[key].count++;
+    bank[key].lastWrong=Date.now();
+    bank[key].history.push({date:new Date().toLocaleDateString(),yourAns:"(flashcard)"});
+    if(bank[key].history.length>5)bank[key].history=bank[key].history.slice(-5);
+    wbSave(bank);
+  }
+  // Update stats display
+  const seenEl=document.getElementById("fcSeen");
+  const knewEl=document.getElementById("fcKnew");
+  if(seenEl)seenEl.textContent=fs.totalSeen;
+  if(knewEl)knewEl.textContent=fs.correctCount;
+  updateWrongBadge();
+  setTimeout(()=>nextFlashcard(),200);
+}
+
+function finishFlashSession(){
+  const fs=_flashState;
+  const struggling=fs.cards.filter(c=>c.weight>1.5).sort((a,b)=>b.weight-a.weight);
+  const mastered=fs.cards.filter(c=>c.weight<0.5);
+  const backFn=fs.lesson===5?`showL5Format('${fs.catKey}')`:`showL4Format('${fs.catKey}')`;
+  const pct=Math.round(fs.correctCount/fs.totalSeen*100);
+  let msg,col;
+  if(pct>=85){msg="完璧！";col="#27ae60"}
+  else if(pct>=65){msg="いいですね！";col="#27ae60"}
+  else if(pct>=40){msg="もう一度！";col="#f39c12"}
+  else{msg="練習しましょう！";col="#e74c3c"}
+  let h=`<button class="back-lessons" onclick="${backFn}">← テスト形式</button>`;
+  h+=`<div class="card" style="text-align:center;padding:30px 22px;margin-top:14px">
+    <h2 style="color:#e67e22;margin-bottom:8px">🎉 セッション完了</h2>
+    <div style="font-size:.9rem;color:#888;margin-bottom:8px">${fs.catLabel}</div>
+    <div style="font-size:2.5rem;font-weight:700;color:${col};margin:12px 0">${fs.correctCount} / ${fs.totalSeen}</div>
+    <div style="font-size:1.1rem;color:${col};margin-bottom:14px">${msg} (${pct}%)</div>
+    <div style="margin:14px 0;color:#666;line-height:1.8">
+      📚 学習：<b>${fs.totalSeen}</b> カード<br>
+      ✅ 知っていた：<b>${fs.correctCount}</b><br>
+      🌟 マスター：<b>${mastered.length}</b><br>
+      📖 まだ復習が必要：<b>${struggling.length}</b>
+    </div>`;
+  if(struggling.length>0){
+    h+=`<div style="margin:14px 0;text-align:left;background:#fff5f5;padding:12px 14px;border-radius:8px;border-left:3px solid #e74c3c">
+      <b style="color:#e74c3c">📝 もう少し復習が必要:</b><br>
+      <span style="font-size:.9rem;color:#555;line-height:1.6">${struggling.slice(0,12).map(c=>`<b>${c.jp}</b> (${c.en})`).join("、")}${struggling.length>12?"…":""}</span>
+    </div>`;
+  }
+  h+=`<button onclick="startFlashcards(${fs.lesson},'${fs.catKey}','${fs.direction}')" style="background:#e67e22;color:#fff;border:none;border-radius:10px;padding:12px 28px;margin-top:14px;font-size:.95rem;font-weight:700;cursor:pointer;width:100%">🔁 もう一度</button>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+  _flashState=null;
+}
+
 function _verbRowHTML(v,idx){
   const typeLabel={u:"u",ru:"ru",irr:"irr"}[v.type];
   return `<div class="verb-row" data-idx="${idx}">
@@ -3381,6 +3614,13 @@ function showL4Format(catKey){
           <div class="icon">📖</div>
           <span class="t1">単語リスト (発音を聞く)</span>
           <span class="t2">Review vocabulary with pronunciation before testing</span>
+        </div>`;
+  }
+  if(Object.keys(L4_VOCAB[catKey]||{}).length>0){
+    h+=`<div class="menu-btn full" onclick="startFlashcards(4,'${catKey}')" style="border-color:#e91e63;background:#fff5f8">
+          <div class="icon">🃏</div>
+          <span class="t1">単語カード (Flashcards)</span>
+          <span class="t2">Anki式：間違えた単語が多く出る／spaced repetition</span>
         </div>`;
   }
   h+=`<div class="menu-btn" onclick="startQuiz(4,'v_${catKey}_en2jp')">
@@ -4051,6 +4291,7 @@ function restoreL4View(){
   if(!l4State)return;
   if(l4State.view==="verbAudio")showL4VerbAudio();
   else if(l4State.view==="vocabAudio"&&l4State.cat)showL4VocabAudio(l4State.cat);
+  else if(l4State.view==="flashcards"&&l4State.cat)showL4Format(l4State.cat);
   else if(l4State.view==="format"&&l4State.cat)showL4Format(l4State.cat);
   else if(l4State.view==="vocab")showL4Vocab();
   else if(l4State.view==="locMenu")showL4LocMenu();
@@ -4117,6 +4358,11 @@ function showL5Format(catKey){
           <div class="icon">📖</div>
           <span class="t1">単語リスト (発音を聞く)</span>
           <span class="t2">Review vocabulary with pronunciation before testing</span>
+        </div>
+        <div class="menu-btn full" onclick="startFlashcards(5,'${catKey}')" style="border-color:#e91e63;background:#fff5f8">
+          <div class="icon">🃏</div>
+          <span class="t1">単語カード (Flashcards)</span>
+          <span class="t2">Anki式：間違えた単語が多く出る／spaced repetition</span>
         </div>`;
   }
   h+=`<div class="menu-btn" onclick="startQuiz(5,'v_${catKey}_en2jp')">
@@ -4172,6 +4418,7 @@ function renderL5Main(){
 function restoreL5View(){
   if(!l5State)return;
   if(l5State.view==="vocabAudio"&&l5State.cat)showL5VocabAudio(l5State.cat);
+  else if(l5State.view==="flashcards"&&l5State.cat)showL5Format(l5State.cat);
   else if(l5State.view==="format"&&l5State.cat)showL5Format(l5State.cat);
   else if(l5State.view==="vocab")showL5Vocab();
   else renderL5Main();
