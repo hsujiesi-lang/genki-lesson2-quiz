@@ -1544,6 +1544,151 @@ L5_CATEGORIES.forEach(c=>{
   L5_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL5VocabJp2En(c.key,15)};
 });
 
+// ===== L5 Grammar: Adjective Forms (affirmative + negative) =====
+// subj types: "thing" (objects/places), "person", "weather" (days/seasons), "either"
+const L5_I_ADJ=[
+  {jp:"おもしろい",en:"interesting",neg:"おもしろくない",subj:"thing"},
+  {jp:"つまらない",en:"boring",neg:"つまらなくない",subj:"thing"},
+  {jp:"あたらしい",en:"new",neg:"あたらしくない",subj:"thing"},
+  {jp:"ふるい",en:"old",neg:"ふるくない",subj:"thing"},
+  {jp:"おおきい",en:"big",neg:"おおきくない",subj:"thing"},
+  {jp:"ちいさい",en:"small",neg:"ちいさくない",subj:"thing"},
+  {jp:"あつい",en:"hot",neg:"あつくない",subj:"weather"},
+  {jp:"さむい",en:"cold",neg:"さむくない",subj:"weather"},
+  {jp:"むずかしい",en:"difficult",neg:"むずかしくない",subj:"thing"},
+  {jp:"やさしい",en:"easy",neg:"やさしくない",subj:"thing"},
+  {jp:"たのしい",en:"fun",neg:"たのしくない",subj:"thing"},
+  {jp:"いそがしい",en:"busy",neg:"いそがしくない",subj:"person"},
+  {jp:"かわいい",en:"cute",neg:"かわいくない",subj:"either"},
+  {jp:"いい",en:"good",neg:"よくない",irregular:true,subj:"either"},
+  {jp:"わるい",en:"bad",neg:"わるくない",subj:"either"},
+  {jp:"やすい",en:"cheap",neg:"やすくない",subj:"thing"},
+  {jp:"たかい",en:"expensive",neg:"たかくない",subj:"thing"},
+];
+
+const L5_NA_ADJ=[
+  {jp:"げんき",en:"healthy",neg:"げんきじゃない",subj:"person"},
+  {jp:"きれい",en:"pretty",neg:"きれいじゃない",lookalike:true,subj:"either"},
+  {jp:"しずか",en:"quiet",neg:"しずかじゃない",subj:"place"},
+  {jp:"にぎやか",en:"lively",neg:"にぎやかじゃない",subj:"place"},
+  {jp:"べんり",en:"convenient",neg:"べんりじゃない",subj:"thing"},
+  {jp:"ひま",en:"free (not busy)",neg:"ひまじゃない",subj:"person"},
+  {jp:"ゆうめい",en:"famous",neg:"ゆうめいじゃない",subj:"either"},
+  {jp:"しんせつ",en:"kind",neg:"しんせつじゃない",subj:"person"},
+];
+
+// Subjects categorized by type
+const L5_ADJ_THINGS=[
+  {jp:"このえいが",en:"this movie"},
+  {jp:"このほん",en:"this book"},
+  {jp:"このまち",en:"this town"},
+  {jp:"このレストラン",en:"this restaurant"},
+  {jp:"このカフェ",en:"this cafe"},
+  {jp:"このスーパー",en:"this supermarket"},
+  {jp:"このしゅくだい",en:"this homework"},
+  {jp:"このじてんしゃ",en:"this bicycle"},
+  {jp:"わたしのいえ",en:"my house"},
+  {jp:"わたしのへや",en:"my room"},
+  {jp:"おきなわ",en:"Okinawa"},
+];
+// Places (subset of things) for adjectives like にぎやか/しずか
+const L5_ADJ_PLACES=[
+  {jp:"このまち",en:"this town"},
+  {jp:"このレストラン",en:"this restaurant"},
+  {jp:"このカフェ",en:"this cafe"},
+  {jp:"このスーパー",en:"this supermarket"},
+  {jp:"わたしのいえ",en:"my house"},
+  {jp:"わたしのへや",en:"my room"},
+  {jp:"おきなわ",en:"Okinawa"},
+  {jp:"とうきょう",en:"Tokyo"},
+  {jp:"こうえん",en:"the park"},
+];
+const L5_ADJ_PEOPLE=[
+  {jp:"メアリーさん",en:"Mary"},
+  {jp:"たけしさん",en:"Takeshi"},
+  {jp:"やまださん",en:"Yamada"},
+  {jp:"さとうさん",en:"Sato"},
+  {jp:"せんせい",en:"the teacher"},
+  {jp:"わたしのともだち",en:"my friend"},
+];
+const L5_ADJ_WEATHER=[
+  {jp:"きょう",en:"today"},
+  {jp:"あした",en:"tomorrow"},
+  {jp:"きのう",en:"yesterday"},
+  {jp:"おきなわ",en:"Okinawa"},
+  {jp:"とうきょう",en:"Tokyo"},
+];
+
+function _pickL5Subj(adj){
+  if(adj.subj==="person")return pick(L5_ADJ_PEOPLE);
+  if(adj.subj==="weather")return pick(L5_ADJ_WEATHER);
+  if(adj.subj==="place")return pick(L5_ADJ_PLACES);
+  if(adj.subj==="thing")return pick(L5_ADJ_THINGS);
+  // "either" — mix
+  const r=Math.random();
+  if(r<.5)return pick(L5_ADJ_THINGS);
+  return pick(L5_ADJ_PEOPLE);
+}
+
+// Type A: Affirmative i-adj
+function makeL5AffI(){
+  const adj=pick(L5_I_ADJ);
+  const subj=_pickL5Subj(adj);
+  const en=`${subj.en} is ${adj.en}.`;
+  const ja=`${subj.jp}は ${adj.jp}です。`;
+  const structure=`<b>[X]は + [い形容詞]<u>です</u></b><br><span style="color:#888;font-size:.85em">い形容詞は辞書形のまま + です（変化なし）</span>`;
+  return {qtext:en,hint:"い形容詞 + です",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: Affirmative na-adj
+function makeL5AffNa(){
+  const adj=pick(L5_NA_ADJ);
+  const subj=_pickL5Subj(adj);
+  const en=`${subj.en} is ${adj.en}.`;
+  const ja=`${subj.jp}は ${adj.jp}です。`;
+  const lookalikeWarn=adj.lookalike?'<br><span style="color:#e74c3c;font-size:.85em">⚠ 「'+adj.jp+'」は「い」で終わるけど<b>な形容詞</b>！</span>':"";
+  const structure=`<b>[X]は + [な形容詞]<u>です</u></b><br><span style="color:#c0392b;font-size:.85em">⚠ 「な」は付けない！　❌ <s>${adj.jp}<u>な</u>です</s>　✅ ${adj.jp}です</span>${lookalikeWarn}`;
+  return {qtext:en,hint:"な形容詞 + です（「な」は付けない！）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: Negative i-adj
+function makeL5NegI(){
+  const adj=pick(L5_I_ADJ);
+  const subj=_pickL5Subj(adj);
+  const en=`${subj.en} is not ${adj.en}.`;
+  const ja=`${subj.jp}は ${adj.neg}です。`;
+  const ja2=`${subj.jp}は ${adj.neg.replace("ない","ありません")}。`;
+  const irregNote=adj.irregular?'<br><span style="color:#e74c3c;font-size:.85em">⚠ 不規則：<b>いい</b> → <b>よくない</b>（いくないではない！）</span>':"";
+  const structure=`<b>[X]は + [い → くない]<u>です</u></b><br><span style="color:#888;font-size:.85em">い形容詞の否定：<b>い</b> を <b>くない</b> に変える</span>${irregNote}`;
+  return {qtext:en,hint:adj.irregular?"⚠ いい は不規則！":"い形容詞の否定：い → くない",answers:[_cleanJa(ja),_cleanJa(ja2)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type D: Negative na-adj
+function makeL5NegNa(){
+  const adj=pick(L5_NA_ADJ);
+  const subj=_pickL5Subj(adj);
+  const en=`${subj.en} is not ${adj.en}.`;
+  const ja=`${subj.jp}は ${adj.neg}です。`;
+  const ja2=`${subj.jp}は ${adj.jp}じゃありません。`;
+  const ja3=`${subj.jp}は ${adj.jp}ではありません。`;
+  const lookalikeWarn=adj.lookalike?'<br><span style="color:#e74c3c;font-size:.85em">⚠ 「'+adj.jp+'」は<b>な形容詞</b>！「い」と勘違いしないで</span>':"";
+  const structure=`<b>[X]は + [な形容詞]<u>じゃないです</u></b><br><span style="color:#888;font-size:.85em">な形容詞の否定：+ じゃない／じゃありません／ではありません</span>${lookalikeWarn}`;
+  return {qtext:en,hint:"な形容詞の否定：+ じゃない（or じゃありません）",answers:[_cleanJa(ja),_cleanJa(ja2),_cleanJa(ja3)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL5AdjForms(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.25)qs.push(makeL5AffI());
+    else if(r<.50)qs.push(makeL5AffNa());
+    else if(r<.78)qs.push(makeL5NegI());
+    else qs.push(makeL5NegNa());
+  }
+  return qs;
+}
+L5_GENERATORS["g_adj_forms"]={title:"形容詞の活用 (Adjective Forms)",gen:()=>genL5AdjForms(15)};
+
 // ===== L4 Grammar: Duration of Time (じかん) =====
 const L4_DUR_NUMS=[
   {dur:"いちじかん",en:"1 hour",half:"いちじかんはん",halfEn:"1 and a half hours"},
@@ -4319,12 +4464,19 @@ let l5State={view:"main",cat:null};
 function buildL5Menu(){
   l5State={view:"main",cat:null};
   return `
-    <div style="padding:10px 12px;background:#fffbe6;border:1px dashed #f39c12;border-radius:8px;font-size:.82rem;color:#a0662a;margin-bottom:10px">📌 Lesson 5 — 単語復習のみ (Vocabulary review only — grammar coming soon)</div>
     <div class="menu-grid">
-      <div class="menu-btn full" onclick="showL5Vocab()" style="padding:24px 16px;border-color:#e67e22;background:#fff8ee">
-        <div class="icon" style="font-size:2rem">📚</div>
-        <span class="t1" style="font-size:1.1rem">単語復習 (Vocabulary Review)</span>
-        <span class="t2">Browse vocabulary by topic (with audio)</span>
+      <div class="section-label">📚 単語 VOCABULARY</div>
+      <div class="menu-btn full" onclick="showL5Vocab()" style="padding:20px 16px;border-color:#e67e22;background:#fff8ee">
+        <div class="icon" style="font-size:1.6rem">📚</div>
+        <span class="t1" style="font-size:1rem">単語復習 (Vocabulary Review)</span>
+        <span class="t2">Browse vocabulary by topic (with audio + flashcards)</span>
+      </div>
+
+      <div class="section-label">📝 文法 GRAMMAR</div>
+      <div class="menu-btn full" onclick="showL5AdjMenu()" style="border-color:#9b59b6;background:#faf5ff">
+        <div class="icon">💡</div>
+        <span class="t1">形容詞の活用 (Adjective Forms)</span>
+        <span class="t2">い形容詞 / な形容詞 — 肯定 & 否定</span>
       </div>
     </div>`;
 }
@@ -4415,12 +4567,100 @@ function renderL5Main(){
   document.getElementById("menuContent").innerHTML=buildL5Menu();
 }
 
+function showL5AdjMenu(){
+  l5State={view:"adjMenu",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">💡 形容詞の活用 (Adjective Forms)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">い形容詞 / な形容詞 — 肯定・否定の作り方</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL5AdjRules()" style="border-color:#9b59b6;background:#faf5ff">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">い → くない／な + じゃない</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(5,'g_adj_forms')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：肯定／否定の文を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5AdjRules(){
+  l5State={view:"adjRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL5AdjMenu()">← 形容詞の活用</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>💡 形容詞の活用 — Describing an object</h3>
+
+    <div class="note">
+      <b>基本パターン:</b><br>
+      [X] は [Y(adj)] です／じゃないです<br>
+      <span style="color:#888;font-size:.88em">→ "X is/is not Y."</span>
+    </div>
+
+    <h3 style="margin-top:14px">✅ 肯定 (Affirmative)</h3>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>い形容詞:</b> 辞書形のまま + です<br>
+      <b>このえいがは おもしろいです。</b><br>
+      <span style="color:#888">This movie is interesting.</span>
+    </div>
+    <div class="note" style="border-left-color:#27ae60">
+      <b>な形容詞:</b> 「な」を取って + です<br>
+      <b>メアリーさんは げんきです。</b><br>
+      <span style="color:#888">Mary is healthy.</span><br>
+      <span style="color:#c0392b;font-size:.88em">⚠ ❌ <s>げんき<u>な</u>です</s>　✅ げんきです</span>
+    </div>
+
+    <h3 style="margin-top:14px">❌ 否定 (Negative)</h3>
+    <div class="note" style="border-left-color:#e74c3c">
+      <b>い形容詞:</b> い → <b>くない</b> + です<br>
+      おもしろい → おもしろ<b>くない</b><br>
+      <b>このえいがは おもしろくないです。</b><br>
+      <span style="color:#888">This movie is not interesting.</span>
+    </div>
+    <div class="note" style="border-left-color:#e74c3c">
+      <b>な形容詞:</b> + <b>じゃない</b> です（or じゃありません）<br>
+      げんき + <b>じゃない</b><br>
+      <b>メアリーさんは げんきじゃないです。</b><br>
+      <span style="color:#888">Mary is not healthy.</span>
+    </div>
+
+    <h3 style="margin-top:14px">⚠️ 重要な不規則 (Important Irregular)</h3>
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>いい (good)</b> の否定 → <b>よくない</b>（いくないではない！）<br>
+      <span style="color:#888;font-size:.85em">活用するときは「いい」が「よ」に変わる</span><br>
+      ✅ よくないです (not good)<br>
+      ❌ <s>いくないです</s>
+    </div>
+
+    <h3 style="margin-top:14px">⚠️ 紛らわしい な形容詞</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      <b>「い」で終わるけど な形容詞のもの:</b><br>
+      🌸 <b>きれい</b>（pretty/clean）— 否定：きれい<b>じゃない</b>（×きれくない）<br>
+      🌸 <b>きらい</b>（disliked）— 否定：きらい<b>じゃない</b>（×きらくない）<br>
+      <span style="color:#888;font-size:.85em">この 2 つは形が「い形容詞」っぽいけど<b>な形容詞</b>！</span>
+    </div>
+
+    <h3 style="margin-top:14px">📋 まとめ表</h3>
+    <table class="gtable">
+      <tr><th>タイプ</th><th>肯定</th><th>否定</th></tr>
+      <tr><td>い形容詞</td><td>～い<b>です</b></td><td>～<b>くない</b>です</td></tr>
+      <tr><td>な形容詞</td><td>～<b>です</b><br>(なを取る)</td><td>～<b>じゃない</b>です</td></tr>
+      <tr><td>いい (irreg)</td><td>いいです</td><td><b>よくない</b>です</td></tr>
+    </table>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
 function restoreL5View(){
   if(!l5State)return;
   if(l5State.view==="vocabAudio"&&l5State.cat)showL5VocabAudio(l5State.cat);
   else if(l5State.view==="flashcards"&&l5State.cat)showL5Format(l5State.cat);
   else if(l5State.view==="format"&&l5State.cat)showL5Format(l5State.cat);
   else if(l5State.view==="vocab")showL5Vocab();
+  else if(l5State.view==="adjMenu")showL5AdjMenu();
+  else if(l5State.view==="adjRules")showL5AdjRules();
   else renderL5Main();
 }
 
