@@ -1689,6 +1689,177 @@ function genL5AdjForms(n=15){
 }
 L5_GENERATORS["g_adj_forms"]={title:"形容詞の活用 (Adjective Forms)",gen:()=>genL5AdjForms(15)};
 
+// ===== L5 Grammar: Degree Adverbs =====
+const L5_DEGREE=[
+  {jp:"すごく",en:"extremely"},
+  {jp:"とても",en:"very"},
+  {jp:"ちょっと",en:"a little"},
+];
+
+function makeL5DegreeI(){
+  const adv=pick(L5_DEGREE);
+  const adj=pick(L5_I_ADJ);
+  const subj=_pickL5Subj(adj);
+  const en=`${subj.en} is ${adv.en} ${adj.en}.`;
+  const ja=`${subj.jp}は ${adv.jp}${adj.jp}です。`;
+  const structure=`<b>[X]は + [副詞] + [い形容詞] + です</b><br><span style="color:#888;font-size:.85em">副詞は形容詞の<b>前</b>に置く</span>`;
+  return {qtext:en,hint:"副詞 + 形容詞の順番",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function makeL5DegreeNa(){
+  const adv=pick(L5_DEGREE);
+  const adj=pick(L5_NA_ADJ);
+  const subj=_pickL5Subj(adj);
+  const en=`${subj.en} is ${adv.en} ${adj.en}.`;
+  const ja=`${subj.jp}は ${adv.jp}${adj.jp}です。`;
+  const structure=`<b>[X]は + [副詞] + [な形容詞] + です</b><br><span style="color:#c0392b;font-size:.85em">⚠ 副詞 + 形容詞の前後に「な」は付けない</span>`;
+  return {qtext:en,hint:"副詞は形容詞の前、「な」は不要",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL5Degree(n=12){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    if(Math.random()<.55)qs.push(makeL5DegreeI());
+    else qs.push(makeL5DegreeNa());
+  }
+  return qs;
+}
+L5_GENERATORS["g_degree"]={title:"程度の副詞 (Degree Adverbs)",gen:()=>genL5Degree(12)};
+
+// ===== L5 Grammar: Likes & Dislikes =====
+const L5_LIKE_VERBS=[
+  {jp:"すき",en:"like",neg:"すきじゃない",enLove:"like",en3:"likes"},
+  {jp:"きらい",en:"dislike",neg:"きらいじゃない",enLove:"dislike",en3:"dislikes"},
+  {jp:"だいすき",en:"love",neg:"だいすきじゃない",enLove:"love",en3:"loves"},
+  {jp:"だいきらい",en:"hate",neg:"だいきらいじゃない",enLove:"hate",en3:"hates"},
+];
+const L5_LIKE_OBJECTS=[
+  {jp:"コーヒー",en:"coffee"},
+  {jp:"おちゃ",en:"tea"},
+  {jp:"すきやき",en:"sukiyaki"},
+  {jp:"さかな",en:"fish"},
+  {jp:"にく",en:"meat"},
+  {jp:"くだもの",en:"fruit"},
+  {jp:"ステーキ",en:"steak"},
+  {jp:"おかし",en:"sweets"},
+  {jp:"パン",en:"bread"},
+  {jp:"たまご",en:"eggs"},
+  {jp:"えいが",en:"movies"},
+  {jp:"おんがく",en:"music"},
+  {jp:"スポーツ",en:"sports"},
+  {jp:"ゲーム",en:"games"},
+  {jp:"ねこ",en:"cats"},
+  {jp:"いぬ",en:"dogs"},
+];
+const L5_LIKE_SUBJECTS=[
+  {jp:"わたし",en:"I",third:false,drop:true},
+  {jp:"わたし",en:"I",third:false,drop:true},
+  {jp:"メアリーさん",en:"Mary",third:true},
+  {jp:"たけしさん",en:"Takeshi",third:true},
+  {jp:"やまださん",en:"Yamada",third:true},
+  {jp:"ロバートさん",en:"Robert",third:true},
+];
+
+// Adj + noun combos (used in attributive form)
+const L5_LIKE_NA_PHRASES=[
+  {adj:"にぎやか",adjEn:"lively",nounJp:"まち",nounEn:"towns"},
+  {adj:"にぎやか",adjEn:"lively",nounJp:"レストラン",nounEn:"restaurants"},
+  {adj:"しずか",adjEn:"quiet",nounJp:"まち",nounEn:"towns"},
+  {adj:"しずか",adjEn:"quiet",nounJp:"カフェ",nounEn:"cafes"},
+  {adj:"しずか",adjEn:"quiet",nounJp:"へや",nounEn:"rooms"},
+  {adj:"きれい",adjEn:"pretty",nounJp:"はな",nounEn:"flowers"},
+  {adj:"きれい",adjEn:"clean",nounJp:"へや",nounEn:"rooms"},
+  {adj:"ゆうめい",adjEn:"famous",nounJp:"レストラン",nounEn:"restaurants"},
+  {adj:"べんり",adjEn:"convenient",nounJp:"スマホ",nounEn:"smartphones"},
+];
+const L5_LIKE_I_PHRASES=[
+  {adj:"おおきい",adjEn:"big",nounJp:"いえ",nounEn:"houses"},
+  {adj:"おおきい",adjEn:"big",nounJp:"くるま",nounEn:"cars"},
+  {adj:"ちいさい",adjEn:"small",nounJp:"いえ",nounEn:"houses"},
+  {adj:"ちいさい",adjEn:"small",nounJp:"いぬ",nounEn:"dogs"},
+  {adj:"あたらしい",adjEn:"new",nounJp:"くるま",nounEn:"cars"},
+  {adj:"あたらしい",adjEn:"new",nounJp:"スマホ",nounEn:"smartphones"},
+  {adj:"ふるい",adjEn:"old",nounJp:"いえ",nounEn:"houses"},
+  {adj:"ふるい",adjEn:"old",nounJp:"おてら",nounEn:"temples"},
+  {adj:"おもしろい",adjEn:"interesting",nounJp:"えいが",nounEn:"movies"},
+  {adj:"おもしろい",adjEn:"interesting",nounJp:"ほん",nounEn:"books"},
+  {adj:"たかい",adjEn:"expensive",nounJp:"くるま",nounEn:"cars"},
+  {adj:"やすい",adjEn:"cheap",nounJp:"レストラン",nounEn:"restaurants"},
+];
+
+// Type A: Basic — X は Y が すき/きらい です
+function makeL5LikeBasic(){
+  const subj=pick(L5_LIKE_SUBJECTS);
+  const obj=pick(L5_LIKE_OBJECTS);
+  const verb=pick(L5_LIKE_VERBS);
+  const verbEn=subj.third?verb.en3:verb.enLove;
+  const en=`${subj.en} ${verbEn} ${obj.en}.`;
+  const ja=`${subj.jp}は ${obj.jp}が ${verb.jp}です。`;
+  const jaDrop=`${obj.jp}が ${verb.jp}です。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[X]は + [Y]<u>が</u> + ${verb.jp}です</b><br><span style="color:#c0392b;font-size:.85em">⚠ 助詞は<b>が</b>（を ではない！）</span><br><span style="color:#888;font-size:.85em">すき/きらい は<b>な形容詞</b></span>`;
+  return {qtext:en,hint:"目的語は<b>が</b>（を ではない）",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: With na-adj + な + noun (にぎやかなまち)
+function makeL5LikeNaAdjNoun(){
+  const subj=pick(L5_LIKE_SUBJECTS);
+  const phr=pick(L5_LIKE_NA_PHRASES);
+  const verb=pick([{jp:"すき",en3:"likes",enLove:"like"},{jp:"だいすき",en3:"loves",enLove:"love"}]);
+  const verbEn=subj.third?verb.en3:verb.enLove;
+  const en=`${subj.en} ${verbEn} ${phr.adjEn} ${phr.nounEn}.`;
+  const ja=`${subj.jp}は ${phr.adj}な${phr.nounJp}が ${verb.jp}です。`;
+  const jaDrop=`${phr.adj}な${phr.nounJp}が ${verb.jp}です。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[X]は + [な-adj]<u>な</u>[名詞]<u>が</u> + ${verb.jp}です</b><br><span style="color:#c0392b;font-size:.85em">⚠ な形容詞が名詞を修飾するときは「<b>な</b>」が必要！<br>例：にぎやか<u>な</u>まち（lively town）</span>`;
+  return {qtext:en,hint:"な形容詞 + <b>な</b> + 名詞 + が + すき",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: With i-adj + noun (no な)
+function makeL5LikeIAdjNoun(){
+  const subj=pick(L5_LIKE_SUBJECTS);
+  const phr=pick(L5_LIKE_I_PHRASES);
+  const verb=pick([{jp:"すき",en3:"likes",enLove:"like"},{jp:"だいすき",en3:"loves",enLove:"love"}]);
+  const verbEn=subj.third?verb.en3:verb.enLove;
+  const en=`${subj.en} ${verbEn} ${phr.adjEn} ${phr.nounEn}.`;
+  const ja=`${subj.jp}は ${phr.adj}${phr.nounJp}が ${verb.jp}です。`;
+  const jaDrop=`${phr.adj}${phr.nounJp}が ${verb.jp}です。`;
+  const answers=[_cleanJa(ja)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[X]は + [い-adj][名詞]<u>が</u> + ${verb.jp}です</b><br><span style="color:#888;font-size:.85em">い形容詞は変化なし、直接名詞に付く（「な」不要）</span>`;
+  return {qtext:en,hint:"い形容詞 + 名詞（「な」は付けない）",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type D: Negative
+function makeL5LikeNegative(){
+  const subj=pick(L5_LIKE_SUBJECTS);
+  const obj=pick(L5_LIKE_OBJECTS);
+  const verbEn=subj.third?"doesn't like":"don't like";
+  const en=`${subj.en} ${verbEn} ${obj.en}.`;
+  const ja=`${subj.jp}は ${obj.jp}が すきじゃないです。`;
+  const ja2=`${subj.jp}は ${obj.jp}が すきじゃありません。`;
+  const jaDrop=`${obj.jp}が すきじゃないです。`;
+  const answers=[_cleanJa(ja),_cleanJa(ja2)];
+  if(subj.drop)answers.push(_cleanJa(jaDrop));
+  const structure=`<b>[X]は + [Y]<u>が</u> + すき<u>じゃない</u>です</b><br><span style="color:#888;font-size:.85em">な形容詞の否定 → じゃない／じゃありません</span>`;
+  return {qtext:en,hint:"すき + じゃないです",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL5Like(n=12){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.35)qs.push(makeL5LikeBasic());
+    else if(r<.62)qs.push(makeL5LikeNaAdjNoun());
+    else if(r<.85)qs.push(makeL5LikeIAdjNoun());
+    else qs.push(makeL5LikeNegative());
+  }
+  return qs;
+}
+L5_GENERATORS["g_likes"]={title:"好き嫌い (Likes & Dislikes)",gen:()=>genL5Like(12)};
+
 // ===== L4 Grammar: Duration of Time (じかん) =====
 const L4_DUR_NUMS=[
   {dur:"いちじかん",en:"1 hour",half:"いちじかんはん",halfEn:"1 and a half hours"},
@@ -4478,6 +4649,16 @@ function buildL5Menu(){
         <span class="t1">形容詞の活用 (Adjective Forms)</span>
         <span class="t2">い形容詞 / な形容詞 — 肯定 & 否定</span>
       </div>
+      <div class="menu-btn full" onclick="showL5DegreeMenu()" style="border-color:#16a085;background:#f0fff8">
+        <div class="icon">📈</div>
+        <span class="t1">程度の副詞 (Degree Adverbs)</span>
+        <span class="t2">すごく / とても / ちょっと + 形容詞</span>
+      </div>
+      <div class="menu-btn full" onclick="showL5LikesMenu()" style="border-color:#e91e63;background:#fff5f8">
+        <div class="icon">💖</div>
+        <span class="t1">好き嫌い (Likes & Dislikes)</span>
+        <span class="t2">XはYが すき/きらい です　＋　な-adj+な+名詞</span>
+      </div>
     </div>`;
 }
 
@@ -4653,6 +4834,149 @@ function showL5AdjRules(){
   document.getElementById("menuContent").innerHTML=h;
 }
 
+function showL5DegreeMenu(){
+  l5State={view:"degreeMenu",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">📈 程度の副詞 (Degree Adverbs)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">すごく / とても / ちょっと + 形容詞</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL5DegreeRules()" style="border-color:#16a085;background:#f0fff8">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">副詞は形容詞の前に置く</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(5,'g_degree')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：副詞 + 形容詞の文を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5DegreeRules(){
+  l5State={view:"degreeRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL5DegreeMenu()">← 程度の副詞</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>📈 Degree Adverbs — 程度を表す副詞</h3>
+    <div class="note">
+      <b>パターン:</b> [X]は + [副詞] + [形容詞]です<br>
+      <span style="color:#888;font-size:.88em">副詞は形容詞の<u>前</u>に置く</span>
+    </div>
+    <h3 style="margin-top:14px">📋 主な程度副詞</h3>
+    <table class="gtable">
+      <tr><th>副詞</th><th>意味</th><th>強さ</th></tr>
+      <tr><td><b>すごく</b></td><td>extremely</td><td>★★★ 最強</td></tr>
+      <tr><td><b>とても</b></td><td>very</td><td>★★ 強い</td></tr>
+      <tr><td><b>ちょっと</b></td><td>a little</td><td>★ 弱い</td></tr>
+      <tr><td><b>あまり〜ない</b></td><td>not very</td><td>否定形と一緒</td></tr>
+    </table>
+    <h3 style="margin-top:14px">📝 例文 (ビデオから)</h3>
+    <div class="note">
+      このえいがは <b>とても</b>おもしろいです。<br>
+      <span style="color:#888">This movie is very interesting.</span>
+    </div>
+    <div class="note">
+      このへやは <b>ちょっと</b>あついです。<br>
+      <span style="color:#888">This room is a little hot.</span>
+    </div>
+    <div class="note">
+      メアリーさんは <b>すごく</b>げんきです。<br>
+      <span style="color:#888">Mary is extremely energetic.</span>
+    </div>
+    <h3 style="margin-top:14px">⚠️ 注意</h3>
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>な形容詞</b>の前に副詞を置くとき、<b>「な」</b>は付けない！<br>
+      ✅ とても<b>げんき</b>です（× とてもげんきな です）
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5LikesMenu(){
+  l5State={view:"likesMenu",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">💖 好き嫌い (Likes & Dislikes)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">XはYが すき/きらい です</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL5LikesRules()" style="border-color:#e91e63;background:#fff5f8">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">が の使い方／な-adj + な + 名詞</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(5,'g_likes')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：好き／嫌いの文を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5LikesRules(){
+  l5State={view:"likesRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL5LikesMenu()">← 好き嫌い</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>💖 Expressing Likes & Dislikes</h3>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：すき/きらい は<u>な形容詞</u>！</b><br>
+      <span style="color:#555;font-size:.88em">動詞ではないので、「を」ではなく「<b>が</b>」を使う</span>
+    </div>
+
+    <h3 style="margin-top:14px">📋 基本パターン</h3>
+    <div class="note">
+      <b>X は Y <u>が</u> すき／きらい です</b><br>
+      <span style="color:#888;font-size:.88em">→ "X likes/dislikes Y"</span>
+    </div>
+
+    <h3 style="margin-top:14px">📝 例文</h3>
+    <div class="note">
+      わたしは コーヒー<b>が</b> すきです。<br>
+      <span style="color:#888">I like coffee.</span>
+    </div>
+    <div class="note">
+      たけしさんは さかな<b>が</b> きらいです。<br>
+      <span style="color:#888">Takeshi dislikes fish.</span>
+    </div>
+
+    <h3 style="margin-top:14px">🌸 重要：な-adj + な + 名詞</h3>
+    <div class="note" style="background:#f3eefc;border-left-color:#9b59b6">
+      <b>な形容詞</b>が名詞を修飾するときは「<b>な</b>」が必要！<br>
+      にぎやか + <b>な</b> + まち = にぎやか<b>な</b>まち（lively town）<br>
+      <br>
+      ロバートさんは <b>にぎやかなまち</b>が すきです。<br>
+      <span style="color:#888">Robert likes lively towns.</span>
+    </div>
+
+    <h3 style="margin-top:14px">💡 い-adj + 名詞 (compare)</h3>
+    <div class="note">
+      <b>い形容詞</b>はそのまま名詞に付く（「な」不要）<br>
+      おおきい + いえ = おおきいいえ（big house）<br>
+      <br>
+      わたしは <b>おおきいいえ</b>が すきです。<br>
+      <span style="color:#888">I like big houses.</span>
+    </div>
+
+    <h3 style="margin-top:14px">📈 強める表現</h3>
+    <table class="gtable">
+      <tr><th>レベル</th><th>肯定</th><th>否定</th></tr>
+      <tr><td>強</td><td><b>だいすき</b>です (love)</td><td><b>だいきらい</b>です (hate)</td></tr>
+      <tr><td>普通</td><td><b>すき</b>です</td><td><b>きらい</b>です</td></tr>
+      <tr><td>否定</td><td><b>すきじゃない</b>です</td><td><b>きらいじゃない</b>です</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">⚖️ まとめ</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      ① 助詞は <b>が</b>（を ではない）<br>
+      ② すき/きらい は <b>な形容詞</b><br>
+      ③ な-adj が名詞を修飾 → <b>な</b>を付ける<br>
+      ④ い-adj が名詞を修飾 → そのまま付ける
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
 function restoreL5View(){
   if(!l5State)return;
   if(l5State.view==="vocabAudio"&&l5State.cat)showL5VocabAudio(l5State.cat);
@@ -4661,6 +4985,10 @@ function restoreL5View(){
   else if(l5State.view==="vocab")showL5Vocab();
   else if(l5State.view==="adjMenu")showL5AdjMenu();
   else if(l5State.view==="adjRules")showL5AdjRules();
+  else if(l5State.view==="degreeMenu")showL5DegreeMenu();
+  else if(l5State.view==="degreeRules")showL5DegreeRules();
+  else if(l5State.view==="likesMenu")showL5LikesMenu();
+  else if(l5State.view==="likesRules")showL5LikesRules();
   else renderL5Main();
 }
 
