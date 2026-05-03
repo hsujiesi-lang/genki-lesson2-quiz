@@ -1737,6 +1737,8 @@ const L5_LIKE_OBJECTS=[
   {jp:"コーヒー",en:"coffee"},
   {jp:"おちゃ",en:"tea"},
   {jp:"すきやき",en:"sukiyaki"},
+  {jp:"なっとう",en:"natto"},
+  {jp:"すし",en:"sushi"},
   {jp:"さかな",en:"fish"},
   {jp:"にく",en:"meat"},
   {jp:"くだもの",en:"fruit"},
@@ -1792,13 +1794,24 @@ function makeL5LikeBasic(){
   const subj=pick(L5_LIKE_SUBJECTS);
   const obj=pick(L5_LIKE_OBJECTS);
   const verb=pick(L5_LIKE_VERBS);
-  const verbEn=subj.third?verb.en3:verb.enLove;
-  const en=`${subj.en} ${verbEn} ${obj.en}.`;
+  // For だいすき/だいきらい, randomly use textbook-style phrasing too
+  let verbEn;
+  if(verb.jp==="だいすき"){
+    const useALot=Math.random()<.5;
+    if(useALot)verbEn=subj.third?`likes ${obj.en} a lot`:`like ${obj.en} a lot`;
+    else verbEn=subj.third?`loves ${obj.en}`:`love ${obj.en}`;
+  }else if(verb.jp==="だいきらい"){
+    verbEn=subj.third?`hates ${obj.en}`:`hate ${obj.en}`;
+  }else{
+    verbEn=`${subj.third?verb.en3:verb.enLove} ${obj.en}`;
+  }
+  const en=`${subj.en} ${verbEn}.`;
   const ja=`${subj.jp}は ${obj.jp}が ${verb.jp}です。`;
   const jaDrop=`${obj.jp}が ${verb.jp}です。`;
   const answers=[_cleanJa(ja)];
   if(subj.drop)answers.push(_cleanJa(jaDrop));
-  const structure=`<b>[X]は + [Y]<u>が</u> + ${verb.jp}です</b><br><span style="color:#c0392b;font-size:.85em">⚠ 助詞は<b>が</b>（を ではない！）</span><br><span style="color:#888;font-size:.85em">すき/きらい は<b>な形容詞</b></span>`;
+  const levelTag={"だいすき":"★★★ 強","すき":"★★ 中","きらい":"★ 否定","だいきらい":"★★★ 強否定"}[verb.jp]||"";
+  const structure=`<b>[X]は + [Y]<u>が</u> + ${verb.jp}です</b>　<span style="color:#888;font-size:.78em">${levelTag}</span><br><span style="color:#c0392b;font-size:.85em">⚠ 助詞は<b>が</b>（を ではない！）</span>`;
   return {qtext:en,hint:"目的語は<b>が</b>（を ではない）",answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
 }
 
