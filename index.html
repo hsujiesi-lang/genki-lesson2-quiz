@@ -414,6 +414,7 @@ function genL2Exam(){
 const L2_GENERATORS={
   v_en2jp:{title:"English → 日本語",gen:()=>genL2VocabEn2Jp(15)},
   v_jp2en:{title:"日本語 → English",gen:()=>genL2VocabJp2En(15)},
+  v_audio:{title:"🔊 音声 → 日本語入力",gen:()=>_genAudioDictation(L2_VOCAB,15)},
   g_kosoad:{title:"こそあど",gen:()=>genL2Kosoado(10)},
   g_place:{title:"ここ/そこ/あそこ/どこ",gen:()=>genL2Place(8)},
   g_dare:{title:"だれの + 名詞",gen:()=>genL2Dare(6)},
@@ -1153,6 +1154,7 @@ function genL3Exam(){
 const L3_GENERATORS={
   v_en2jp:{title:"English → 日本語",gen:()=>genL3VocabEn2Jp(15)},
   v_jp2en:{title:"日本語 → English",gen:()=>genL3VocabJp2En(15)},
+  v_audio:{title:"🔊 音声 → 日本語入力",gen:()=>_genAudioDictation(L3_VOCAB,15)},
   g_verb:{title:"動詞の活用 (ます形)",gen:()=>genL3VerbConj(15)},
   g_particle:{title:"助詞 を/に/で/へ",gen:()=>genL3Particles(12)},
   g_time:{title:"時間 + に",gen:()=>genL3Time(10)},
@@ -1383,6 +1385,7 @@ const L4_GENERATORS={};
 L4_CATEGORIES.forEach(c=>{
   L4_GENERATORS[`v_${c.key}_en2jp`]={title:`${c.jp}：English → 日本語`,gen:()=>genL4VocabEn2Jp(c.key,15)};
   L4_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL4VocabJp2En(c.key,15)};
+  L4_GENERATORS[`v_${c.key}_audio`]={title:`${c.jp}：🔊 音声 → 日本語入力`,gen:()=>_genAudioDictation(L4_VOCAB[c.key]||{},15)};
 });
 
 // ============================================================
@@ -1542,6 +1545,7 @@ const L5_GENERATORS={};
 L5_CATEGORIES.forEach(c=>{
   L5_GENERATORS[`v_${c.key}_en2jp`]={title:`${c.jp}：English → 日本語`,gen:()=>genL5VocabEn2Jp(c.key,15)};
   L5_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL5VocabJp2En(c.key,15)};
+  L5_GENERATORS[`v_${c.key}_audio`]={title:`${c.jp}：🔊 音声 → 日本語入力`,gen:()=>_genAudioDictation(L5_VOCAB[c.key]||{},15)};
 });
 
 // ===== L5 Grammar: Adjective Forms (affirmative + negative) =====
@@ -3178,6 +3182,26 @@ function showL4VerbAudio(){
 // ===== Generic vocabulary audio list (for non-verb categories) =====
 let _currentVocabList=[];
 
+// Generic audio dictation generator — used by all lessons
+function _genAudioDictation(dict,n=15){
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return null;
+  }
+  return shuffle([...keys]).slice(0,n).map(k=>({
+    qtext:`<div style="text-align:center;padding:8px 0">
+      <button onclick="playWord('${k.replace(/'/g,"\\'")}')" style="background:#9b59b6;color:#fff;border:none;border-radius:50%;width:88px;height:88px;font-size:2.2rem;cursor:pointer;box-shadow:0 4px 14px rgba(155,89,182,.35);transition:transform .15s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="音声を再生">🔊</button>
+      <p style="color:#888;font-size:.85rem;margin-top:8px">タップして再生 (tap to replay)</p>
+    </div>`,
+    hint:"聞こえた日本語を入力してください (type the Japanese you heard)",
+    answers:[k],
+    explain:`${k} (${dict[k]})`,
+    audioWord:k,
+    isAudio:true,
+  }));
+}
+
 function playWord(word){
   if(!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
@@ -3684,6 +3708,7 @@ function buildL2Menu(){
       <div class="section-label">単語 VOCABULARY</div>
       <div class="menu-btn" onclick="startQuiz(2,'v_en2jp')"><div class="icon">🇬🇧→🇯🇵</div><span class="t1">English → 日本語</span><span class="t2">See English, type Japanese</span></div>
       <div class="menu-btn" onclick="startQuiz(2,'v_jp2en')"><div class="icon">🇯🇵→🇬🇧</div><span class="t1">日本語 → English</span><span class="t2">See Japanese, type English</span></div>
+      <div class="menu-btn full" onclick="startQuiz(2,'v_audio')" style="border-color:#16a085;background:#f0fff8"><div class="icon">🔊</div><span class="t1">音声 → 日本語入力 (Audio Dictation)</span><span class="t2">聞こえた日本語をタイプする</span></div>
 
       <div class="section-label">文法 GRAMMAR</div>
       <div class="menu-btn" onclick="startQuiz(2,'g_kosoad')"><div class="icon">👉</div><span class="t1">こそあど</span><span class="t2">これ/それ/あれ/どれ + この/その/あの/どの</span></div>
@@ -3728,6 +3753,7 @@ function buildL3Menu(){
       <div class="section-label">単語 VOCABULARY</div>
       <div class="menu-btn" onclick="startQuiz(3,'v_en2jp')"><div class="icon">🇬🇧→🇯🇵</div><span class="t1">English → 日本語</span><span class="t2">See English, type Japanese</span></div>
       <div class="menu-btn" onclick="startQuiz(3,'v_jp2en')"><div class="icon">🇯🇵→🇬🇧</div><span class="t1">日本語 → English</span><span class="t2">See Japanese, type English</span></div>
+      <div class="menu-btn full" onclick="startQuiz(3,'v_audio')" style="border-color:#16a085;background:#f0fff8"><div class="icon">🔊</div><span class="t1">音声 → 日本語入力 (Audio Dictation)</span><span class="t2">聞こえた日本語をタイプする</span></div>
 
       <div class="section-label">文法 GRAMMAR</div>
       <div class="menu-btn" onclick="startQuiz(3,'g_verb')"><div class="icon">📐</div><span class="t1">動詞の活用</span><span class="t2">Verb conjugation (ます form)</span></div>
@@ -3962,6 +3988,13 @@ function showL4Format(catKey){
         <span class="t1">日本語 → English</span>
         <span class="t2">See Japanese, type English</span>
       </div>`;
+  if(Object.keys(L4_VOCAB[catKey]||{}).length>0){
+    h+=`<div class="menu-btn full" onclick="startQuiz(4,'v_${catKey}_audio')" style="border-color:#16a085;background:#f0fff8">
+          <div class="icon">🔊</div>
+          <span class="t1">音声 → 日本語入力 (Audio Dictation)</span>
+          <span class="t2">聞こえた日本語をタイプする練習</span>
+        </div>`;
+  }
   h+=`</div>`;
   document.getElementById("menuContent").innerHTML=h;
 }
@@ -4721,6 +4754,13 @@ function showL5Format(catKey){
         <span class="t1">日本語 → English</span>
         <span class="t2">See Japanese, type English</span>
       </div>`;
+  if(Object.keys(L5_VOCAB[catKey]||{}).length>0){
+    h+=`<div class="menu-btn full" onclick="startQuiz(5,'v_${catKey}_audio')" style="border-color:#16a085;background:#f0fff8">
+          <div class="icon">🔊</div>
+          <span class="t1">音声 → 日本語入力 (Audio Dictation)</span>
+          <span class="t2">聞こえた日本語をタイプする練習</span>
+        </div>`;
+  }
   h+=`</div>`;
   document.getElementById("menuContent").innerHTML=h;
 }
@@ -5131,6 +5171,10 @@ function showQ(){
   });
   inp.addEventListener("input",()=>{enterReady=false;const ch=document.getElementById("ch");if(ch)ch.style.display="none";inp.style.borderColor="#eee"});
   setTimeout(()=>inp.focus(),80);
+  // Auto-play audio for dictation questions
+  if(q.isAudio&&q.audioWord){
+    setTimeout(()=>playWord(q.audioWord),350);
+  }
 }
 
 function handleBtn(){
