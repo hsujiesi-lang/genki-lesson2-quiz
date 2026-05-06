@@ -84,6 +84,27 @@
   .gtable tr:nth-child(even) td{background:#fdf6ec}
   .note{background:#fff8ee;border-left:3px solid #e67e22;padding:10px 14px;margin:10px 0;border-radius:0 8px 8px 0;font-size:.85rem;line-height:1.6}
 
+  /* Adjective Conjugation Audio Rows */
+  .adj-conj-row{background:#fff;border:2px solid #f0d9b5;border-radius:12px;padding:12px 14px;margin-bottom:10px;transition:all .2s}
+  .adj-conj-row:hover{border-color:#e67e22;box-shadow:0 3px 10px rgba(230,126,34,.12)}
+  .adj-conj-row.playing{border-color:#27ae60;background:#f0fff4}
+  .adj-conj-row .adj-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .adj-conj-row .adj-head .vplay{background:#e67e22;color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:1rem;cursor:pointer;flex:0 0 36px;transition:transform .15s}
+  .adj-conj-row .adj-head .vplay:hover{background:#d35400;transform:scale(1.08)}
+  .adj-conj-row .adj-jp{font-weight:700;font-size:1.2rem;color:#333}
+  .adj-conj-row .adj-en{color:#888;font-size:.85rem;font-style:italic}
+  .adj-conj-row .adj-type{font-size:.68rem;color:#fff;padding:2px 8px;border-radius:8px;font-weight:700;margin-left:auto}
+  .adj-conj-row .adj-type.i{background:#3498db}
+  .adj-conj-row .adj-type.na{background:#e91e63}
+  .adj-conj-row .adj-forms{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  .adj-conj-row .adj-form{padding:6px 10px;border-radius:6px;font-size:.85rem;cursor:pointer;transition:background .15s}
+  .adj-conj-row .adj-form:hover{background:#fff8ee}
+  .adj-conj-row .adj-form .lbl{display:block;font-size:.7rem;color:#999;margin-bottom:2px;font-weight:700}
+  .adj-conj-row .adj-form.aff{background:#f0fff8}
+  .adj-conj-row .adj-form.neg{background:#fff5f5}
+  .adj-conj-row .adj-form .val{font-size:.92rem;color:#333}
+  @media(max-width:500px){.adj-conj-row .adj-forms{grid-template-columns:1fr}}
+
   /* Flashcards */
   .fcard{background:#fff;border-radius:18px;padding:36px 22px;margin:14px 0;box-shadow:0 4px 18px rgba(0,0,0,.08);text-align:center;min-height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:all .2s;user-select:none}
   .fcard:hover{box-shadow:0 6px 22px rgba(0,0,0,.12)}
@@ -1876,6 +1897,203 @@ function genL5Like(n=12){
   return qs;
 }
 L5_GENERATORS["g_likes"]={title:"好き嫌い (Likes & Dislikes)",gen:()=>genL5Like(12)};
+
+// ===== L5 Grammar: Adjective Conjugation Drill (Present + Past) =====
+function _buildL5AdjConjData(){
+  const data=[];
+  // i-adjectives
+  L5_I_ADJ.forEach(adj=>{
+    if(adj.jp==="いい"){
+      data.push({jp:"いい",en:"good",type:"i",irregular:true,
+        aff_pres:["いいです"],
+        neg_pres:["よくないです","よくありません"],
+        aff_past:["よかったです"],
+        neg_past:["よくなかったです","よくありませんでした"]});
+    }else{
+      const stem=adj.jp.slice(0,-1);  // drop final い
+      data.push({jp:adj.jp,en:adj.en,type:"i",
+        aff_pres:[adj.jp+"です"],
+        neg_pres:[stem+"くないです",stem+"くありません"],
+        aff_past:[stem+"かったです"],
+        neg_past:[stem+"くなかったです",stem+"くありませんでした"]});
+    }
+  });
+  // na-adjectives
+  L5_NA_ADJ.forEach(adj=>{
+    data.push({jp:adj.jp,en:adj.en,type:"na",lookalike:adj.lookalike,
+      aff_pres:[adj.jp+"です"],
+      neg_pres:[adj.jp+"じゃないです",adj.jp+"じゃありません",adj.jp+"ではありません"],
+      aff_past:[adj.jp+"でした"],
+      neg_past:[adj.jp+"じゃなかったです",adj.jp+"じゃありませんでした",adj.jp+"ではありませんでした"]});
+  });
+  return data;
+}
+const L5_ADJ_CONJ_DATA=_buildL5AdjConjData();
+
+function _makeAdjConjQ(adj,formKey,tenseLabel,formLabel){
+  const typeLabel=adj.type==="i"?"い形容詞":"な形容詞";
+  const typeColor=adj.type==="i"?"#3498db":"#e91e63";
+  const isNeg=formKey.startsWith("neg");
+  const isPast=formKey.endsWith("past");
+  const enMeaning=isNeg
+    ?(isPast?`was not ${adj.en}`:`is not ${adj.en}`)
+    :(isPast?`was ${adj.en}`:`is ${adj.en}`);
+  const irregNote=adj.irregular?'<br><span style="color:#e74c3c;font-size:.85em">⚠ 不規則：<b>いい</b> の活用は <b>よ-</b> から始まる！</span>':"";
+  const lookalikeNote=adj.lookalike?'<br><span style="color:#e74c3c;font-size:.85em">⚠ 「'+adj.jp+'」は「い」で終わるけど<b>な形容詞</b>！</span>':"";
+
+  const qtext=`<div style="text-align:center;padding:8px 0">
+    <div style="font-size:1.7rem;font-weight:700;color:#333">${adj.jp}</div>
+    <div style="font-size:.85rem;color:${typeColor};margin:4px 0;font-weight:700">${typeLabel}　・　"${adj.en}"</div>
+    <div style="margin:14px 0;background:#fff8ee;padding:10px 14px;border-radius:8px;border-left:3px solid #e67e22;text-align:left">
+      <div style="color:#e67e22;font-weight:700;font-size:1rem">→ ${formLabel}（${tenseLabel}）</div>
+      <div style="color:#888;font-size:.85em;margin-top:2px">"${enMeaning}"</div>
+    </div>
+  </div>`;
+
+  let structure;
+  if(adj.type==="i"){
+    if(formKey==="aff_pres")structure=`<b>い形容詞 → そのまま + です</b><br>${adj.jp} + です = <b>${adj.jp}です</b>`;
+    else if(formKey==="neg_pres")structure=`<b>い形容詞 → い を <u>くないです</u> に変える</b>${irregNote}`;
+    else if(formKey==="aff_past")structure=`<b>い形容詞 → い を <u>かったです</u> に変える</b>${irregNote}<br><span style="color:#c0392b;font-size:.85em">⚠ ❌ <s>${adj.jp}でした</s>（い形容詞に「でした」は使わない！）</span>`;
+    else /*neg_past*/ structure=`<b>い形容詞 → い を <u>くなかったです</u> に変える</b>${irregNote}`;
+  }else{
+    if(formKey==="aff_pres")structure=`<b>な形容詞 → そのまま + です（「な」は付けない）</b>${lookalikeNote}`;
+    else if(formKey==="neg_pres")structure=`<b>な形容詞 → + <u>じゃないです</u>（or じゃありません）</b>${lookalikeNote}`;
+    else if(formKey==="aff_past")structure=`<b>な形容詞 → + <u>でした</u></b>${lookalikeNote}<br><span style="color:#888;font-size:.85em">名詞と同じ活用</span>`;
+    else /*neg_past*/ structure=`<b>な形容詞 → + <u>じゃなかったです</u>（or じゃありませんでした）</b>${lookalikeNote}`;
+  }
+
+  return {
+    qtext,
+    hint:`${formLabel}（${tenseLabel}）の形を入力してください`,
+    answers:adj[formKey].map(_cleanJa),
+    explain:adj[formKey][0],
+    structure,
+    alwaysShowStructure:true,
+  };
+}
+
+function genL5AdjPresent(n=15){
+  const qs=[];
+  const data=L5_ADJ_CONJ_DATA;
+  for(let i=0;i<n;i++){
+    const adj=pick(data);
+    const isNeg=Math.random()<.5;
+    const formKey=isNeg?"neg_pres":"aff_pres";
+    const formLabel=isNeg?"否定 (negative)":"肯定 (affirmative)";
+    qs.push(_makeAdjConjQ(adj,formKey,"現在形",formLabel));
+  }
+  return qs;
+}
+
+function genL5AdjPast(n=15){
+  const qs=[];
+  const data=L5_ADJ_CONJ_DATA;
+  for(let i=0;i<n;i++){
+    const adj=pick(data);
+    const isNeg=Math.random()<.5;
+    const formKey=isNeg?"neg_past":"aff_past";
+    const formLabel=isNeg?"否定 (negative)":"肯定 (affirmative)";
+    qs.push(_makeAdjConjQ(adj,formKey,"過去形",formLabel));
+  }
+  return qs;
+}
+
+L5_GENERATORS["g_adj_pres"]={title:"形容詞の活用 — 現在形",gen:()=>genL5AdjPresent(15)};
+L5_GENERATORS["g_adj_past"]={title:"形容詞の活用 — 過去形",gen:()=>genL5AdjPast(15)};
+
+// ===== L5 Adjective Conjugation Audio (similar to L4 verb audio) =====
+function _adjConjForms(adj){
+  // Returns the 4 conjugated forms for audio playback (without です/なし)
+  // We use the spoken-natural forms
+  if(adj.type==="i"||adj.jp.endsWith("い")&&!adj.lookalike){
+    if(adj.jp==="いい"){
+      return {aff_pres:"いいです",neg_pres:"よくないです",aff_past:"よかったです",neg_past:"よくなかったです"};
+    }
+    const stem=adj.jp.slice(0,-1);
+    return {
+      aff_pres:adj.jp+"です",
+      neg_pres:stem+"くないです",
+      aff_past:stem+"かったです",
+      neg_past:stem+"くなかったです",
+    };
+  }
+  return {
+    aff_pres:adj.jp+"です",
+    neg_pres:adj.jp+"じゃないです",
+    aff_past:adj.jp+"でした",
+    neg_past:adj.jp+"じゃなかったです",
+  };
+}
+
+let _adjAudioSpeaking=false;
+function playAdjAllForms(idx,catKey){
+  if(_adjAudioSpeaking){
+    window.speechSynthesis.cancel();
+    _adjAudioSpeaking=false;
+    document.querySelectorAll(".adj-conj-row").forEach(r=>r.classList.remove("playing"));
+    return;
+  }
+  const list=catKey==="i_adj"?L5_I_ADJ:L5_NA_ADJ;
+  const adj=list[idx];
+  if(!adj||!window.speechSynthesis)return;
+  const row=document.querySelector(`.adj-conj-row[data-idx="${idx}"]`);
+  row&&row.classList.add("playing");
+  const forms=_adjConjForms({...adj,type:catKey==="i_adj"?"i":"na"});
+  const seq=[forms.aff_pres,forms.neg_pres,forms.aff_past,forms.neg_past];
+  let i=0;
+  _adjAudioSpeaking=true;
+  function speakNext(){
+    if(i>=seq.length){
+      _adjAudioSpeaking=false;
+      row&&row.classList.remove("playing");
+      return;
+    }
+    const u=new SpeechSynthesisUtterance(seq[i]);
+    u.lang="ja-JP";u.rate=.85;
+    u.onend=()=>{i++;setTimeout(speakNext,450);};
+    u.onerror=()=>{i++;setTimeout(speakNext,100);};
+    window.speechSynthesis.speak(u);
+  }
+  speakNext();
+}
+
+function playAdjForm(form){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(form);
+  u.lang="ja-JP";u.rate=.85;
+  window.speechSynthesis.speak(u);
+}
+
+function showL5AdjConjAudio(catKey){
+  const cat=L5_CATEGORIES.find(c=>c.key===catKey);
+  const list=catKey==="i_adj"?L5_I_ADJ:L5_NA_ADJ;
+  const typeLetter=catKey==="i_adj"?"i":"na";
+  l5State={view:"adjConjAudio",cat:catKey};
+  let h=`<button class="back-lessons" onclick="showL5Format('${catKey}')">← テスト形式</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">📢 ${cat.jp} — 活用音声リスト</h3>`;
+  h+=`<p style="color:#999;font-size:.82rem;margin-bottom:6px;padding-left:4px">🔊 をタップ：4 形を順番に再生（現在肯定 → 現在否定 → 過去肯定 → 過去否定）</p>`;
+  h+=`<p style="color:#aaa;font-size:.75rem;margin-bottom:10px;padding-left:4px">各フォームを個別に聞きたい場合は、そのフォームをタップしてください</p>`;
+  list.forEach((adj,idx)=>{
+    const forms=_adjConjForms({...adj,type:typeLetter});
+    h+=`<div class="adj-conj-row" data-idx="${idx}">
+      <div class="adj-head">
+        <button class="vplay" onclick="event.stopPropagation();playAdjAllForms(${idx},'${catKey}')" title="4形を順番に再生">🔊</button>
+        <span class="adj-jp" onclick="playAdjForm('${forms.aff_pres.replace(/'/g,"\\'")}')">${adj.jp}</span>
+        <span class="adj-en">${adj.en}</span>
+        <span class="adj-type ${typeLetter}">${typeLetter}-adj</span>
+      </div>
+      <div class="adj-forms">
+        <div class="adj-form aff" onclick="playAdjForm('${forms.aff_pres.replace(/'/g,"\\'")}')"><span class="lbl">現在 肯定</span><span class="val">${forms.aff_pres}</span></div>
+        <div class="adj-form neg" onclick="playAdjForm('${forms.neg_pres.replace(/'/g,"\\'")}')"><span class="lbl">現在 否定</span><span class="val">${forms.neg_pres}</span></div>
+        <div class="adj-form aff" onclick="playAdjForm('${forms.aff_past.replace(/'/g,"\\'")}')"><span class="lbl">過去 肯定</span><span class="val">${forms.aff_past}</span></div>
+        <div class="adj-form neg" onclick="playAdjForm('${forms.neg_past.replace(/'/g,"\\'")}')"><span class="lbl">過去 否定</span><span class="val">${forms.neg_past}</span></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById("menuContent").innerHTML=h;
+}
 
 // ===== L4 Grammar: Duration of Time (じかん) =====
 const L4_DUR_NUMS=[
@@ -4705,6 +4923,11 @@ function buildL5Menu(){
         <span class="t1">好き嫌い (Likes & Dislikes)</span>
         <span class="t2">XはYが すき/きらい です　＋　な-adj+な+名詞</span>
       </div>
+      <div class="menu-btn full" onclick="showL5AdjConjMenu()" style="border-color:#3498db;background:#f0f8ff">
+        <div class="icon">⏱</div>
+        <span class="t1">形容詞の活用ドリル (Adjective Conjugation Drill)</span>
+        <span class="t2">現在形 / 過去形 — 肯定 & 否定をタイプ練習</span>
+      </div>
     </div>`;
 }
 
@@ -4743,6 +4966,14 @@ function showL5Format(catKey){
           <span class="t1">単語カード (Flashcards)</span>
           <span class="t2">Anki式：間違えた単語が多く出る／spaced repetition</span>
         </div>`;
+    // Special: adjective categories get conjugation audio list
+    if(catKey==="i_adj"||catKey==="na_adj"){
+      h+=`<div class="menu-btn full" onclick="showL5AdjConjAudio('${catKey}')" style="border-color:#3498db;background:#f0f8ff">
+          <div class="icon">📢</div>
+          <span class="t1">活用音声リスト (Conjugation Audio)</span>
+          <span class="t2">肯定／否定／過去 4 形を音声で練習（L4の動詞リストと同じ形式）</span>
+        </div>`;
+    }
   }
   h+=`<div class="menu-btn" onclick="startQuiz(5,'v_${catKey}_en2jp')">
         <div class="icon">🇬🇧→🇯🇵</div>
@@ -4946,6 +5177,88 @@ function showL5DegreeRules(){
   document.getElementById("menuContent").innerHTML=h;
 }
 
+function showL5AdjConjMenu(){
+  l5State={view:"adjConjMenu",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">⏱ 形容詞の活用ドリル</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">Adjective Conjugation Drill — show the adjective, type the conjugation</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL5AdjConjRules()" style="border-color:#9b59b6;background:#faf5ff">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">現在形 & 過去形 のまとめ表</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(5,'g_adj_pres')" style="border-color:#3498db;background:#f0f8ff">
+          <div class="icon">🟢</div>
+          <span class="t1">現在形 (Present)</span>
+          <span class="t2">です／くないです／じゃないです — 肯定&否定</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(5,'g_adj_past')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">🔵</div>
+          <span class="t1">過去形 (Past)</span>
+          <span class="t2">かったです／でした／じゃなかったです — 肯定&否定</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5AdjConjRules(){
+  l5State={view:"adjConjRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL5AdjConjMenu()">← 形容詞の活用ドリル</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>⏱ 形容詞の活用 — Adjective Conjugation</h3>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：い形容詞 と な形容詞 で活用が違う！</b>
+    </div>
+
+    <h3 style="margin-top:14px">[現在形 Present]</h3>
+    <table class="gtable">
+      <tr><th>タイプ</th><th>肯定 (affirmative)</th><th>否定 (negative)</th></tr>
+      <tr><td>い形容詞<br>ex. さむい</td><td>さむい<b>です</b></td><td>さむ<b>くないです</b><br>(or さむくありません)</td></tr>
+      <tr><td>な形容詞<br>ex. げんき</td><td>げんき<b>です</b></td><td>げんき<b>じゃないです</b><br>(or じゃありません)</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">[過去形 Past]</h3>
+    <table class="gtable">
+      <tr><th>タイプ</th><th>肯定 (was/were)</th><th>否定 (was/were not)</th></tr>
+      <tr><td>い形容詞<br>ex. さむい</td><td>さむ<b>かったです</b></td><td>さむ<b>くなかったです</b><br>(or さむくありませんでした)</td></tr>
+      <tr><td>な形容詞<br>ex. げんき</td><td>げんき<b>でした</b></td><td>げんき<b>じゃなかったです</b><br>(or じゃありませんでした)</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">⚠️ よくある間違い</h3>
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>❌ さむい<u>でした</u></b>（い形容詞に「でした」を付けない！）<br>
+      <b>✅ さむ<u>かった</u>です</b>（い → かった）<br>
+      <span style="color:#888;font-size:.85em">い形容詞は名詞と違う活用！</span>
+    </div>
+
+    <h3 style="margin-top:14px">⚠️ いい は不規則！</h3>
+    <table class="gtable">
+      <tr><th>形</th><th>正しい</th><th>間違い</th></tr>
+      <tr><td>現在肯定</td><td>いい<b>です</b></td><td>—</td></tr>
+      <tr><td>現在否定</td><td><b>よく</b>ないです</td><td>❌ いくないです</td></tr>
+      <tr><td>過去肯定</td><td><b>よ</b>かったです</td><td>❌ いかったです</td></tr>
+      <tr><td>過去否定</td><td><b>よ</b>くなかったです</td><td>❌ いくなかったです</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">⚠️ 紛らわしい な形容詞（陷阱）</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      🌸 <b>きれい・きらい</b> は「い」で終わるけど<b>な形容詞</b>！<br>
+      ✅ きれい<b>でした</b>　❌ きれかったです<br>
+      ✅ きれい<b>じゃなかったです</b>　❌ きれくなかったです
+    </div>
+
+    <h3 style="margin-top:14px">📋 完全例 (さむい / げんき)</h3>
+    <table class="gtable">
+      <tr><th></th><th>現在 肯定</th><th>現在 否定</th><th>過去 肯定</th><th>過去 否定</th></tr>
+      <tr><td>さむい</td><td>さむいです</td><td>さむくないです</td><td>さむかったです</td><td>さむくなかったです</td></tr>
+      <tr><td>げんき</td><td>げんきです</td><td>げんきじゃないです</td><td>げんきでした</td><td>げんきじゃなかったです</td></tr>
+    </table>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
 function showL5LikesMenu(){
   l5State={view:"likesMenu",cat:null};
   let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
@@ -5042,6 +5355,9 @@ function restoreL5View(){
   else if(l5State.view==="degreeRules")showL5DegreeRules();
   else if(l5State.view==="likesMenu")showL5LikesMenu();
   else if(l5State.view==="likesRules")showL5LikesRules();
+  else if(l5State.view==="adjConjMenu")showL5AdjConjMenu();
+  else if(l5State.view==="adjConjRules")showL5AdjConjRules();
+  else if(l5State.view==="adjConjAudio"&&l5State.cat)showL5AdjConjAudio(l5State.cat);
   else renderL5Main();
 }
 
