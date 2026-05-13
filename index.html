@@ -2002,6 +2002,138 @@ function genL5AdjPast(n=15){
 L5_GENERATORS["g_adj_pres"]={title:"形容詞の活用 — 現在形",gen:()=>genL5AdjPresent(15)};
 L5_GENERATORS["g_adj_past"]={title:"形容詞の活用 — 過去形",gen:()=>genL5AdjPast(15)};
 
+// ===== L5 Grammar: Shopping & Counters (〜を ください + 助数詞) =====
+const L5_SHOP_ITEMS=[
+  // ～まい (flat, thin objects)
+  {jp:"Tシャツ",en:"T-shirt",enPl:"T-shirts",counter:"まい"},
+  {jp:"しゃしん",en:"photo",enPl:"photos",counter:"まい"},
+  {jp:"かみ",en:"sheet of paper",enPl:"sheets of paper",counter:"まい"},
+  {jp:"きって",en:"stamp",enPl:"stamps",counter:"まい"},
+  {jp:"おさら",en:"plate",enPl:"plates",counter:"まい"},
+  // ～ほん (long thin objects)
+  {jp:"ペン",en:"pen",enPl:"pens",counter:"ほん"},
+  {jp:"えんぴつ",en:"pencil",enPl:"pencils",counter:"ほん"},
+  {jp:"かさ",en:"umbrella",enPl:"umbrellas",counter:"ほん"},
+  // ～さつ (bound objects: books)
+  {jp:"ほん",en:"book",enPl:"books",counter:"さつ"},
+  {jp:"ざっし",en:"magazine",enPl:"magazines",counter:"さつ"},
+  {jp:"ノート",en:"notebook",enPl:"notebooks",counter:"さつ"},
+  // ～ひき (small animals)
+  {jp:"いぬ",en:"dog",enPl:"dogs",counter:"ひき"},
+  {jp:"ねこ",en:"cat",enPl:"cats",counter:"ひき"},
+  {jp:"さかな",en:"fish",enPl:"fish",counter:"ひき"},
+  // ～つ (general counter)
+  {jp:"りんご",en:"apple",enPl:"apples",counter:"つ"},
+  {jp:"パン",en:"piece of bread",enPl:"pieces of bread",counter:"つ"},
+  {jp:"ケーキ",en:"cake",enPl:"cakes",counter:"つ"},
+  {jp:"おかし",en:"sweet",enPl:"sweets",counter:"つ"},
+  {jp:"たまご",en:"egg",enPl:"eggs",counter:"こ"},
+];
+
+// Counter forms (1-10) with sound changes
+const L5_COUNTER_FORMS={
+  "まい":["いちまい","にまい","さんまい","よんまい","ごまい","ろくまい","ななまい","はちまい","きゅうまい","じゅうまい"],
+  "ほん":["いっぽん","にほん","さんぼん","よんほん","ごほん","ろっぽん","ななほん","はっぽん","きゅうほん","じゅっぽん"],
+  "さつ":["いっさつ","にさつ","さんさつ","よんさつ","ごさつ","ろくさつ","ななさつ","はっさつ","きゅうさつ","じゅっさつ"],
+  "ひき":["いっぴき","にひき","さんびき","よんひき","ごひき","ろっぴき","ななひき","はっぴき","きゅうひき","じゅっぴき"],
+  "こ":["いっこ","にこ","さんこ","よんこ","ごこ","ろっこ","ななこ","はっこ","きゅうこ","じゅっこ"],
+  "つ":["ひとつ","ふたつ","みっつ","よっつ","いつつ","むっつ","ななつ","やっつ","ここのつ","とお"],
+};
+// Alternative forms (some counters have variants)
+const L5_COUNTER_ALT={
+  "ほん":{9:["じっぽん"]},
+  "さつ":{9:["じっさつ"]},
+  "ひき":{9:["じっぴき"]},
+  "こ":{9:["じっこ"]},
+};
+
+const L5_SHOP_DEMS=[
+  {jp:"その",en:"that"},
+  {jp:"この",en:"this"},
+  {jp:"あの",en:"that (over there)"},
+];
+
+const L5_SHOP_ADJ=[
+  {jp:"あたらしい",en:"new"},
+  {jp:"ふるい",en:"old"},
+  {jp:"おおきい",en:"big"},
+  {jp:"ちいさい",en:"small"},
+  {jp:"やすい",en:"cheap"},
+  {jp:"たかい",en:"expensive"},
+  {jp:"かわいい",en:"cute"},
+  {jp:"おいしい",en:"delicious"},
+];
+
+function _counterDesc(c){
+  return {"まい":"薄い平らな物","ほん":"細長い物","さつ":"綴じた物","ひき":"小動物","こ":"小さい丸い物","つ":"一般的な物"}[c]||"";
+}
+
+function _getCounterForms(counter,num){
+  // num: 1-10, returns array of acceptable forms
+  const main=L5_COUNTER_FORMS[counter][num-1];
+  const alts=(L5_COUNTER_ALT[counter]&&L5_COUNTER_ALT[counter][num])||[];
+  return [main,...alts];
+}
+
+// Type A: Basic ~をください (demonstrative + noun)
+function makeShopBasic(){
+  const item=pick(L5_SHOP_ITEMS);
+  const dem=pick(L5_SHOP_DEMS);
+  const en=`I will take ${dem.en} ${item.en}.`;
+  const ja=`${dem.jp}${item.jp}を ください。`;
+  const structure=`<b>[この/その/あの][物]を + ください</b><br><span style="color:#888;font-size:.85em">特定の物を指定するとき（個数を言わない）</span>`;
+  return {qtext:en,hint:"〜を ください",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type B: With number + counter
+function makeShopCounter(){
+  const item=pick(L5_SHOP_ITEMS);
+  const num=Math.floor(Math.random()*4)+2;  // 2-5
+  const forms=_getCounterForms(item.counter,num);
+  const en=`I will take ${num} ${item.enPl}.`;
+  const ja=`${item.jp}を ${forms[0]} ください。`;
+  const answers=forms.map(f=>_cleanJa(`${item.jp}を ${f} ください。`));
+  const structure=`<b>[物]を + [数+${item.counter}] + ください</b><br><span style="color:#c0392b;font-size:.85em">⚠ 助数詞は「<b>${item.counter}</b>」(${_counterDesc(item.counter)})</span>`;
+  return {qtext:en,hint:`助数詞: ${item.counter} (${_counterDesc(item.counter)})`,answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type C: Adjective + noun + counter
+function makeShopAdjCounter(){
+  const item=pick(L5_SHOP_ITEMS);
+  const adj=pick(L5_SHOP_ADJ);
+  const num=Math.floor(Math.random()*4)+2;
+  const forms=_getCounterForms(item.counter,num);
+  const en=`I will take ${num} ${adj.en} ${item.enPl}.`;
+  const ja=`${adj.jp}${item.jp}を ${forms[0]} ください。`;
+  const answers=forms.map(f=>_cleanJa(`${adj.jp}${item.jp}を ${f} ください。`));
+  const structure=`<b>[形容詞][物]を + [数+${item.counter}] + ください</b><br><span style="color:#888;font-size:.85em">い形容詞は名詞に直接付く</span>`;
+  return {qtext:en,hint:`${adj.jp} + ${item.jp} + を + 数${item.counter} + ください`,answers,explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+// Type D: Counter form quiz — what's the counter for X?
+function makeCounterIdentify(){
+  const item=pick(L5_SHOP_ITEMS);
+  const num=Math.floor(Math.random()*9)+1;  // 1-9
+  const form=L5_COUNTER_FORMS[item.counter][num-1];
+  const en=`How do you say "${num}" when counting ${item.enPl}? (write the number+counter only)`;
+  const answers=_getCounterForms(item.counter,num).map(_cleanJa);
+  const structure=`<b>${item.jp} → 助数詞「${item.counter}」(${_counterDesc(item.counter)})</b><br><span style="color:#c0392b;font-size:.85em">⚠ 1, 3, 6, 8, 10 で音変化に注意！</span>`;
+  return {qtext:en,hint:"数字+助数詞のみ（〜まい / 〜ぽん など）",answers,explain:form,structure,alwaysShowStructure:true};
+}
+
+function genL5Shop(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(r<.20)qs.push(makeShopBasic());
+    else if(r<.55)qs.push(makeShopCounter());
+    else if(r<.80)qs.push(makeShopAdjCounter());
+    else qs.push(makeCounterIdentify());
+  }
+  return qs;
+}
+L5_GENERATORS["g_shop"]={title:"買い物 (Shopping & Counters)",gen:()=>genL5Shop(15)};
+
 // ===== L5 Adjective Conjugation Audio (similar to L4 verb audio) =====
 function _adjConjForms(adj){
   // Returns the 4 conjugated forms for audio playback (without です/なし)
@@ -4928,6 +5060,11 @@ function buildL5Menu(){
         <span class="t1">形容詞の活用ドリル (Adjective Conjugation Drill)</span>
         <span class="t2">現在形 / 過去形 — 肯定 & 否定をタイプ練習</span>
       </div>
+      <div class="menu-btn full" onclick="showL5ShopMenu()" style="border-color:#f39c12;background:#fffbe6">
+        <div class="icon">🛍</div>
+        <span class="t1">買い物 (Shopping & Counters)</span>
+        <span class="t2">〜を ください + 助数詞 (まい / ほん / さつ / ひき / つ)</span>
+      </div>
     </div>`;
 }
 
@@ -5177,6 +5314,96 @@ function showL5DegreeRules(){
   document.getElementById("menuContent").innerHTML=h;
 }
 
+function showL5ShopMenu(){
+  l5State={view:"shopMenu",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.1rem">🛍 買い物 (Shopping & Counters)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">〜を ください + 助数詞 — Genki p.136</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL5ShopRules()" style="border-color:#f39c12;background:#fffbe6">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">〜を ください + 助数詞の音変化</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(5,'g_shop')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：物を買うときの文を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5ShopRules(){
+  l5State={view:"shopRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL5ShopMenu()">← 買い物</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>🛍 Shopping & Counting</h3>
+
+    <div class="note">
+      <b>基本パターン:</b><br>
+      [物]を + ください<br>
+      <span style="color:#888;font-size:.88em">→ "I will take..." / "Please give me..."</span>
+    </div>
+
+    <div class="note">
+      <b>個数を言う:</b><br>
+      [物]を + [数+助数詞] + ください<br>
+      <span style="color:#888;font-size:.88em">→ "I will take [number] [items]"</span>
+    </div>
+
+    <h3 style="margin-top:14px">📝 例文 (Genki p.136)</h3>
+    <div class="note">
+      その<b>T シャツを</b> ください。<br>
+      <span style="color:#888">I will take that T-shirt.</span>
+    </div>
+    <div class="note">
+      Tシャツを <b>ごまい</b> ください。<br>
+      <span style="color:#888">I will take 5 T-shirts.</span>
+    </div>
+    <div class="note">
+      あたらしい Tシャツを <b>にまい</b> ください。<br>
+      <span style="color:#888">I will take 2 new T-shirts.</span>
+    </div>
+
+    <h3 style="margin-top:14px">📋 助数詞 (Counters) — 主なもの</h3>
+    <table class="gtable">
+      <tr><th>助数詞</th><th>使う物</th><th>例</th></tr>
+      <tr><td><b>まい</b></td><td>薄い・平らな物</td><td>Tシャツ・しゃしん・かみ・きって</td></tr>
+      <tr><td><b>ほん</b></td><td>細長い物</td><td>ペン・えんぴつ・かさ</td></tr>
+      <tr><td><b>さつ</b></td><td>綴じた物</td><td>ほん・ざっし・ノート</td></tr>
+      <tr><td><b>ひき</b></td><td>小動物</td><td>いぬ・ねこ・さかな</td></tr>
+      <tr><td><b>こ</b></td><td>小さい丸い物</td><td>たまご・りんご・みかん</td></tr>
+      <tr><td><b>つ</b></td><td>一般的な物</td><td>パン・ケーキ・おかし</td></tr>
+      <tr><td>にん</td><td>人</td><td>(L4) 1人=ひとり, 2人=ふたり</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">⚠️ 音変化 (Sound Changes)</h3>
+    <table class="gtable">
+      <tr><th>数</th><th>まい</th><th>ほん</th><th>さつ</th><th>ひき</th><th>つ</th></tr>
+      <tr><td>1</td><td>いちまい</td><td><b>いっぽん</b></td><td><b>いっさつ</b></td><td><b>いっぴき</b></td><td><b>ひとつ</b></td></tr>
+      <tr><td>2</td><td>にまい</td><td>にほん</td><td>にさつ</td><td>にひき</td><td><b>ふたつ</b></td></tr>
+      <tr><td>3</td><td>さんまい</td><td><b>さんぼん</b></td><td>さんさつ</td><td><b>さんびき</b></td><td><b>みっつ</b></td></tr>
+      <tr><td>4</td><td>よんまい</td><td>よんほん</td><td>よんさつ</td><td>よんひき</td><td><b>よっつ</b></td></tr>
+      <tr><td>5</td><td>ごまい</td><td>ごほん</td><td>ごさつ</td><td>ごひき</td><td><b>いつつ</b></td></tr>
+      <tr><td>6</td><td>ろくまい</td><td><b>ろっぽん</b></td><td>ろくさつ</td><td><b>ろっぴき</b></td><td><b>むっつ</b></td></tr>
+      <tr><td>7</td><td>ななまい</td><td>ななほん</td><td>ななさつ</td><td>ななひき</td><td><b>ななつ</b></td></tr>
+      <tr><td>8</td><td>はちまい</td><td><b>はっぽん</b></td><td><b>はっさつ</b></td><td><b>はっぴき</b></td><td><b>やっつ</b></td></tr>
+      <tr><td>9</td><td>きゅうまい</td><td>きゅうほん</td><td>きゅうさつ</td><td>きゅうひき</td><td><b>ここのつ</b></td></tr>
+      <tr><td>10</td><td>じゅうまい</td><td><b>じゅっぽん</b></td><td><b>じゅっさつ</b></td><td><b>じゅっぴき</b></td><td><b>とお</b></td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">💡 まとめ</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      ① 単独：そのTシャツ<b>を</b> ください<br>
+      ② 個数：Tシャツ<b>を</b> にまい <b>ください</b><br>
+      ③ 形容詞 + 物：あたらしい Tシャツ<b>を</b> にまい <b>ください</b><br>
+      <span style="color:#c0392b;font-size:.85em">⚠ 助数詞は物の<b>形</b>で決まる（薄い→まい、細長い→ほん、本→さつ）</span>
+    </div>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
 function showL5AdjConjMenu(){
   l5State={view:"adjConjMenu",cat:null};
   let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
@@ -5358,6 +5585,8 @@ function restoreL5View(){
   else if(l5State.view==="adjConjMenu")showL5AdjConjMenu();
   else if(l5State.view==="adjConjRules")showL5AdjConjRules();
   else if(l5State.view==="adjConjAudio"&&l5State.cat)showL5AdjConjAudio(l5State.cat);
+  else if(l5State.view==="shopMenu")showL5ShopMenu();
+  else if(l5State.view==="shopRules")showL5ShopRules();
   else renderL5Main();
 }
 
