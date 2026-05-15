@@ -179,6 +179,11 @@
         <span class="ltitle">おきなわ旅行</span>
         <span class="lsub">Trip to Okinawa</span>
       </div>
+      <div class="lesson-card" onclick="selectLesson(6)">
+        <div class="lnum">L6</div>
+        <span class="ltitle">わたしの好きなレストラン</span>
+        <span class="lsub">My Favorite Restaurant</span>
+      </div>
       <div class="lesson-card" onclick="showNumbersMenu()" style="border-color:#2ecc71">
         <div class="lnum" style="color:#2ecc71">123</div>
         <span class="ltitle">数字 (Numbers)</span>
@@ -2134,6 +2139,134 @@ function genL5Shop(n=15){
 }
 L5_GENERATORS["g_shop"]={title:"買い物 (Shopping & Counters)",gen:()=>genL5Shop(15)};
 
+// ============================================================
+//  LESSON 6 DATA & GENERATORS  (Genki 1, 第6課)
+// ============================================================
+const L6_CATEGORIES=[
+  {key:"places", jp:"名詞 — 場所",     en:"Places",            icon:"📍"},
+  {key:"things", jp:"名詞 — 物",       en:"Things",            icon:"📦"},
+  {key:"people", jp:"名詞 — 人",       en:"People",            icon:"👥"},
+  {key:"verbs",  jp:"動詞",            en:"Verbs (te-form lesson)",  icon:"🏃"},
+  {key:"adv",    jp:"副詞・その他",    en:"Adverbs / Others",   icon:"💫"},
+  {key:"expr",   jp:"表現",            en:"Expressions",        icon:"💬"},
+];
+
+const L6_VOCAB={
+  places:{
+    "ATM":"ATM",
+    "えき":"station; train station",
+    "おてあらい":"restroom",
+    "きょうかい":"church",
+    "こうばん":"police box",
+    "いりぐち":"entrance",
+    "でぐち":"exit",
+  },
+  things:{
+    "かんじ":"kanji; Chinese character",
+    "きっぷ":"ticket",
+    "ことば":"language; word",
+    "しごと":"job; work; occupation",
+    "たばこ":"cigarette",
+    "でんき":"electricity; lights",
+    "でんしゃ":"train",
+    "ひこうき":"airplane",
+    "びょうき":"illness; sickness",
+    "まど":"window",
+    "みち":"street; road",
+    "ようじ":"errand; business to take care of",
+    "けっこん":"marriage",
+    "パーティー":"party",
+    "でんわ":"phone call",
+    "シャワー":"shower",
+    "ホームワーク":"homework",
+    "クレジットカード":"credit card",
+  },
+  people:{
+    "だいがくいんせい":"graduate student",
+  },
+  verbs:{
+    // U-verbs
+    "あそぶ":"to play; to hang out",
+    "いそぐ":"to hurry",
+    "かえす":"to return (a thing)",
+    "けす":"to turn off; to erase",
+    "しぬ":"to die",
+    "すわる":"to sit down",
+    "たつ":"to stand up",
+    "つかう":"to use",
+    "てつだう":"to help",
+    "もつ":"to carry; to hold",
+    "やすむ":"to rest; to be absent; to take time off",
+    "はらう":"to pay",
+    // Ru-verbs
+    "あける":"to open",
+    "おしえる":"to teach; to instruct",
+    "おりる":"to get off",
+    "かりる":"to borrow",
+    "しめる":"to close",
+    "つける":"to turn on",
+    "シャワーをあびる":"to take a shower",
+    // Irregular
+    "もってくる":"to bring (a thing)",
+    "つれてくる":"to bring (a person)",
+    "でんわする":"to make a phone call",
+    "けっこんする":"to get married",
+  },
+  adv:{
+    "ゆっくり":"slowly; leisurely",
+    "まっすぐ":"straight",
+    "もういちど":"once again; one more time",
+    "すぐ":"right away; immediately",
+    "まだ":"still; not yet",
+    "ぜんぶ":"all",
+  },
+  expr:{
+    "いいですよ":"sure; no problem",
+    "だいじょうぶです":"it's okay; I'm fine",
+    "もちろん":"of course",
+    "ありがとうございました":"thank you (for what was done)",
+    "またあした":"see you tomorrow",
+  },
+};
+
+function genL6VocabEn2Jp(cat,n=15){
+  const dict=L6_VOCAB[cat]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return null;
+  }
+  return shuffle([...keys]).slice(0,n).map(k=>({
+    qtext:`<span style="font-size:1.3rem;font-weight:700">${dict[k]}</span>`,
+    hint:"日本語で入力してください",answers:[k],explain:k
+  }));
+}
+
+function genL6VocabJp2En(cat,n=15){
+  const dict=L6_VOCAB[cat]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return null;
+  }
+  return shuffle([...keys]).slice(0,n).map(k=>{
+    const alts=dict[k].split(";").map(s=>s.trim());
+    alts.push(...dict[k].split("/").map(s=>s.trim()));
+    const base=dict[k].replace(/\s*\(.*?\)\s*/g,"").trim();
+    if(base)alts.push(base);
+    return {qtext:`<span style="font-size:1.6rem;font-weight:700">${k}</span>`,
+            hint:"Type the English meaning",
+            answers:[...new Set(alts)],explain:dict[k]};
+  });
+}
+
+const L6_GENERATORS={};
+L6_CATEGORIES.forEach(c=>{
+  L6_GENERATORS[`v_${c.key}_en2jp`]={title:`${c.jp}：English → 日本語`,gen:()=>genL6VocabEn2Jp(c.key,15)};
+  L6_GENERATORS[`v_${c.key}_jp2en`]={title:`${c.jp}：日本語 → English`,gen:()=>genL6VocabJp2En(c.key,15)};
+  L6_GENERATORS[`v_${c.key}_audio`]={title:`${c.jp}：🔊 音声 → 日本語入力`,gen:()=>_genAudioDictation(L6_VOCAB[c.key]||{},15)};
+});
+
 // ===== L5 Adjective Conjugation Audio (similar to L4 verb audio) =====
 function _adjConjForms(adj){
   // Returns the 4 conjugated forms for audio playback (without です/なし)
@@ -3671,8 +3804,8 @@ let _flashState=null;
 
 function startFlashcards(lesson,catKey,direction){
   direction=direction||"jp2en";
-  const vocab=lesson===5?L5_VOCAB:L4_VOCAB;
-  const cats=lesson===5?L5_CATEGORIES:L4_CATEGORIES;
+  const vocab=lesson===6?L6_VOCAB:lesson===5?L5_VOCAB:L4_VOCAB;
+  const cats=lesson===6?L6_CATEGORIES:lesson===5?L5_CATEGORIES:L4_CATEGORIES;
   const dict=vocab[catKey]||{};
   const cat=cats.find(c=>c.key===catKey);
   const keys=Object.keys(dict);
@@ -3700,7 +3833,8 @@ function startFlashcards(lesson,catKey,direction){
     currentCard:null,
     flipped:false,
   };
-  if(lesson===5)l5State={view:"flashcards",cat:catKey};
+  if(lesson===6)l6State={view:"flashcards",cat:catKey};
+  else if(lesson===5)l5State={view:"flashcards",cat:catKey};
   else if(lesson===4)l4State={view:"flashcards",cat:catKey};
   renderFlashcardsScreen();
   nextFlashcard();
@@ -3708,7 +3842,7 @@ function startFlashcards(lesson,catKey,direction){
 
 function renderFlashcardsScreen(){
   const fs=_flashState;
-  const backFn=fs.lesson===5?`showL5Format('${fs.catKey}')`:`showL4Format('${fs.catKey}')`;
+  const backFn=fs.lesson===6?`showL6Format('${fs.catKey}')`:fs.lesson===5?`showL5Format('${fs.catKey}')`:`showL4Format('${fs.catKey}')`;
   let h=`<button class="back-lessons" onclick="${backFn}">← テスト形式</button>`;
   h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">🃏 ${fs.catLabel} — 単語カード</h3>`;
   h+=`<p style="color:#999;font-size:.82rem;margin-bottom:8px;padding-left:4px">Anki式：間違えた単語が多く出ます</p>`;
@@ -3843,7 +3977,7 @@ function finishFlashSession(){
   const fs=_flashState;
   const struggling=fs.cards.filter(c=>c.weight>1.5).sort((a,b)=>b.weight-a.weight);
   const mastered=fs.cards.filter(c=>c.weight<0.5);
-  const backFn=fs.lesson===5?`showL5Format('${fs.catKey}')`:`showL4Format('${fs.catKey}')`;
+  const backFn=fs.lesson===6?`showL6Format('${fs.catKey}')`:fs.lesson===5?`showL5Format('${fs.catKey}')`:`showL4Format('${fs.catKey}')`;
   const pct=Math.round(fs.correctCount/fs.totalSeen*100);
   let msg,col;
   if(pct>=85){msg="完璧！";col="#27ae60"}
@@ -5591,13 +5725,147 @@ function restoreL5View(){
 }
 
 // ============================================================
+//  LESSON 6 NAVIGATION (Vocabulary only — grammar coming soon)
+// ============================================================
+let l6State={view:"main",cat:null};
+
+function buildL6Menu(){
+  l6State={view:"main",cat:null};
+  return `
+    <div style="padding:10px 12px;background:#fffbe6;border:1px dashed #f39c12;border-radius:8px;font-size:.82rem;color:#a0662a;margin-bottom:10px">📌 Lesson 6 — 単語復習のみ (Vocabulary review only — grammar coming soon)</div>
+    <div class="menu-grid">
+      <div class="menu-btn full" onclick="showL6Vocab()" style="padding:24px 16px;border-color:#e67e22;background:#fff8ee">
+        <div class="icon" style="font-size:2rem">📚</div>
+        <span class="t1" style="font-size:1.1rem">単語復習 (Vocabulary Review)</span>
+        <span class="t2">Browse vocabulary by topic (with audio + flashcards)</span>
+      </div>
+    </div>`;
+}
+
+function showL6Vocab(){
+  l6State={view:"vocab",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL6Main()">← L6 メニュー</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 10px;font-size:1.05rem">📚 単語復習 — 主題を選んでください</h3>`;
+  h+=`<div class="menu-grid">`;
+  L6_CATEGORIES.forEach(c=>{
+    h+=`<div class="menu-btn" onclick="showL6Format('${c.key}')">
+          <div class="icon" style="font-size:1.6rem">${c.icon}</div>
+          <span class="t1">${c.jp}</span>
+          <span class="t2">${c.en}</span>
+        </div>`;
+  });
+  h+=`</div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL6Format(catKey){
+  const cat=L6_CATEGORIES.find(c=>c.key===catKey);
+  if(!cat)return;
+  l6State={view:"format",cat:catKey};
+  let h=`<button class="back-lessons" onclick="showL6Vocab()">← 主題選択</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp}</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">${cat.en} — テスト形式を選んでください</p>`;
+  h+=`<div class="menu-grid">`;
+  if(Object.keys(L6_VOCAB[catKey]||{}).length>0){
+    h+=`<div class="menu-btn full" onclick="showL6VocabAudio('${catKey}')" style="border-color:#9b59b6;background:#faf5ff">
+          <div class="icon">📖</div>
+          <span class="t1">単語リスト (発音を聞く)</span>
+          <span class="t2">Review vocabulary with pronunciation before testing</span>
+        </div>
+        <div class="menu-btn full" onclick="startFlashcards(6,'${catKey}')" style="border-color:#e91e63;background:#fff5f8">
+          <div class="icon">🃏</div>
+          <span class="t1">単語カード (Flashcards)</span>
+          <span class="t2">Anki式：間違えた単語が多く出る／spaced repetition</span>
+        </div>`;
+  }
+  h+=`<div class="menu-btn" onclick="startQuiz(6,'v_${catKey}_en2jp')">
+        <div class="icon">🇬🇧→🇯🇵</div>
+        <span class="t1">English → 日本語</span>
+        <span class="t2">See English, type Japanese</span>
+      </div>
+      <div class="menu-btn" onclick="startQuiz(6,'v_${catKey}_jp2en')">
+        <div class="icon">🇯🇵→🇬🇧</div>
+        <span class="t1">日本語 → English</span>
+        <span class="t2">See Japanese, type English</span>
+      </div>`;
+  if(Object.keys(L6_VOCAB[catKey]||{}).length>0){
+    h+=`<div class="menu-btn full" onclick="startQuiz(6,'v_${catKey}_audio')" style="border-color:#16a085;background:#f0fff8">
+          <div class="icon">🔊</div>
+          <span class="t1">音声 → 日本語入力 (Audio Dictation)</span>
+          <span class="t2">聞こえた日本語をタイプする練習</span>
+        </div>`;
+  }
+  h+=`</div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL6VocabAudio(catKey){
+  const cat=L6_CATEGORIES.find(c=>c.key===catKey);
+  if(!cat)return;
+  const dict=L6_VOCAB[catKey]||{};
+  const keys=Object.keys(dict);
+  if(keys.length===0){
+    alert("このカテゴリーにはまだ単語が追加されていません。\n(No vocabulary has been added to this category yet.)");
+    return;
+  }
+  _currentVocabList=keys;
+  l6State={view:"vocabAudio",cat:catKey};
+  let h=`<button class="back-lessons" onclick="showL6Format('${catKey}')">← テスト形式</button>`;
+  h+=`<h3 style="color:#e67e22;margin:14px 4px 4px;font-size:1.05rem">${cat.icon} ${cat.jp} — 単語リスト</h3>`;
+  h+=`<p style="color:#999;font-size:.82rem;margin-bottom:10px;padding-left:4px">🔊 をタップして発音を聞く (tap to hear pronunciation)</p>`;
+  // Special grouping for verbs by type
+  if(catKey==="verbs"){
+    h+=`<div style="padding:10px 14px;background:#fff8ee;border-left:3px solid #f39c12;border-radius:0 8px 8px 0;font-size:.85rem;color:#a0662a;margin-bottom:12px;line-height:1.6">
+      🏃 <b>L6 は て-form の課！</b> 動詞は う/る/不規則に分類されています。<br>
+      <span style="color:#666;font-size:.82rem">それぞれの te-form の作り方が違うので、タイプを覚えてください。</span>
+    </div>`;
+    const uVerbs=["あそぶ","いそぐ","かえす","けす","しぬ","すわる","たつ","つかう","てつだう","もつ","やすむ","はらう"];
+    const ruVerbs=["あける","おしえる","おりる","かりる","しめる","つける","シャワーをあびる"];
+    const irrVerbs=["もってくる","つれてくる","でんわする","けっこんする"];
+    const groups=[
+      {label:"🔵 u-verbs (う段で終わる)",keys:uVerbs},
+      {label:"🟢 ru-verbs (る で終わる)",keys:ruVerbs},
+      {label:"🔴 不規則 (irregular)",keys:irrVerbs},
+    ];
+    groups.forEach(g=>{
+      h+=`<div class="section-label" style="margin:12px 0 6px">${g.label}</div>`;
+      g.keys.forEach(w=>{
+        if(dict[w]){
+          const idx=keys.indexOf(w);
+          h+=_wordRowHTML(w,dict[w],idx);
+        }
+      });
+    });
+  }else{
+    keys.forEach((k,idx)=>{
+      h+=_wordRowHTML(k,dict[k],idx);
+    });
+  }
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function renderL6Main(){
+  document.getElementById("menuContent").innerHTML=buildL6Menu();
+}
+
+function restoreL6View(){
+  if(!l6State)return;
+  if(l6State.view==="vocabAudio"&&l6State.cat)showL6VocabAudio(l6State.cat);
+  else if(l6State.view==="flashcards"&&l6State.cat)showL6Format(l6State.cat);
+  else if(l6State.view==="format"&&l6State.cat)showL6Format(l6State.cat);
+  else if(l6State.view==="vocab")showL6Vocab();
+  else renderL6Main();
+}
+
+// ============================================================
 //  NAVIGATION
 // ============================================================
 function selectLesson(num){
   currentLesson=num;
   document.getElementById("lessonPicker").style.display="none";
   const mc=document.getElementById("menuContent");
-  if(num===5)mc.innerHTML=buildL5Menu();
+  if(num===6)mc.innerHTML=buildL6Menu();
+  else if(num===5)mc.innerHTML=buildL5Menu();
   else if(num===4)mc.innerHTML=buildL4Menu();
   else if(num===3)mc.innerHTML=buildL3Menu();
   else mc.innerHTML=buildL2Menu();
@@ -5615,7 +5883,8 @@ function backToMenu(){
   document.getElementById("quizArea").classList.remove("active");
   if(currentLesson){
     document.getElementById("menuScreen").style.display="block";
-    if(currentLesson===5)restoreL5View();
+    if(currentLesson===6)restoreL6View();
+    else if(currentLesson===5)restoreL5View();
     else if(currentLesson===4)restoreL4View();
     else if(currentLesson==="numbers")showNumbersMenu();
   }else{
@@ -5664,6 +5933,7 @@ function startWrongBank(){
 function startQuiz(lesson,type){
   let gens;
   if(lesson==="numbers")gens=NUMBERS_GENERATORS;
+  else if(lesson===6)gens=L6_GENERATORS;
   else if(lesson===5)gens=L5_GENERATORS;
   else if(lesson===4)gens=L4_GENERATORS;
   else if(lesson===3)gens=L3_GENERATORS;
