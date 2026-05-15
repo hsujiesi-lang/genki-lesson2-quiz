@@ -1484,13 +1484,11 @@ const L5_VOCAB={
   },
   i_adj:{
     "あたらしい":"new",
-    "ふるい":"old (for things, not people)",
+    "ふるい":"old (for things)",
     "おおきい":"big; large",
     "ちいさい":"small",
     "あつい":"hot (weather)",
     "さむい":"cold (weather)",
-    "あつい (もの)":"hot (object/drink)",
-    "つめたい":"cold (object/drink)",
     "おもしろい":"interesting; funny",
     "つまらない":"boring; dull",
     "むずかしい":"difficult",
@@ -1498,11 +1496,12 @@ const L5_VOCAB={
     "たのしい":"fun; enjoyable",
     "いそがしい":"busy",
     "かわいい":"cute",
+    "かっこいい":"good-looking; cool",
     "いい":"good",
     "わるい":"bad",
-    "かっこいい":"good-looking; cool",
-    "やすい":"cheap; inexpensive",
     "たかい":"expensive; tall",
+    "ひくい":"low",
+    "やすい":"cheap; inexpensive",
   },
   na_adj:{
     "きれい":"pretty; clean",
@@ -1514,9 +1513,6 @@ const L5_VOCAB={
     "きらい":"disliked; hated",
     "だいすき":"very fond of; love",
     "だいきらい":"to hate",
-    "ゆうめい":"famous",
-    "しんせつ":"kind (person)",
-    "べんり":"convenient",
   },
   verbs:{
     // Lesson 5 doesn't introduce many new verbs; mostly review
@@ -1576,6 +1572,7 @@ L5_CATEGORIES.forEach(c=>{
 
 // ===== L5 Grammar: Adjective Forms (affirmative + negative) =====
 // subj types: "thing" (objects/places), "person", "weather" (days/seasons), "either"
+// Note: Only adjectives from Genki Lesson 5 (textbook list)
 const L5_I_ADJ=[
   {jp:"おもしろい",en:"interesting",neg:"おもしろくない",subj:"thing"},
   {jp:"つまらない",en:"boring",neg:"つまらなくない",subj:"thing"},
@@ -1590,10 +1587,12 @@ const L5_I_ADJ=[
   {jp:"たのしい",en:"fun",neg:"たのしくない",subj:"thing"},
   {jp:"いそがしい",en:"busy",neg:"いそがしくない",subj:"person"},
   {jp:"かわいい",en:"cute",neg:"かわいくない",subj:"either"},
+  {jp:"かっこいい",en:"good-looking",neg:"かっこよくない",subj:"either",irregular:true},
   {jp:"いい",en:"good",neg:"よくない",irregular:true,subj:"either"},
   {jp:"わるい",en:"bad",neg:"わるくない",subj:"either"},
   {jp:"やすい",en:"cheap",neg:"やすくない",subj:"thing"},
   {jp:"たかい",en:"expensive",neg:"たかくない",subj:"thing"},
+  {jp:"ひくい",en:"low",neg:"ひくくない",subj:"thing"},
 ];
 
 const L5_NA_ADJ=[
@@ -1601,10 +1600,7 @@ const L5_NA_ADJ=[
   {jp:"きれい",en:"pretty",neg:"きれいじゃない",lookalike:true,subj:"either"},
   {jp:"しずか",en:"quiet",neg:"しずかじゃない",subj:"place"},
   {jp:"にぎやか",en:"lively",neg:"にぎやかじゃない",subj:"place"},
-  {jp:"べんり",en:"convenient",neg:"べんりじゃない",subj:"thing"},
   {jp:"ひま",en:"free (not busy)",neg:"ひまじゃない",subj:"person"},
-  {jp:"ゆうめい",en:"famous",neg:"ゆうめいじゃない",subj:"either"},
-  {jp:"しんせつ",en:"kind",neg:"しんせつじゃない",subj:"person"},
 ];
 
 // Subjects categorized by type
@@ -1801,8 +1797,6 @@ const L5_LIKE_NA_PHRASES=[
   {adj:"しずか",adjEn:"quiet",nounJp:"へや",nounEn:"rooms"},
   {adj:"きれい",adjEn:"pretty",nounJp:"はな",nounEn:"flowers"},
   {adj:"きれい",adjEn:"clean",nounJp:"へや",nounEn:"rooms"},
-  {adj:"ゆうめい",adjEn:"famous",nounJp:"レストラン",nounEn:"restaurants"},
-  {adj:"べんり",adjEn:"convenient",nounJp:"スマホ",nounEn:"smartphones"},
 ];
 const L5_LIKE_I_PHRASES=[
   {adj:"おおきい",adjEn:"big",nounJp:"いえ",nounEn:"houses"},
