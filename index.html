@@ -2260,14 +2260,13 @@ function makeL5PastNoun(){
 function genL5Past(n=15){
   const qs=[];
   for(let i=0;i<n;i++){
-    const r=Math.random();
-    if(r<.40)qs.push(makeL5PastIAdj());
-    else if(r<.70)qs.push(makeL5PastNaAdj());
-    else qs.push(makeL5PastNoun());
+    // Only adjective past tense — i-adj and na-adj
+    if(Math.random()<.55)qs.push(makeL5PastIAdj());
+    else qs.push(makeL5PastNaAdj());
   }
   return qs;
 }
-L5_GENERATORS["g_past"]={title:"Grammar 2: 過去形 (Past Tense)",gen:()=>genL5Past(15)};
+L5_GENERATORS["g_past"]={title:"Grammar 2: 形容詞の過去形 (Adjective Past Tense)",gen:()=>genL5Past(15)};
 
 // ============================================================
 //  LESSON 6 DATA & GENERATORS  (Genki 1, 第6課)
@@ -5311,8 +5310,8 @@ function buildL5Menu(){
       </div>
       <div class="menu-btn full" onclick="showL5PastMenu()" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">📅</div>
-        <span class="t1"><span style="background:#f39c12;color:#fff;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-right:6px;font-weight:700">Grammar 2</span>過去形 (Past Tense)</span>
-        <span class="t2">い-adj / な-adj / 名詞 — 過去の肯定 & 否定</span>
+        <span class="t1"><span style="background:#f39c12;color:#fff;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-right:6px;font-weight:700">Grammar 2</span>形容詞の過去形 (Adjective Past Tense)</span>
+        <span class="t2">い形容詞 / な形容詞 — 過去の肯定 & 否定</span>
       </div>
       <div class="menu-btn full" onclick="showL5DegreeMenu()" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">📈</div>
@@ -5587,8 +5586,8 @@ function showL5PastMenu(){
   l5State={view:"pastMenu",cat:null};
   let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
   h+=`<div style="background:#fff8ee;border:1.5px solid #f39c12;border-radius:8px;padding:6px 12px;display:inline-block;font-size:.85rem;color:#e67e22;font-weight:700;margin:8px 0">📘 Grammar 2</div>`;
-  h+=`<h3 style="color:#e67e22;margin:8px 4px 4px;font-size:1.1rem">📅 過去形 (Past Tense)</h3>`;
-  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">い形容詞 + な形容詞 + 名詞 — 過去の肯定 & 否定</p>`;
+  h+=`<h3 style="color:#e67e22;margin:8px 4px 4px;font-size:1.1rem">📅 形容詞の過去形 (Adjective Past Tense)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">い形容詞 + な形容詞 — 過去の肯定 & 否定</p>`;
   h+=`<div class="menu-grid">
         <div class="menu-btn full" onclick="showL5PastRules()" style="border-color:#16a085;background:#f0fff8">
           <div class="icon">📖</div>
@@ -5606,21 +5605,20 @@ function showL5PastMenu(){
 
 function showL5PastRules(){
   l5State={view:"pastRules",cat:null};
-  let h=`<button class="back-lessons" onclick="showL5PastMenu()">← 過去形</button>`;
+  let h=`<button class="back-lessons" onclick="showL5PastMenu()">← 形容詞の過去形</button>`;
   h+=`<div class="gbox show" style="display:block;margin-top:14px">
-    <h3>📅 Grammar 2 — Past Tense</h3>
+    <h3>📅 Grammar 2 — 形容詞の過去形</h3>
 
     <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
-      <b>⚠️ 重要：い形容詞、な形容詞、名詞で過去形のパターンが違う！</b><br>
-      <span style="color:#555">な形容詞と名詞は同じ活用、い形容詞は別の活用。</span>
+      <b>⚠️ 重要：い形容詞 と な形容詞で過去形のパターンが違う！</b><br>
+      <span style="color:#555">い形容詞は「かったです」、な形容詞は「でした」を使う。</span>
     </div>
 
-    <h3 style="margin-top:14px">📋 過去形まとめ表</h3>
+    <h3 style="margin-top:14px">📋 形容詞の過去形まとめ表</h3>
     <table class="gtable">
       <tr><th>タイプ</th><th>肯定 (was)</th><th>否定 (was not)</th></tr>
       <tr><td><b>い形容詞</b><br>さむい</td><td>さむ<b>かったです</b></td><td>さむ<b>くなかったです</b><br>(or さむくありませんでした)</td></tr>
       <tr><td><b>な形容詞</b><br>げんき</td><td>げんき<b>でした</b></td><td>げんき<b>じゃなかったです</b><br>(or じゃありませんでした)</td></tr>
-      <tr><td><b>名詞</b><br>がくせい</td><td>がくせい<b>でした</b></td><td>がくせい<b>じゃなかったです</b><br>(or じゃありませんでした)</td></tr>
     </table>
 
     <h3 style="margin-top:14px">📝 例文</h3>
@@ -5644,16 +5642,6 @@ function showL5PastRules(){
       メアリーさんは <b>げんきじゃなかったです</b>。<br>
       <span style="color:#888">Mary was not healthy.</span>
     </div>
-    <div class="note" style="border-left-color:#27ae60">
-      <b>名詞 過去肯定:</b><br>
-      きのうは <b>げつようびでした</b>。<br>
-      <span style="color:#888">Yesterday was Monday.</span>
-    </div>
-    <div class="note" style="border-left-color:#27ae60">
-      <b>名詞 過去否定:</b><br>
-      たけしさんは <b>がくせいじゃなかったです</b>。<br>
-      <span style="color:#888">Takeshi was not a student.</span>
-    </div>
 
     <h3 style="margin-top:14px">⚠️ 不規則 (Irregular)</h3>
     <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
@@ -5668,13 +5656,13 @@ function showL5PastRules(){
 
     <h3 style="margin-top:14px">⚠️ 紛らわしい！</h3>
     <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
-      ❌ <s>さむいでした</s>（い形容詞に「でした」は付けない）<br>
+      ❌ <s>さむいでした</s>（い形容詞に「でした」は付けない！）<br>
       ✅ <b>さむかったです</b><br>
       <br>
-      ❌ <s>げんきかったです</s>（な形容詞は「かった」じゃない）<br>
+      ❌ <s>げんきかったです</s>（な形容詞は「かった」じゃない！）<br>
       ✅ <b>げんきでした</b><br>
       <br>
-      <span style="color:#c0392b;font-size:.85em">⚠ きれい・きらい は い で終わるけど<b>な形容詞</b>！<br>
+      <span style="color:#c0392b;font-size:.85em">⚠ きれい・きらい は「い」で終わるけど<b>な形容詞</b>！<br>
       ✅ きれい<b>でした</b>　❌ きれかったです</span>
     </div>
 
@@ -5682,8 +5670,8 @@ function showL5PastRules(){
     <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
       ① い形容詞：い → <b>かったです</b>（肯定）／<b>くなかったです</b>（否定）<br>
       ② な形容詞：そのまま + <b>でした</b>（肯定）／<b>じゃなかったです</b>（否定）<br>
-      ③ 名詞：な形容詞と同じ活用<br>
-      ④ いい は不規則（よかった、よくなかった）
+      ③ いい は不規則（よかった、よくなかった）<br>
+      <span style="color:#888;font-size:.85em">※ な形容詞の活用は名詞と同じパターン（参考のみ）</span>
     </div>
   </div>`;
   document.getElementById("menuContent").innerHTML=h;
