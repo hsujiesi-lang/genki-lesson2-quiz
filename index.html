@@ -1418,69 +1418,46 @@ L4_CATEGORIES.forEach(c=>{
 //  LESSON 5 DATA & GENERATORS  (Genki 1, 第5課「おきなわ旅行」)
 // ============================================================
 const L5_CATEGORIES=[
-  {key:"places", jp:"名詞 — 場所",      en:"Places",            icon:"📍"},
-  {key:"things", jp:"名詞 — 物",        en:"Things",            icon:"📦"},
-  {key:"food",   jp:"名詞 — 食べ物",    en:"Food & Drink",      icon:"🍱"},
-  {key:"people", jp:"名詞 — 人",        en:"People",            icon:"👥"},
-  {key:"time",   jp:"名詞 — 時間",      en:"Time-related",      icon:"🕐"},
-  {key:"nature", jp:"名詞 — 自然・動物",en:"Nature & Animals",  icon:"🌿"},
-  {key:"i_adj",  jp:"い形容詞",         en:"i-Adjectives",      icon:"💡"},
-  {key:"na_adj", jp:"な形容詞",         en:"na-Adjectives",     icon:"🌸"},
-  {key:"verbs",  jp:"動詞",             en:"Verbs",             icon:"🏃"},
-  {key:"adv",    jp:"副詞・その他",     en:"Adverbs / Others",  icon:"💫"},
-  {key:"expr",   jp:"表現",             en:"Expressions",       icon:"💬"},
+  {key:"places", jp:"名詞 — 場所",      en:"Places",                  icon:"📍"},
+  {key:"things", jp:"名詞 — 物・活動",  en:"Things & Activities",     icon:"📦"},
+  {key:"time",   jp:"名詞 — 時間",      en:"Time-related",            icon:"🕐"},
+  {key:"nature", jp:"名詞 — 自然・動物",en:"Nature & Animals",        icon:"🌿"},
+  {key:"i_adj",  jp:"い形容詞",         en:"i-Adjectives",            icon:"💡"},
+  {key:"na_adj", jp:"な形容詞",         en:"na-Adjectives",           icon:"🌸"},
+  {key:"adv",    jp:"副詞・その他",     en:"Adverbs / Others",        icon:"💫"},
+  {key:"expr",   jp:"表現",             en:"Expressions",             icon:"💬"},
 ];
 
 const L5_VOCAB={
+  // Only Genki 1 Lesson 5 vocabulary (3rd edition)
   places:{
     "うみ":"sea; ocean",
     "やま":"mountain",
-    "しょくどう":"cafeteria; dining hall",
     "おきなわ":"Okinawa",
-    "ホームステイ":"homestay",
-    "おんせん":"hot spring",
+    "まつり":"festival",
+    "ところ":"place",
   },
   things:{
-    "きょうかしょ":"textbook",
-    "けいたい":"cell phone",
-    "にもつ":"baggage; luggage",
-    "なまえ":"name",
-    "やくそく":"promise; appointment",
     "たんじょうび":"birthday",
-    "しゅくだい":"homework",
     "りょこう":"travel; trip",
-    "おみやげ":"souvenir",
-  },
-  food:{
-    "おかし":"snack; sweets",
-    "くだもの":"fruit",
-    "たまご":"egg",
+    "スポーツ":"sports",
+    "ピクニック":"picnic",
+    "ふゆやすみ":"winter break",
+    "いろ":"color",
+    "おさけ":"alcohol; sake",
+    "たべもの":"food",
+    "のみもの":"drinks",
+    "フランス":"France",
     "すきやき":"sukiyaki",
-    "ステーキ":"steak",
-  },
-  people:{
-    "かいしゃいん":"office worker",
-    "おとうと":"younger brother",
-    "いもうと":"younger sister",
+    "おみやげ":"souvenir",
+    "ホームステイ":"homestay",
   },
   time:{
     "このあいだ":"the other day",
     "やすみ":"holiday; day off; absence",
-    "はる":"spring",
-    "なつ":"summer",
-    "あき":"autumn; fall",
-    "ふゆ":"winter",
-    "～じはん":"half past ~",
   },
   nature:{
-    "ゆき":"snow",
-    "あめ":"rain",
-    "てんき":"weather",
-    "そら":"sky",
     "どうぶつ":"animal",
-    "ねこ":"cat",
-    "いぬ":"dog",
-    "さかな":"fish",
   },
   i_adj:{
     "あたらしい":"new",
@@ -1514,21 +1491,14 @@ const L5_VOCAB={
     "だいすき":"very fond of; love",
     "だいきらい":"to hate",
   },
-  verbs:{
-    // Lesson 5 doesn't introduce many new verbs; mostly review
-  },
   adv:{
     "とても":"very",
-    "あまり":"not very (with negative)",
     "どんな":"what kind of (+ noun)",
-    "そして":"and (sentence connector)",
-    "でも":"but",
     "まあまあ":"so-so",
     "～が":"but (clause connector)",
   },
   expr:{
     "そうですね":"Let me see; That's right",
-    "ええ":"yes (casual)",
   },
 };
 
