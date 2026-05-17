@@ -1418,87 +1418,80 @@ L4_CATEGORIES.forEach(c=>{
 //  LESSON 5 DATA & GENERATORS  (Genki 1, 第5課「おきなわ旅行」)
 // ============================================================
 const L5_CATEGORIES=[
-  {key:"places", jp:"名詞 — 場所",      en:"Places",                  icon:"📍"},
-  {key:"things", jp:"名詞 — 物・活動",  en:"Things & Activities",     icon:"📦"},
-  {key:"time",   jp:"名詞 — 時間",      en:"Time-related",            icon:"🕐"},
-  {key:"nature", jp:"名詞 — 自然・動物",en:"Nature & Animals",        icon:"🌿"},
+  {key:"nouns",  jp:"名詞",            en:"Nouns",                   icon:"📦"},
   {key:"i_adj",  jp:"い形容詞",         en:"i-Adjectives",            icon:"💡"},
   {key:"na_adj", jp:"な形容詞",         en:"na-Adjectives",           icon:"🌸"},
-  {key:"adv",    jp:"副詞・その他",     en:"Adverbs / Others",        icon:"💫"},
+  {key:"verbs",  jp:"動詞",            en:"Verbs (U + Ru)",          icon:"🏃"},
+  {key:"adv",    jp:"副詞・その他",     en:"Adverbs & Others",        icon:"💫"},
   {key:"expr",   jp:"表現",             en:"Expressions",             icon:"💬"},
 ];
 
 const L5_VOCAB={
-  // Only Genki 1 Lesson 5 vocabulary (3rd edition)
-  places:{
-    "うみ":"sea; ocean",
-    "やま":"mountain",
-    "おきなわ":"Okinawa",
-    "まつり":"festival",
-    "ところ":"place",
-  },
-  things:{
-    "たんじょうび":"birthday",
-    "りょこう":"travel; trip",
-    "スポーツ":"sports",
-    "ピクニック":"picnic",
-    "ふゆやすみ":"winter break",
-    "いろ":"color",
-    "おさけ":"alcohol; sake",
+  // Strict Genki 1 Lesson 5 textbook vocabulary
+  nouns:{
     "たべもの":"food",
-    "のみもの":"drinks",
-    "フランス":"France",
-    "すきやき":"sukiyaki",
-    "おみやげ":"souvenir",
-    "ホームステイ":"homestay",
-  },
-  time:{
-    "このあいだ":"the other day",
+    "のみもの":"drink",
+    "くだもの":"fruit",
     "やすみ":"holiday; day off; absence",
-  },
-  nature:{
-    "どうぶつ":"animal",
+    "りょこう":"travel",
+    "うみ":"sea",
+    "サーフィン":"surfing",
+    "おみやげ":"souvenir",
+    "バス":"bus",
+    "てんき":"weather",
+    "しゅくだい":"homework",
+    "テスト":"test",
+    "たんじょうび":"birthday",
+    "へや":"room",
+    "ぼく":"I (used by men)",
+    "Lサイズ":"size L",
   },
   i_adj:{
-    // Genki L5 i-adjectives only (18 items)
     "あたらしい":"new",
-    "ふるい":"old (for things)",
-    "おおきい":"big; large",
+    "ふるい":"old (thing — not for people)",
+    "あつい":"hot (weather / object)",
+    "さむい":"cold (weather — not for things)",
+    "いそがしい":"busy (people/days)",
+    "おおきい":"large",
     "ちいさい":"small",
-    "あつい":"hot (weather)",
-    "さむい":"cold (weather)",
     "おもしろい":"interesting; funny",
-    "つまらない":"boring; dull",
+    "つまらない":"boring",
+    "やさしい":"easy (problem); kind (person)",
     "むずかしい":"difficult",
-    "やさしい":"easy; kind",
-    "たのしい":"fun; enjoyable",
-    "いそがしい":"busy",
-    "かわいい":"cute",
-    "かっこいい":"good-looking; cool",
-    "いい":"good",
-    "たかい":"expensive; tall",
-    "ひくい":"low",
-    "やすい":"cheap; inexpensive",
+    "かっこいい":"good-looking",
+    "こわい":"frightening",
+    "たのしい":"fun",
+    "やすい":"inexpensive; cheap (thing)",
   },
   na_adj:{
-    "きれい":"pretty; clean",
+    "すき":"fond of; to like (〜が)",
+    "きらい":"disgusted with; to dislike (〜が)",
+    "だいすき":"very fond of; to love (〜が)",
+    "だいきらい":"to hate (〜が)",
+    "きれい":"beautiful; clean",
     "げんき":"healthy; energetic",
     "しずか":"quiet",
     "にぎやか":"lively",
-    "ひま":"free time; not busy",
-    "すき":"liked; favorite",
-    "きらい":"disliked; hated",
-    "だいすき":"very fond of; love",
-    "だいきらい":"to hate",
+    "ひま":"not busy; free (time)",
+  },
+  verbs:{
+    // U-verbs
+    "およぐ":"to swim",
+    "きく":"to ask (person に)",
+    "のる":"to ride; to board (〜に)",
+    "やる":"to do; to perform (〜を)",
+    // Ru-verb
+    "でかける":"to go out",
   },
   adv:{
+    "いっしょに":"together",
+    "すごく":"extremely",
     "とても":"very",
-    "どんな":"what kind of (+ noun)",
-    "まあまあ":"so-so",
-    "～が":"but (clause connector)",
+    "どんな":"what kind of...",
+    "～まい":"counter for flat objects",
   },
   expr:{
-    "そうですね":"Let me see; That's right",
+    "だいじょうぶ":"It's okay; Not to worry",
   },
 };
 
@@ -1544,11 +1537,12 @@ L5_CATEGORIES.forEach(c=>{
 // subj types: "thing" (objects/places), "person", "weather" (days/seasons), "either"
 // Note: Only adjectives from Genki Lesson 5 (textbook list)
 const L5_I_ADJ=[
+  // Strict Genki L5 textbook list (+ いい kept for irregular grammar reference)
   {jp:"おもしろい",en:"interesting",neg:"おもしろくない",subj:"thing"},
   {jp:"つまらない",en:"boring",neg:"つまらなくない",subj:"thing"},
   {jp:"あたらしい",en:"new",neg:"あたらしくない",subj:"thing"},
   {jp:"ふるい",en:"old",neg:"ふるくない",subj:"thing"},
-  {jp:"おおきい",en:"big",neg:"おおきくない",subj:"thing"},
+  {jp:"おおきい",en:"large",neg:"おおきくない",subj:"thing"},
   {jp:"ちいさい",en:"small",neg:"ちいさくない",subj:"thing"},
   {jp:"あつい",en:"hot",neg:"あつくない",subj:"weather"},
   {jp:"さむい",en:"cold",neg:"さむくない",subj:"weather"},
@@ -1556,12 +1550,10 @@ const L5_I_ADJ=[
   {jp:"やさしい",en:"easy",neg:"やさしくない",subj:"thing"},
   {jp:"たのしい",en:"fun",neg:"たのしくない",subj:"thing"},
   {jp:"いそがしい",en:"busy",neg:"いそがしくない",subj:"person"},
-  {jp:"かわいい",en:"cute",neg:"かわいくない",subj:"either"},
+  {jp:"こわい",en:"frightening",neg:"こわくない",subj:"either"},
   {jp:"かっこいい",en:"good-looking",neg:"かっこよくない",subj:"either",irregular:true},
   {jp:"いい",en:"good",neg:"よくない",irregular:true,subj:"either"},
   {jp:"やすい",en:"cheap",neg:"やすくない",subj:"thing"},
-  {jp:"たかい",en:"expensive",neg:"たかくない",subj:"thing"},
-  {jp:"ひくい",en:"low",neg:"ひくくない",subj:"thing"},
 ];
 
 const L5_NA_ADJ=[
@@ -1768,6 +1760,7 @@ const L5_LIKE_NA_PHRASES=[
   {adj:"きれい",adjEn:"clean",nounJp:"へや",nounEn:"rooms"},
 ];
 const L5_LIKE_I_PHRASES=[
+  // Only uses L5 textbook adjectives
   {adj:"おおきい",adjEn:"big",nounJp:"いえ",nounEn:"houses"},
   {adj:"おおきい",adjEn:"big",nounJp:"くるま",nounEn:"cars"},
   {adj:"ちいさい",adjEn:"small",nounJp:"いえ",nounEn:"houses"},
@@ -1778,8 +1771,8 @@ const L5_LIKE_I_PHRASES=[
   {adj:"ふるい",adjEn:"old",nounJp:"おてら",nounEn:"temples"},
   {adj:"おもしろい",adjEn:"interesting",nounJp:"えいが",nounEn:"movies"},
   {adj:"おもしろい",adjEn:"interesting",nounJp:"ほん",nounEn:"books"},
-  {adj:"たかい",adjEn:"expensive",nounJp:"くるま",nounEn:"cars"},
   {adj:"やすい",adjEn:"cheap",nounJp:"レストラン",nounEn:"restaurants"},
+  {adj:"たのしい",adjEn:"fun",nounJp:"えいが",nounEn:"movies"},
 ];
 
 // Type A: Basic — X は Y が すき/きらい です
