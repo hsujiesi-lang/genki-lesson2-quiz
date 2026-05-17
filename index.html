@@ -2231,6 +2231,87 @@ function genL5Past(n=15){
 L5_GENERATORS["g_past"]={title:"Grammar 2: 形容詞の過去形 (Adjective Past Tense)",gen:()=>genL5Past(15)};
 
 // ============================================================
+// L5 Grammar 3: Adjective + Noun (Modifying Nouns)
+// ============================================================
+const L5_ADJNOUN_I_PAIRS=[
+  {adj:"おもしろい",adjEn:"interesting",noun:"えいが",nounEn:"movie"},
+  {adj:"おもしろい",adjEn:"interesting",noun:"ほん",nounEn:"book"},
+  {adj:"つまらない",adjEn:"boring",noun:"えいが",nounEn:"movie"},
+  {adj:"つまらない",adjEn:"boring",noun:"ほん",nounEn:"book"},
+  {adj:"こわい",adjEn:"scary",noun:"えいが",nounEn:"movie"},
+  {adj:"たのしい",adjEn:"fun",noun:"えいが",nounEn:"movie"},
+  {adj:"たのしい",adjEn:"fun",noun:"りょこう",nounEn:"trip"},
+  {adj:"あたらしい",adjEn:"new",noun:"ほん",nounEn:"book"},
+  {adj:"あたらしい",adjEn:"new",noun:"スマホ",nounEn:"smartphone"},
+  {adj:"ふるい",adjEn:"old",noun:"ほん",nounEn:"book"},
+  {adj:"ふるい",adjEn:"old",noun:"いえ",nounEn:"house"},
+  {adj:"おおきい",adjEn:"large",noun:"いえ",nounEn:"house"},
+  {adj:"おおきい",adjEn:"large",noun:"へや",nounEn:"room"},
+  {adj:"ちいさい",adjEn:"small",noun:"いえ",nounEn:"house"},
+  {adj:"ちいさい",adjEn:"small",noun:"へや",nounEn:"room"},
+  {adj:"ちいさい",adjEn:"small",noun:"スマホ",nounEn:"smartphone"},
+  {adj:"むずかしい",adjEn:"difficult",noun:"ほん",nounEn:"book"},
+  {adj:"むずかしい",adjEn:"difficult",noun:"テスト",nounEn:"test"},
+  {adj:"むずかしい",adjEn:"difficult",noun:"しゅくだい",nounEn:"homework"},
+  {adj:"やさしい",adjEn:"easy",noun:"テスト",nounEn:"test"},
+  {adj:"やさしい",adjEn:"easy",noun:"しゅくだい",nounEn:"homework"},
+  {adj:"かっこいい",adjEn:"good-looking",noun:"スマホ",nounEn:"smartphone"},
+  {adj:"やすい",adjEn:"cheap",noun:"ほん",nounEn:"book"},
+  {adj:"やすい",adjEn:"cheap",noun:"レストラン",nounEn:"restaurant"},
+  {adj:"いい",adjEn:"good",noun:"てんき",nounEn:"weather"},
+  {adj:"いい",adjEn:"good",noun:"ほん",nounEn:"book"},
+];
+
+const L5_ADJNOUN_NA_PAIRS=[
+  {adj:"にぎやか",adjEn:"lively",noun:"まち",nounEn:"town"},
+  {adj:"にぎやか",adjEn:"lively",noun:"カフェ",nounEn:"cafe"},
+  {adj:"にぎやか",adjEn:"lively",noun:"レストラン",nounEn:"restaurant"},
+  {adj:"しずか",adjEn:"quiet",noun:"まち",nounEn:"town"},
+  {adj:"しずか",adjEn:"quiet",noun:"カフェ",nounEn:"cafe"},
+  {adj:"しずか",adjEn:"quiet",noun:"へや",nounEn:"room"},
+  {adj:"しずか",adjEn:"quiet",noun:"レストラン",nounEn:"restaurant"},
+  {adj:"きれい",adjEn:"beautiful",noun:"へや",nounEn:"room"},
+  {adj:"きれい",adjEn:"beautiful",noun:"まち",nounEn:"town"},
+  {adj:"きれい",adjEn:"clean",noun:"へや",nounEn:"room"},
+];
+
+const L5_ADJNOUN_DEMS=[
+  {jp:"これ",en:"This"},
+  {jp:"それ",en:"That"},
+  {jp:"あれ",en:"That (over there)"},
+];
+
+function _enArticle(adjEn){return /^[aeiou]/i.test(adjEn)?"an":"a"}
+
+function makeL5AdjNounI(){
+  const pair=pick(L5_ADJNOUN_I_PAIRS);
+  const dem=pick(L5_ADJNOUN_DEMS);
+  const en=`${dem.en} is ${_enArticle(pair.adjEn)} ${pair.adjEn} ${pair.nounEn}.`;
+  const ja=`${dem.jp}は ${pair.adj}${pair.noun}です。`;
+  const structure=`<b>[X]は + [い形容詞][名詞] + です</b><br><span style="color:#888;font-size:.85em">い形容詞は<u>そのまま</u>名詞に付く（「な」<b>不要</b>）</span>`;
+  return {qtext:en,hint:"い形容詞 + 名詞（「な」不要）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function makeL5AdjNounNa(){
+  const pair=pick(L5_ADJNOUN_NA_PAIRS);
+  const dem=pick(L5_ADJNOUN_DEMS);
+  const en=`${dem.en} is ${_enArticle(pair.adjEn)} ${pair.adjEn} ${pair.nounEn}.`;
+  const ja=`${dem.jp}は ${pair.adj}な${pair.noun}です。`;
+  const structure=`<b>[X]は + [な形容詞]<u>な</u>[名詞] + です</b><br><span style="color:#c0392b;font-size:.85em">⚠ な形容詞 + <b>な</b> + 名詞（必ず「な」を付ける！）</span>`;
+  return {qtext:en,hint:"な形容詞 + な + 名詞（「な」必要！）",answers:[_cleanJa(ja)],explain:ja,structure,isTranslation:true,alwaysShowStructure:true};
+}
+
+function genL5AdjNoun(n=15){
+  const qs=[];
+  for(let i=0;i<n;i++){
+    if(Math.random()<.55)qs.push(makeL5AdjNounI());
+    else qs.push(makeL5AdjNounNa());
+  }
+  return qs;
+}
+L5_GENERATORS["g_adj_noun"]={title:"Grammar 3: 形容詞 + 名詞 (Adj Modifying Noun)",gen:()=>genL5AdjNoun(15)};
+
+// ============================================================
 // L5 Grammar 5: ～ましょう / ～ましょうか (Let's... / Shall we...?)
 // ============================================================
 const L5_MASHO_VERBS=[
@@ -5390,6 +5471,11 @@ function buildL5Menu(){
         <span class="t1"><span style="background:#f39c12;color:#fff;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-right:6px;font-weight:700">Grammar 2</span>形容詞の過去形 (Adjective Past Tense)</span>
         <span class="t2">い形容詞 / な形容詞 — 過去の肯定 & 否定</span>
       </div>
+      <div class="menu-btn full" onclick="showL5AdjNounMenu()" style="border-color:#2980b9;background:#f0f8ff">
+        <div class="icon">🔗</div>
+        <span class="t1"><span style="background:#f39c12;color:#fff;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-right:6px;font-weight:700">Grammar 3</span>形容詞 + 名詞 (Adj Modifying Noun)</span>
+        <span class="t2">い形容詞 + 名詞　vs　な形容詞 + な + 名詞</span>
+      </div>
       <div class="menu-btn full" onclick="showL5DegreeMenu()" style="border-color:#16a085;background:#f0fff8">
         <div class="icon">📈</div>
         <span class="t1">程度の副詞 (Degree Adverbs)</span>
@@ -5412,8 +5498,8 @@ function buildL5Menu(){
       </div>
       <div class="menu-btn full" onclick="showL5ShopMenu()" style="border-color:#f39c12;background:#fffbe6">
         <div class="icon">🛍</div>
-        <span class="t1">買い物 (Shopping & Counters)</span>
-        <span class="t2">〜を ください + 助数詞 (まい / ほん / さつ / ひき / つ)</span>
+        <span class="t1"><span style="background:#f39c12;color:#fff;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-right:6px;font-weight:700">Grammar 6</span>買い物 (Counting & 〜を ください)</span>
+        <span class="t2">助数詞 ～まい / ～ほん / ～さつ / ～ひき / ～つ</span>
       </div>
     </div>`;
 }
@@ -5756,6 +5842,102 @@ function showL5MashoRules(){
       <tr><td>～<b>ましょうか</b></td><td>もう少し決まっている提案</td><td>たべましょうか<br>(Shall we eat?)</td></tr>
       <tr><td>～<b>ませんか</b></td><td>誘い・お誘い</td><td>たべませんか<br>(Would you like to eat?)</td></tr>
     </table>
+  </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5AdjNounMenu(){
+  l5State={view:"adjNounMenu",cat:null};
+  let h=`<button class="back-lessons" onclick="renderL5Main()">← L5 メニュー</button>`;
+  h+=`<div style="background:#fff8ee;border:1.5px solid #f39c12;border-radius:8px;padding:6px 12px;display:inline-block;font-size:.85rem;color:#e67e22;font-weight:700;margin:8px 0">📘 Grammar 3</div>`;
+  h+=`<h3 style="color:#e67e22;margin:8px 4px 4px;font-size:1.1rem">🔗 形容詞 + 名詞 (Adj Modifying Noun)</h3>`;
+  h+=`<p style="color:#999;font-size:.85rem;margin-bottom:10px;padding-left:4px">い形容詞 + 名詞　／　な形容詞 + な + 名詞</p>`;
+  h+=`<div class="menu-grid">
+        <div class="menu-btn full" onclick="showL5AdjNounRules()" style="border-color:#2980b9;background:#f0f8ff">
+          <div class="icon">📖</div>
+          <span class="t1">規則 (Rules & Examples)</span>
+          <span class="t2">い-adj はそのまま／な-adj は「な」が必要</span>
+        </div>
+        <div class="menu-btn full" onclick="startQuiz(5,'g_adj_noun')" style="border-color:#e67e22;background:#fff8ee">
+          <div class="icon">✏️</div>
+          <span class="t1">測験 (Practice)</span>
+          <span class="t2">英→日：形容詞付きの名詞句を作る</span>
+        </div>
+      </div>`;
+  document.getElementById("menuContent").innerHTML=h;
+}
+
+function showL5AdjNounRules(){
+  l5State={view:"adjNounRules",cat:null};
+  let h=`<button class="back-lessons" onclick="showL5AdjNounMenu()">← 形容詞 + 名詞</button>`;
+  h+=`<div class="gbox show" style="display:block;margin-top:14px">
+    <h3>🔗 Grammar 3 — Adjective Modifying Noun</h3>
+
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>⚠️ 重要：い形容詞 と な形容詞 で形が違う！</b><br>
+      <span style="color:#555">な形容詞は名詞の前に「な」が必要。</span>
+    </div>
+
+    <h3 style="margin-top:14px">📋 まとめ表</h3>
+    <table class="gtable">
+      <tr><th>タイプ</th><th>形</th><th>例</th></tr>
+      <tr><td><b>い形容詞</b></td><td>そのまま + 名詞<br>(「な」不要)</td><td>おもしろい えいが<br>(an interesting movie)</td></tr>
+      <tr><td><b>な形容詞</b></td><td>+ <b>な</b> + 名詞<br>(「な」必要)</td><td>にぎやかな まち<br>(a lively town)</td></tr>
+    </table>
+
+    <h3 style="margin-top:14px">✅ い形容詞 + 名詞</h3>
+    <div class="note">
+      これは <b>おもしろい えいが</b>です。<br>
+      <span style="color:#888">This is an interesting movie.</span>
+    </div>
+    <div class="note">
+      これは <b>あたらしい スマホ</b>です。<br>
+      <span style="color:#888">This is a new smartphone.</span>
+    </div>
+    <div class="note">
+      それは <b>むずかしい テスト</b>です。<br>
+      <span style="color:#888">That was a difficult test.</span>
+    </div>
+
+    <h3 style="margin-top:14px">✅ な形容詞 + <u>な</u> + 名詞</h3>
+    <div class="note" style="border-left-color:#9b59b6">
+      これは <b>にぎやかな まち</b>です。<br>
+      <span style="color:#888">This is a lively town.</span>
+    </div>
+    <div class="note" style="border-left-color:#9b59b6">
+      あれは <b>しずかな カフェ</b>です。<br>
+      <span style="color:#888">That (over there) is a quiet cafe.</span>
+    </div>
+    <div class="note" style="border-left-color:#9b59b6">
+      これは <b>きれいな へや</b>です。<br>
+      <span style="color:#888">This is a beautiful room.</span>
+    </div>
+
+    <h3 style="margin-top:14px">⚠️ よくある間違い</h3>
+    <div class="note" style="background:#fff5f5;border-left-color:#e74c3c">
+      <b>い形容詞 に「な」を付けない!</b><br>
+      ❌ <s>おもしろい<u>な</u>えいが</s><br>
+      ✅ おもしろい えいが<br>
+      <br>
+      <b>な形容詞 に「な」を忘れない!</b><br>
+      ❌ <s>にぎやか まち</s><br>
+      ✅ にぎやか<u>な</u> まち
+    </div>
+
+    <h3 style="margin-top:14px">⚠️ 紛らわしい な形容詞</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      🌸 <b>きれい</b>・<b>きらい</b> は「い」で終わるけど<b>な形容詞</b>！<br>
+      ✅ きれい<b>な</b> へや (a beautiful room)<br>
+      ❌ <s>きれいへや</s> / <s>きれい へや</s>
+    </div>
+
+    <h3 style="margin-top:14px">💡 ポイント</h3>
+    <div class="note" style="background:#fffbe6;border-left-color:#f39c12">
+      ① <b>い形容詞</b>：辞書形のまま名詞に付く<br>
+      ② <b>な形容詞</b>：「な」を付けてから名詞に付く<br>
+      ③ Grammar 4 (好き嫌い) でもよく使う：<br>
+      　「にぎやかな まちが すきです」(I like lively towns)
+    </div>
   </div>`;
   document.getElementById("menuContent").innerHTML=h;
 }
@@ -6132,6 +6314,8 @@ function restoreL5View(){
   else if(l5State.view==="pastRules")showL5PastRules();
   else if(l5State.view==="mashoMenu")showL5MashoMenu();
   else if(l5State.view==="mashoRules")showL5MashoRules();
+  else if(l5State.view==="adjNounMenu")showL5AdjNounMenu();
+  else if(l5State.view==="adjNounRules")showL5AdjNounRules();
   else renderL5Main();
 }
 
